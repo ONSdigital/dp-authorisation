@@ -1,0 +1,119 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "WIzknz1rbQWUgVG7KwwElO7DajY=",
+			"path": "github.com/ONSdigital/go-ns/common",
+			"revision": "81b393bfc6e80674df603b7fde2f31a35e81b9dd",
+			"revisionTime": "2019-03-01T13:55:03Z"
+		},
+		{
+			"checksumSHA1": "r2PdGOPVGXt0WTdGQXN5aHfp0RM=",
+			"path": "github.com/ONSdigital/log.go/log",
+			"revision": "93cc21caa3b378645874496cca0d8204bdf0f891",
+			"revisionTime": "2019-02-14T09:59:51Z"
+		},
+		{
+			"checksumSHA1": "BxH9xJUqczhpL57gfKZe2/VlBHY=",
+			"path": "github.com/fatih/color",
+			"revision": "3f9d52f7176a6927daacff70a3e8d1dc2025c53e",
+			"revisionTime": "2018-10-10T23:13:11Z"
+		},
+		{
+			"checksumSHA1": "yIkYzW7bzAD81zHyuCNmEj4+oxQ=",
+			"path": "github.com/gopherjs/gopherjs/js",
+			"revision": "415225646bb92c4449bb484646f2c95a98402f6f",
+			"revisionTime": "2017-09-27T19:27:36Z"
+		},
+		{
+			"checksumSHA1": "+HUsIuEnSLik8Jrrw9MDdxmhT5c=",
+			"path": "github.com/hokaccha/go-prettyjson",
+			"revision": "f579f869bbfea48a61fbea09207cadd1aaeceb83",
+			"revisionTime": "2018-09-20T04:03:06Z"
+		},
+		{
+			"checksumSHA1": "cIiyvAduLLFvu+tg1Qr5Jw3jeWo=",
+			"path": "github.com/jtolds/gls",
+			"revision": "b4936e06046bbecbb94cae9c18127ebe510a2cb9",
+			"revisionTime": "2018-11-10T20:28:10Z"
+		},
+		{
+			"checksumSHA1": "XEV3BI3nHA/rNa/tIgB7fVCrDww=",
+			"origin": "github.com/fatih/color/vendor/github.com/mattn/go-colorable",
+			"path": "github.com/mattn/go-colorable",
+			"revision": "3f9d52f7176a6927daacff70a3e8d1dc2025c53e",
+			"revisionTime": "2018-10-10T23:13:11Z"
+		},
+		{
+			"checksumSHA1": "y/A5iuvwjytQE2CqVuphQRXR2nI=",
+			"origin": "github.com/fatih/color/vendor/github.com/mattn/go-isatty",
+			"path": "github.com/mattn/go-isatty",
+			"revision": "3f9d52f7176a6927daacff70a3e8d1dc2025c53e",
+			"revisionTime": "2018-10-10T23:13:11Z"
+		},
+		{
+			"checksumSHA1": "rJab1YdNhQooDiBWNnt7TLWPyBU=",
+			"path": "github.com/pkg/errors",
+			"revision": "c605e284fe17294bda444b34710735b29d1a9d90",
+			"revisionTime": "2017-05-05T04:36:39Z"
+		},
+		{
+			"checksumSHA1": "8M5kk6pT2gknOtearzxw7gagVCM=",
+			"path": "github.com/smartystreets/assertions",
+			"revision": "f487f9de1cd36ebab28235b9373028812fb47cbd",
+			"revisionTime": "2019-04-01T21:17:40Z"
+		},
+		{
+			"checksumSHA1": "a0CRqejGZH1LxO4G/DZsux7ULWA=",
+			"path": "github.com/smartystreets/assertions/internal/go-diff/diffmatchpatch",
+			"revision": "f487f9de1cd36ebab28235b9373028812fb47cbd",
+			"revisionTime": "2019-04-01T21:17:40Z"
+		},
+		{
+			"checksumSHA1": "v6W3GIQMzr3QSXB2NtBa9X7SwiI=",
+			"path": "github.com/smartystreets/assertions/internal/go-render/render",
+			"revision": "f487f9de1cd36ebab28235b9373028812fb47cbd",
+			"revisionTime": "2019-04-01T21:17:40Z"
+		},
+		{
+			"checksumSHA1": "r6FauVdOTFnwYQgrKGFuWUbIAJE=",
+			"path": "github.com/smartystreets/assertions/internal/oglematchers",
+			"revision": "f487f9de1cd36ebab28235b9373028812fb47cbd",
+			"revisionTime": "2019-04-01T21:17:40Z"
+		},
+		{
+			"checksumSHA1": "fzTuiT5s2hzKZ/EYS9zMx8ztsXE=",
+			"path": "github.com/smartystreets/goconvey/convey",
+			"revision": "68dc04aab96ae4326137d6b77330c224063a927e",
+			"revisionTime": "2019-03-30T03:26:15Z"
+		},
+		{
+			"checksumSHA1": "6Mgn4H/4vpqYGlaIKZ0UwOmJN0E=",
+			"path": "github.com/smartystreets/goconvey/convey/gotest",
+			"revision": "68dc04aab96ae4326137d6b77330c224063a927e",
+			"revisionTime": "2019-03-30T03:26:15Z"
+		},
+		{
+			"checksumSHA1": "/8sed9aZQ9B7D0cBhH3OhvS2fAk=",
+			"path": "github.com/smartystreets/goconvey/convey/reporting",
+			"revision": "68dc04aab96ae4326137d6b77330c224063a927e",
+			"revisionTime": "2019-03-30T03:26:15Z"
+		},
+		{
+			"checksumSHA1": "GtamqiJoL7PGHsN454AoffBFMa8=",
+			"origin": "github.com/ONSdigital/go-ns/vendor/golang.org/x/net/context",
+			"path": "golang.org/x/net/context",
+			"revision": "81b393bfc6e80674df603b7fde2f31a35e81b9dd",
+			"revisionTime": "2019-03-01T13:55:03Z"
+		},
+		{
+			"checksumSHA1": "CNHEeGnucEUlTHJrLS2kHtfNbws=",
+			"origin": "github.com/fatih/color/vendor/golang.org/x/sys/unix",
+			"path": "golang.org/x/sys/unix",
+			"revision": "3f9d52f7176a6927daacff70a3e8d1dc2025c53e",
+			"revisionTime": "2018-10-10T23:13:11Z"
+		}
+	],
+	"rootPath": "github.com/ONSdigital/dp-permissions"
+}
