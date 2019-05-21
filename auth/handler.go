@@ -12,17 +12,18 @@ import (
 
 const (
 	CollectionIDHeader = "Collection-Id"
-	DatasetIDParam     = "dataset_id"
 )
 
 var (
 	getRequestVars func(r *http.Request) map[string]string
 	authenticator  PermissionAuthenticator
+	datasetIDKey   string
 )
 
-// Configure set up function for the auth pkg. Requires a function for getting request parameters and a
-// PermissionsAuthenticator implementation
-func Configure(GetRequestVarsFunc func(r *http.Request) map[string]string, PermissionsAuthenticator PermissionAuthenticator) {
+// Configure set up function for the auth pkg. Requires the datasetID parameter key, a function for getting request
+// parameters and a PermissionsAuthenticator implementation
+func Configure(DatasetIDKey string, GetRequestVarsFunc func(r *http.Request) map[string]string, PermissionsAuthenticator PermissionAuthenticator) {
+	datasetIDKey = DatasetIDKey
 	getRequestVars = GetRequestVarsFunc
 	authenticator = PermissionsAuthenticator
 }
@@ -43,7 +44,7 @@ func Require(required permissions.CRUD, endpoint func(http.ResponseWriter, *http
 		serviceAuthToken := r.Header.Get(common.AuthHeaderKey)
 		userAuthToken := r.Header.Get(common.FlorenceHeaderKey)
 		collectionID := r.Header.Get(CollectionIDHeader)
-		datasetID := getRequestVars(r)[DatasetIDParam]
+		datasetID := getRequestVars(r)[datasetIDKey]
 
 		authStatus, err := authenticator.Check(required, serviceAuthToken, userAuthToken, collectionID, datasetID)
 		if err != nil {
