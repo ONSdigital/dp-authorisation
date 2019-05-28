@@ -17,6 +17,7 @@ const (
 	userAuthToken    = "667"
 	collectionID     = "668"
 	datasetID        = "669"
+	datsetIDKey      = "dataset_id"
 )
 
 type handlerCalls struct {
@@ -33,7 +34,7 @@ func TestRequire_CallerAuthorized(t *testing.T) {
 	Convey("given an authorized caller", t, func() {
 		authenticatorMock := getAuthenticatorMoq(200, nil)
 
-		auth.Configure(getRequestVarsMoq(), authenticatorMock)
+		auth.Configure(datsetIDKey, getRequestVarsMoq(), authenticatorMock)
 
 		requiredPermissions := permissions.CRUD{
 			Create: true,
@@ -81,7 +82,7 @@ func TestRequire_CallerNotAuthorized(t *testing.T) {
 	Convey("given an unauthorized caller", t, func() {
 		authenticatorMock := getAuthenticatorMoq(401, nil)
 
-		auth.Configure(getRequestVarsMoq(), authenticatorMock)
+		auth.Configure(datsetIDKey, getRequestVarsMoq(), authenticatorMock)
 
 		handlerCalls := make([]handlerCalls, 0)
 		handler := getHandlerMoq(&handlerCalls)
@@ -130,7 +131,7 @@ func TestRequire_CheckPermissionsError(t *testing.T) {
 	Convey("given permissions check returns an error", t, func() {
 		authenticatorMock := getAuthenticatorMoq(0, errors.New("wubba lubba dub dub"))
 
-		auth.Configure(getRequestVarsMoq(), authenticatorMock)
+		auth.Configure(datsetIDKey, getRequestVarsMoq(), authenticatorMock)
 
 		handlerCalls := make([]handlerCalls, 0)
 		handler := getHandlerMoq(&handlerCalls)
