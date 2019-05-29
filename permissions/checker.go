@@ -32,11 +32,11 @@ func (c *Checker) Check(ctx context.Context, required CRUD, serviceToken string,
 	}
 
 	defer resp.Body.Close()
-	data["status_code"] = resp.StatusCode
 
 	if resp.StatusCode != 200 {
-		return handleErrorResponse(ctx, resp, data)
+		//
+		return handleErrorResponse(ctx, resp, data), nil
 	}
 
-	return handleSuccessfulResponse(ctx, resp, &required, data)
+	return handleSuccessfulResponse(ctx, resp.Body, &required, data)
 }

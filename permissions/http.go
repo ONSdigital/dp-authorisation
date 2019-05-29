@@ -32,26 +32,29 @@ func (c *Checker) getPermissionsRequest(serviceToken string, userToken string, c
 }
 
 // handleErrorResponse handle get permission responses with a non 200 status code.
-func handleErrorResponse(ctx context.Context, resp *http.Response, data log.Data) (int, error) {
+func handleErrorResponse(ctx context.Context, resp *http.Response, data log.Data) int {
+	data["status"] = resp.StatusCode
 	log.Event(ctx, "get permissions request returned a non 200 response status", data)
 
-	message, err := getErrorResponse(resp.Body)
+	entity, err := getErrorEntity(resp.Body)
 	if err != nil {
-		return 0, errors.WithMessage(err, "error reading get permissions error response")
+		// If we cannot read the error body then this becomes an internal server error
+		log.Event(ctx, "internal server error failed reading get permissions error response", data)
+		return 500
 	}
 
-	data["cause"] = message
-	log.Event(ctx, "get permissions request successful", data)
-	return resp.StatusCode, nil
+	data["response_body"] = entity
+	log.Event(ctx, "get permissions request unsuccessful", data)
+	return resp.StatusCode
 }
 
 // handleSuccessfulResponse handles successful (200 status) get permissions responses. Marshal the response body into
 // the CRUD object and verify it satisfies the required permissions. If the caller has the required permissions returns
 // status 200 else returns status 403,
-func handleSuccessfulResponse(ctx context.Context, resp *http.Response, required *CRUD, data log.Data) (int, error) {
+func handleSuccessfulResponse(ctx context.Context, body io.Reader, required *CRUD, data log.Data) (int, error) {
 	log.Event(ctx, "get permissions request successful", data)
 
-	callerPerms, err := unmarshalPermissions(resp.Body)
+	callerPerms, err := unmarshalPermissions(body)
 	if err != nil {
 		return 0, err
 	}
@@ -62,13 +65,18 @@ func handleSuccessfulResponse(ctx context.Context, resp *http.Response, required
 	return 200, nil
 }
 
-// getErrorResponse get the response entity for a non 200 status code.
-func getErrorResponse(r io.Reader) (string, error) {
+// getErrorEntity get the response entity for a non 200 status code.
+func getErrorEntity(r io.Reader) (*errorEntity, error) {
 	body, err := ioutil.ReadAll(r)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(body), nil
+
+	var entity errorEntity
+	if err = json.Unmarshal(body, &entity); err != nil {
+		return nil, err
+	}
+	return &entity, nil
 }
 
 // unmarshalPermissions unmarshall the get permissions response json into a CRUD object

@@ -4,8 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"testing"
 
+	"github.com/ONSdigital/dp-permissions/permissions/mocks"
+	"github.com/ONSdigital/log.go/log"
+	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -74,5 +78,44 @@ func Test_unmarshalPermissionsResponse(t *testing.T) {
 				})
 			})
 		})
+	}
+}
+
+func TestHandleErrorResponse(t *testing.T) {
+
+	Convey("Should return the expected status for a valid error entity response body", t, func() {
+		entity := errorEntity{"unauthorized"}
+		b, err := json.Marshal(entity)
+		So(err, ShouldBeNil)
+
+		resp := getErrorResponse(401, b, nil)
+		So(handleErrorResponse(nil, resp, log.Data{}), ShouldEqual, 401)
+	})
+
+	Convey("Should return status 500 if read body returns an error", t, func() {
+		resp := getErrorResponse(401, nil, errors.New("pop!"))
+		So(handleErrorResponse(nil, resp, log.Data{}), ShouldEqual, 500)
+	})
+
+	Convey("Should return status 500 if unmarshal body to error entity fails", t, func() {
+
+		invalidBody := []int{1, 2, 3, 4, 5}
+		b, err := json.Marshal(invalidBody)
+		So(err, ShouldBeNil)
+
+		resp := getErrorResponse(401, b, nil)
+		So(handleErrorResponse(nil, resp, log.Data{}), ShouldEqual, 500)
+	})
+
+}
+
+func getErrorResponse(status int, b []byte, err error) *http.Response {
+	return &http.Response{
+		StatusCode: status,
+		Body: &mocks.ReadCloser{
+			GetEntityFunc: func() ([]byte, error) {
+				return b, err
+			},
+		},
 	}
 }

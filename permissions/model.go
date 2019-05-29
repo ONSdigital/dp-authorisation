@@ -22,6 +22,10 @@ type permissions struct {
 	Permissions []permission `json:"permissions"`
 }
 
+type errorEntity struct {
+	Message string `json:"message"`
+}
+
 type HTTPClient interface {
 	Do(ctx context.Context, req *http.Request) (*http.Response, error)
 }
