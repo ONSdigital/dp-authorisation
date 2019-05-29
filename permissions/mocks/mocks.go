@@ -1,12 +1,21 @@
 // mocks provide mock implementations for use in the permissions unit tests
 package mocks
 
-import "io"
+import (
+	"context"
+	"io"
+	"net/http"
+)
 
 // ReadCloser is a mocked impl of an io.ReadCloser
 type ReadCloser struct {
-	GetEntityFunc  func() ([]byte, error)
-	done       bool
+	GetEntityFunc func() ([]byte, error)
+	done          bool
+}
+
+type HTTPClient struct {
+	calls  []*http.Request
+	DoFunc func() (*http.Response, error)
 }
 
 func (rc *ReadCloser) Read(p []byte) (n int, err error) {
@@ -28,4 +37,9 @@ func (rc *ReadCloser) Read(p []byte) (n int, err error) {
 
 func (rc *ReadCloser) Close() error {
 	return nil
+}
+
+func (m *HTTPClient) Do(ctx context.Context, req *http.Request) (*http.Response, error) {
+	m.calls = append(m.calls, req)
+	return m.DoFunc()
 }

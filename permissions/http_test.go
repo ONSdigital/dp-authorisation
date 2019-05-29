@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-permissions/permissions/mocks"
+	"github.com/ONSdigital/go-ns/common"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
@@ -67,7 +68,7 @@ func Test_unmarshalPermissionsResponse(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			Convey("When unmarshalPermissions is called", func() {
-				crud, err := unmarshalPermissions(nil, bytes.NewReader(b))
+				crud, err := unmarshalPermissions(bytes.NewReader(b))
 
 				Convey("Then the expected CRUD permissions are returned", func() {
 					So(crud, ShouldResemble, s.crud)
@@ -168,9 +169,66 @@ func TestUnmarshalPermissions(t *testing.T) {
 				},
 			}
 
-			crud, err := unmarshalPermissions(nil, reader)
+			crud, err := unmarshalPermissions(reader)
 			So(crud, ShouldResemble, s.crud)
 			So(err, ShouldResemble, s.err)
+		})
+	}
+}
+
+func TestGetPermissionsRequest(t *testing.T) {
+
+	type scenario struct {
+		desc          string
+		checker       *Checker
+		serviceT      string
+		userT         string
+		collectionID  string
+		datasetID     string
+		AssertReqFunc func(r *http.Request) bool
+		AssertErrFunc func(err error) bool
+	}
+
+	scenarios := []scenario{
+		{
+			desc:         "should return the expected error if the checker has not been configured with a host",
+			checker:      &Checker{},
+			serviceT:     "",
+			userT:        "",
+			collectionID: "",
+			datasetID:    "",
+			AssertReqFunc: func(r *http.Request) bool {
+				return r == nil
+			},
+			AssertErrFunc: func(err error) bool {
+				return err.Error() == "error creating permissionsList request host not configured"
+			},
+		},
+		{
+			desc:         "should return the expected request if the check is correctly configured",
+			checker:      &Checker{host: "http://localhost:8082/permissionsList"},
+			serviceT:     "111",
+			userT:        "222",
+			collectionID: "333",
+			datasetID:    "444",
+			AssertErrFunc: func(err error) bool {
+				return err == nil
+			},
+			AssertReqFunc: func(r *http.Request) bool {
+				return r != nil &&
+					r.Header.Get(common.AuthHeaderKey) == "111" &&
+					r.Header.Get(common.FlorenceHeaderKey) == "222" &&
+					r.URL.Query().Get("collection_id") == "333" &&
+					r.URL.Query().Get("dataset_id") == "444"
+			},
+		},
+	}
+
+	for i, s := range scenarios {
+		Convey(fmt.Sprintf("%d) %s", i, s.desc), t, func() {
+			r, err := s.checker.getPermissionsRequest(s.serviceT, s.userT, s.collectionID, s.datasetID)
+			So(s.AssertReqFunc(r), ShouldBeTrue)
+			So(s.AssertErrFunc(err), ShouldBeTrue)
 		})
 	}
 }

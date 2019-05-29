@@ -38,7 +38,7 @@ func handleErrorResponse(ctx context.Context, resp *http.Response, data log.Data
 
 	entity, err := unmarshallErrorEntity(resp.Body)
 	if err != nil {
-		// If we cannot read the error body then this becomes an internal server error
+		// If we cannot read the error body we can't return the original status so this becomes an internal server error
 		log.Event(ctx, "internal server error failed reading get permissions error response", data)
 		return 500
 	}
@@ -63,7 +63,7 @@ func unmarshallErrorEntity(r io.Reader) (*errorEntity, error) {
 }
 
 // unmarshalPermissions read the response body and unmarshall into a CRUD object
-func unmarshalPermissions(ctx context.Context, reader io.Reader) (*CRUD, error) {
+func unmarshalPermissions(reader io.Reader) (*CRUD, error) {
 	b, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return nil, err

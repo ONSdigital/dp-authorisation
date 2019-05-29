@@ -37,12 +37,14 @@ func (c *Checker) Check(ctx context.Context, required CRUD, serviceToken string,
 		return handleErrorResponse(ctx, resp, data), nil
 	}
 
-	callerPerms, err := unmarshalPermissions(ctx, resp.Body)
+	callerPerms, err := unmarshalPermissions(resp.Body)
 	if err != nil {
 		log.Event(ctx, "error unmarshalling caller permissions json", log.Error(err), data)
 		return 500, err
 	}
 
+	// If the callers permissions do not satisfy the required permissions return a 403 - we know who they are but they
+	// are not allowed to perform this action.
 	if !required.Satisfied(ctx, callerPerms) {
 		return 403, nil
 	}
