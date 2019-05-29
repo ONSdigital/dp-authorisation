@@ -18,42 +18,42 @@ func TestCRUD_Satisfied(t *testing.T) {
 
 	scenarios := []scenario{
 		{
-			given:          "required permissionsList: CRUD & caller permissionsList: R",
+			given:          "required permissions: CRUD & caller permissions: R",
 			then:           "verify should be unsuccessful",
 			required:       &CRUD{Create: true, Read: true, Update: true, Delete: true},
 			actual:         &CRUD{Create: false, Read: true, Update: false, Delete: false},
 			expectedResult: false,
 		},
 		{
-			given:          "required permissionsList: R & caller permissionsList: R",
+			given:          "required permissions: R & caller permissions: R",
 			then:           "verify should be successful",
 			required:       &CRUD{Create: false, Read: true, Update: false, Delete: false},
 			actual:         &CRUD{Create: false, Read: true, Update: false, Delete: false},
 			expectedResult: true,
 		},
 		{
-			given:          "required permissionsList: none & caller permissionsList: R",
+			given:          "required permissions: none & caller permissions: R",
 			then:           "verify should be successful",
 			required:       &CRUD{Create: false, Read: false, Update: false, Delete: false},
 			actual:         &CRUD{Create: false, Read: true, Update: false, Delete: false},
 			expectedResult: true,
 		},
 		{
-			given:          "required permissionsList: CRUD & caller permissionsList: CRU",
+			given:          "required permissions: CRUD & caller permissions: CRU",
 			then:           "verify should be unsuccessful",
 			required:       &CRUD{Create: true, Read: true, Update: true, Delete: true},
 			actual:         &CRUD{Create: true, Read: true, Update: true, Delete: false},
 			expectedResult: false,
 		},
 		{
-			given:          "required permissionsList: R & caller permissionsList: CRUD",
+			given:          "required permissions: R & caller permissions: CRUD",
 			then:           "verify should be successful",
 			required:       &CRUD{Create: false, Read: true, Update: false, Delete: false},
 			actual:         &CRUD{Create: true, Read: true, Update: true, Delete: true},
 			expectedResult: true,
 		},
 		{
-			given:          "required permissionsList: R & caller permissionsList: C",
+			given:          "required permissions: R & caller permissions: C",
 			then:           "verify should be unsuccessful",
 			required:       &CRUD{Create: false, Read: true, Update: false, Delete: false},
 			actual:         &CRUD{Create: true, Read: false, Update: false, Delete: false},
