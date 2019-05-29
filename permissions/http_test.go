@@ -67,7 +67,7 @@ func Test_unmarshalPermissionsResponse(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			Convey("When unmarshalPermissions is called", func() {
-				crud, err := unmarshalPermissions(bytes.NewReader(b))
+				crud, err := unmarshalPermissions(nil, bytes.NewReader(b))
 
 				Convey("Then the expected CRUD permissions are returned", func() {
 					So(crud, ShouldResemble, s.crud)
@@ -83,30 +83,96 @@ func Test_unmarshalPermissionsResponse(t *testing.T) {
 
 func TestHandleErrorResponse(t *testing.T) {
 
-	Convey("Should return the expected status for a valid error entity response body", t, func() {
-		entity := errorEntity{"unauthorized"}
-		b, err := json.Marshal(entity)
-		So(err, ShouldBeNil)
+	type scenario struct {
+		desc           string
+		body           []byte
+		readerErr      error
+		status         int
+		expectedStatus int
+	}
 
-		resp := getErrorResponse(401, b, nil)
-		So(handleErrorResponse(nil, resp, log.Data{}), ShouldEqual, 401)
-	})
+	scenarios := []scenario{
+		{
+			desc:           "Should return the expected status for a valid error entity response body",
+			body:           toJson(t, errorEntity{"unauthorized"}),
+			readerErr:      nil,
+			status:         401,
+			expectedStatus: 401,
+		},
+		{
+			desc:           "Should return status 500 if read body returns an error",
+			body:           nil,
+			readerErr:      errors.New("pop!"),
+			status:         401,
+			expectedStatus: 500,
+		},
+		{
+			desc:           "Should return status 500 if unmarshal body to error entity fails",
+			body:           toJson(t, []int{1, 2, 3, 4, 5}),
+			readerErr:      nil,
+			status:         401,
+			expectedStatus: 500,
+		},
+	}
 
-	Convey("Should return status 500 if read body returns an error", t, func() {
-		resp := getErrorResponse(401, nil, errors.New("pop!"))
-		So(handleErrorResponse(nil, resp, log.Data{}), ShouldEqual, 500)
-	})
+	for i, s := range scenarios {
+		Convey(fmt.Sprintf("%d) %s", i, s.desc), t, func() {
+			resp := getErrorResponse(s.status, s.body, s.readerErr)
+			So(handleErrorResponse(nil, resp, log.Data{}), ShouldEqual, s.expectedStatus)
+		})
+	}
+}
 
-	Convey("Should return status 500 if unmarshal body to error entity fails", t, func() {
+func TestUnmarshalPermissions(t *testing.T) {
 
-		invalidBody := []int{1, 2, 3, 4, 5}
-		b, err := json.Marshal(invalidBody)
-		So(err, ShouldBeNil)
+	type scenario struct {
+		desc  string
+		body  []byte
+		err   error
+		crud  *CRUD
+		perms permissions
+	}
 
-		resp := getErrorResponse(401, b, nil)
-		So(handleErrorResponse(nil, resp, log.Data{}), ShouldEqual, 500)
-	})
+	scenarios := []scenario{
+		{
+			desc: "should return expected error if read response body fails",
+			body: nil,
+			err:  errors.New("boom"),
+			crud: nil,
+		},
+		{
+			desc: "should return expected error if response body not valid permissions json",
+			body: toJson(t, 666),
+			err:  errors.New("json: cannot unmarshal number into Go value of type permissions.permissions"),
+			crud: nil,
+		},
+		{
+			desc: "should return CRUD for permissions json [Create, Read, Update,  Delete]",
+			body: toJson(t, permissions{Permissions: []permission{Create, Read, Update, Delete}}),
+			err:  nil,
+			crud: &CRUD{Create: true, Read: true, Update: true, Delete: true},
+		},
+		{
+			desc: "should return R for permissions json [Read]",
+			body: toJson(t, permissions{Permissions: []permission{Read}}),
+			err:  nil,
+			crud: &CRUD{Create: false, Read: true, Update: false, Delete: false},
+		},
+	}
 
+	for i, s := range scenarios {
+		Convey(fmt.Sprintf("%d) %s", i, s.desc), t, func() {
+			reader := &mocks.ReadCloser{
+				GetEntityFunc: func() (i []byte, e error) {
+					return s.body, s.err
+				},
+			}
+
+			crud, err := unmarshalPermissions(nil, reader)
+			So(crud, ShouldResemble, s.crud)
+			So(err, ShouldResemble, s.err)
+		})
+	}
 }
 
 func getErrorResponse(status int, b []byte, err error) *http.Response {
@@ -118,4 +184,12 @@ func getErrorResponse(status int, b []byte, err error) *http.Response {
 			},
 		},
 	}
+}
+
+func toJson(t *testing.T, i interface{}) []byte {
+	b, err := json.Marshal(i)
+	if err != nil {
+		t.Fatalf("failed to marshal object to json: %s", err.Error())
+	}
+	return b
 }

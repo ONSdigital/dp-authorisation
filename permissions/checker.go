@@ -34,9 +34,17 @@ func (c *Checker) Check(ctx context.Context, required CRUD, serviceToken string,
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		//
 		return handleErrorResponse(ctx, resp, data), nil
 	}
 
-	return handleSuccessfulResponse(ctx, resp.Body, &required, data)
+	callerPerms, err := unmarshalPermissions(ctx, resp.Body)
+	if err != nil {
+		log.Event(ctx, "error unmarshalling caller permissions json", log.Error(err), data)
+		return 500, err
+	}
+
+	if !required.Satisfied(ctx, callerPerms) {
+		return 403, nil
+	}
+	return 200, nil
 }

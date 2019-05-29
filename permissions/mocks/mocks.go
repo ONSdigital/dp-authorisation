@@ -1,7 +1,9 @@
+// mocks provide mock implementations for use in the permissions unit tests
 package mocks
 
 import "io"
 
+// ReadCloser is a mocked impl of an io.ReadCloser
 type ReadCloser struct {
 	GetEntityFunc  func() ([]byte, error)
 	done       bool

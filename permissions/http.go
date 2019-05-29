@@ -36,7 +36,7 @@ func handleErrorResponse(ctx context.Context, resp *http.Response, data log.Data
 	data["status"] = resp.StatusCode
 	log.Event(ctx, "get permissions request returned a non 200 response status", data)
 
-	entity, err := getErrorEntity(resp.Body)
+	entity, err := unmarshallErrorEntity(resp.Body)
 	if err != nil {
 		// If we cannot read the error body then this becomes an internal server error
 		log.Event(ctx, "internal server error failed reading get permissions error response", data)
@@ -48,25 +48,8 @@ func handleErrorResponse(ctx context.Context, resp *http.Response, data log.Data
 	return resp.StatusCode
 }
 
-// handleSuccessfulResponse handles successful (200 status) get permissions responses. Marshal the response body into
-// the CRUD object and verify it satisfies the required permissions. If the caller has the required permissions returns
-// status 200 else returns status 403,
-func handleSuccessfulResponse(ctx context.Context, body io.Reader, required *CRUD, data log.Data) (int, error) {
-	log.Event(ctx, "get permissions request successful", data)
-
-	callerPerms, err := unmarshalPermissions(body)
-	if err != nil {
-		return 0, err
-	}
-
-	if !required.Satisfied(ctx, callerPerms) {
-		return 403, nil
-	}
-	return 200, nil
-}
-
-// getErrorEntity get the response entity for a non 200 status code.
-func getErrorEntity(r io.Reader) (*errorEntity, error) {
+// unmarshallErrorEntity read the response body and unmarshall it into an error entity object
+func unmarshallErrorEntity(r io.Reader) (*errorEntity, error) {
 	body, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -79,11 +62,11 @@ func getErrorEntity(r io.Reader) (*errorEntity, error) {
 	return &entity, nil
 }
 
-// unmarshalPermissions unmarshall the get permissions response json into a CRUD object
-func unmarshalPermissions(reader io.Reader) (*CRUD, error) {
+// unmarshalPermissions read the response body and unmarshall into a CRUD object
+func unmarshalPermissions(ctx context.Context, reader io.Reader) (*CRUD, error) {
 	b, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return nil, errors.WithMessage(err, "error reading get permissions response body")
+		return nil, err
 	}
 
 	var p permissions
