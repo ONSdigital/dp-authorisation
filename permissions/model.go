@@ -49,7 +49,9 @@ type CRUD struct {
 	Delete bool
 }
 
-func (required *CRUD) Satisfied(ctx context.Context, caller *CRUD) bool {
+// Satisfied is a verification function that checks a callers permissions contains each of the required permissions.
+// Returns nil if the caller has all of the stated required permissions otherwise returns Error with Status 403
+func (required *CRUD) Satisfied(ctx context.Context, caller *CRUD) error {
 	missingPermissions := make([]permission, 0)
 
 	if required.Create && !caller.Create {
@@ -71,14 +73,17 @@ func (required *CRUD) Satisfied(ctx context.Context, caller *CRUD) bool {
 			"caller_permissions":   caller,
 			"missing_permissions":  missingPermissions,
 		})
-		return false
+		return Error{
+			Status:  403,
+			Message: "caller does not have the required permission to perform the requested action",
+		}
 	}
 
 	log.Event(ctx, "caller has permissionsList required required permission", log.Data{
 		"required_permissions": required,
 		"caller_permissions":   caller,
 	})
-	return true
+	return nil
 }
 
 func (e Error) Error() string {

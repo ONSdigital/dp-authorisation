@@ -43,13 +43,5 @@ func (p *Permissions) Vet(ctx context.Context, required CRUD, serviceToken strin
 		return err
 	}
 
-	// If the callers permissions do not satisfy the required permissions return a 403 - we know who they are but they
-	// are not allowed to perform this action.
-	if !required.Satisfied(ctx, callerPerms) {
-		return Error{
-			Status:  403,
-			Message: "caller does not have the required permissons to perform this action",
-		}
-	}
-	return nil
+	return required.Satisfied(ctx, callerPerms)
 }
