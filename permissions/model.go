@@ -17,8 +17,9 @@ const (
 )
 
 type Error struct {
-	Status int
-	Cause  error
+	Status  int
+	Message string
+	Cause   error
 }
 
 type permission string
@@ -84,5 +85,5 @@ func (e Error) Error() string {
 	if e.Cause != nil {
 		return e.Cause.Error()
 	}
-	return "TODO"
+	return e.Message
 }

@@ -3,14 +3,14 @@ package permissions
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"testing"
 
 	"github.com/ONSdigital/dp-permissions/permissions/mocks"
 	"github.com/ONSdigital/go-ns/common"
-	"github.com/ONSdigital/log.go/log"
-	"github.com/pkg/errors"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -82,44 +82,62 @@ func Test_unmarshalPermissionsResponse(t *testing.T) {
 	}
 }
 
-func TestHandleErrorResponse(t *testing.T) {
+func TestGetErrorFromResponse(t *testing.T) {
 
 	type scenario struct {
-		desc           string
-		body           []byte
-		readerErr      error
-		status         int
-		expectedStatus int
+		desc          string
+		body          []byte
+		readerErr     error
+		status        int
+		assertErrFunc func(err Error) bool
 	}
 
 	scenarios := []scenario{
 		{
-			desc:           "Should return the expected status for a valid error entity response body",
-			body:           toJson(t, errorEntity{"unauthorized"}),
-			readerErr:      nil,
-			status:         401,
-			expectedStatus: 401,
+			desc:      "Should return the expected error for a valid error entity response body",
+			body:      toJson(t, errorEntity{"unauthorized"}),
+			readerErr: nil,
+			status:    401,
+			assertErrFunc: func(err Error) bool {
+				return reflect.DeepEqual(err, Error{Cause: nil, Status: 401, Message: "unauthorized"})
+			},
 		},
 		{
-			desc:           "Should return status 500 if read body returns an error",
-			body:           nil,
-			readerErr:      errors.New("pop!"),
-			status:         401,
-			expectedStatus: 500,
+			desc:      "Should return error with status 500 if read body returns an error",
+			body:      nil,
+			readerErr: errors.New("pop!"),
+			status:    401,
+			assertErrFunc: func(err Error) bool {
+				return reflect.DeepEqual(err, Error{
+					Cause:   errors.New("pop!"),
+					Status:  500,
+					Message: "internal server error failed reading get permissions error response body",
+				})
+			},
 		},
 		{
-			desc:           "Should return status 500 if unmarshal body to error entity fails",
-			body:           toJson(t, []int{1, 2, 3, 4, 5}),
-			readerErr:      nil,
-			status:         401,
-			expectedStatus: 500,
+			desc:      "Should return error with status 500 if unmarshal body to error entity fails",
+			body:      toJson(t, []int{1, 2, 3, 4, 5}),
+			readerErr: nil,
+			status:    401,
+			assertErrFunc: func(err Error) bool {
+				_, ok := err.Cause.(*json.UnmarshalTypeError)
+				return ok &&
+					err.Status == 500 &&
+					err.Message == "internal server error failed unmarshalling get permissions error response body"
+			},
 		},
 	}
 
 	for i, s := range scenarios {
 		Convey(fmt.Sprintf("%d) %s", i, s.desc), t, func() {
-			resp := getErrorResponse(s.status, s.body, s.readerErr)
-			So(handleErrorResponse(nil, resp, log.Data{}), ShouldEqual, s.expectedStatus)
+			resp := getMockErrorResponse(s.status, s.body, s.readerErr)
+
+			err := getErrorFromResponse(resp)
+
+			permErr, ok := err.(Error)
+			So(ok, ShouldBeTrue)
+			So(s.assertErrFunc(permErr), ShouldBeTrue)
 		})
 	}
 }
@@ -233,7 +251,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 	}
 }
 
-func getErrorResponse(status int, b []byte, err error) *http.Response {
+func getMockErrorResponse(status int, b []byte, err error) *http.Response {
 	return &http.Response{
 		StatusCode: status,
 		Body: &mocks.ReadCloser{

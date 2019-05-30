@@ -1,16 +1,14 @@
 package permissions
 
 import (
-	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/ONSdigital/go-ns/common"
-	"github.com/ONSdigital/log.go/log"
-	"github.com/pkg/errors"
 )
 
 // getPermissionsRequest create a new get permissions http request for the specified service/user/collection ID/dataset ID values.
@@ -22,7 +20,7 @@ func (p *Permissions) getPermissionsRequest(serviceToken string, userToken strin
 	url := fmt.Sprintf(gerPermissionsURL, p.host, datasetID, collectionID)
 	r, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, errors.WithMessage(err, "error making get permissionsList request")
+		return nil, err
 	}
 
 	r.Header.Set(common.FlorenceHeaderKey, userToken)
@@ -31,35 +29,27 @@ func (p *Permissions) getPermissionsRequest(serviceToken string, userToken strin
 	return r, nil
 }
 
-// handleErrorResponse handle get permission responses with a non 200 status code.
-func handleErrorResponse(ctx context.Context, resp *http.Response, data log.Data) int {
-	data["status"] = resp.StatusCode
-	log.Event(ctx, "get permissions request returned a non 200 response status", data)
-
-	entity, err := unmarshallErrorEntity(resp.Body)
+// getErrorFromResponse handle get permission responses with a non 200 status code.
+func getErrorFromResponse(resp *http.Response) error {
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		// If we cannot read the error body we can't return the original status so this becomes an internal server error
-		log.Event(ctx, "internal server error failed reading get permissions error response", data)
-		return 500
-	}
-
-	data["response_body"] = entity
-	log.Event(ctx, "get permissions request unsuccessful", data)
-	return resp.StatusCode
-}
-
-// unmarshallErrorEntity read the response body and unmarshall it into an error entity object
-func unmarshallErrorEntity(r io.Reader) (*errorEntity, error) {
-	body, err := ioutil.ReadAll(r)
-	if err != nil {
-		return nil, err
+		return Error{
+			Status:  500,
+			Message: "internal server error failed reading get permissions error response body",
+			Cause:   err,
+		}
 	}
 
 	var entity errorEntity
 	if err = json.Unmarshal(body, &entity); err != nil {
-		return nil, err
+		return Error{
+			Status:  500,
+			Message: "internal server error failed unmarshalling get permissions error response body",
+			Cause:   err,
+		}
 	}
-	return &entity, nil
+
+	return Error{Status: resp.StatusCode, Message: entity.Message}
 }
 
 // unmarshalPermissions read the response body and unmarshall into a CRUD object

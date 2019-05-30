@@ -34,7 +34,11 @@ func (p *Permissions) Vet(ctx context.Context, required CRUD, serviceToken strin
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return handleErrorResponse(ctx, resp, data), nil
+		err = getErrorFromResponse(resp)
+		if permErr, ok := err.(Error); ok {
+			return permErr.Status, permErr.Cause
+		}
+		return 500, err
 	}
 
 	callerPerms, err := unmarshalPermissions(resp.Body)
