@@ -2,7 +2,6 @@ package permissions
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -14,13 +13,20 @@ import (
 // getPermissionsRequest create a new get permissions http request for the specified service/user/collection ID/dataset ID values.
 func (p *Permissions) getPermissionsRequest(serviceToken string, userToken string, collectionID string, datasetID string) (*http.Request, error) {
 	if p.host == "" {
-		return nil, errors.New("error creating permissionsList request host not configured")
+		return nil, Error{
+			Status:  500,
+			Message: "error creating permissionsList request host not configured",
+		}
 	}
 
 	url := fmt.Sprintf(gerPermissionsURL, p.host, datasetID, collectionID)
 	r, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, err
+		return nil, Error{
+			Cause:   err,
+			Status:  500,
+			Message: "error making get permissions http request",
+		}
 	}
 
 	r.Header.Set(common.FlorenceHeaderKey, userToken)

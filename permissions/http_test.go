@@ -219,7 +219,10 @@ func TestGetPermissionsRequest(t *testing.T) {
 				return r == nil
 			},
 			AssertErrFunc: func(err error) bool {
-				return err.Error() == "error creating permissionsList request host not configured"
+				return reflect.DeepEqual(err, Error{
+					Status:  500,
+					Message: "error creating permissionsList request host not configured",
+				})
 			},
 		},
 		{
