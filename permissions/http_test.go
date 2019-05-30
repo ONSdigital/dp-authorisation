@@ -1,7 +1,6 @@
 package permissions
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,74 +12,6 @@ import (
 	"github.com/ONSdigital/go-ns/common"
 	. "github.com/smartystreets/goconvey/convey"
 )
-
-func Test_unmarshalPermissionsResponse(t *testing.T) {
-
-	type scenario struct {
-		desc       string
-		input      interface{}
-		crud       *CRUD
-		checkError func(err error) bool
-	}
-
-	scenarios := []scenario{
-		{
-			desc:       "Given a valid permissions response",
-			input:      callerPermissions{List: []permission{Create, Read, Update, Delete}},
-			crud:       &CRUD{Create: true, Read: true, Update: true, Delete: true},
-			checkError: func(err error) bool { return true },
-		},
-		{
-			desc:       "Given empty permissions response",
-			input:      callerPermissions{List: []permission{}},
-			crud:       &CRUD{Create: false, Read: false, Update: false, Delete: false},
-			checkError: func(err error) bool { return true },
-		},
-		{
-			desc:       "Given a single permission response",
-			input:      callerPermissions{List: []permission{Read}},
-			crud:       &CRUD{Create: false, Read: true, Update: false, Delete: false},
-			checkError: func(err error) bool { return true },
-		},
-		{
-			desc:  "Given an invalid permissions response",
-			input: "This is not a valid permissions response",
-			crud:  nil,
-			checkError: func(err error) bool {
-				_, ok := err.(*json.UnmarshalTypeError)
-				return ok
-			},
-		},
-		{
-			desc:  "Given an invalid permissions response",
-			input: "This is not a valid permissions response",
-			crud:  nil,
-			checkError: func(err error) bool {
-				_, ok := err.(*json.UnmarshalTypeError)
-				return ok
-			},
-		},
-	}
-
-	for i, s := range scenarios {
-		Convey(fmt.Sprintf("%d) %s", i, s.desc), t, func() {
-			b, err := json.Marshal(s.input)
-			So(err, ShouldBeNil)
-
-			Convey("When unmarshalPermissions is called", func() {
-				crud, err := unmarshalPermissions(bytes.NewReader(b))
-
-				Convey("Then the expected CRUD permissions are returned", func() {
-					So(crud, ShouldResemble, s.crud)
-				})
-
-				Convey("And the expected error is returned", func() {
-					So(s.checkError(err), ShouldBeTrue)
-				})
-			})
-		})
-	}
-}
 
 func TestGetErrorFromResponse(t *testing.T) {
 
@@ -145,37 +76,69 @@ func TestGetErrorFromResponse(t *testing.T) {
 func TestUnmarshalPermissions(t *testing.T) {
 
 	type scenario struct {
-		desc  string
-		body  []byte
-		err   error
-		crud  *CRUD
-		perms callerPermissions
+		desc          string
+		body          []byte
+		err           error
+		crud          *CRUD
+		perms         callerPermissions
+		assertErrFunc func(err error) bool
 	}
 
 	scenarios := []scenario{
 		{
 			desc: "should return expected error if read response body fails",
 			body: nil,
-			err:  errors.New("boom"),
+			err:  errors.New("reader error"),
 			crud: nil,
+			assertErrFunc: func(err error) bool {
+				permErr, ok := err.(Error);
+				return ok &&
+					permErr.Status == 500 &&
+					permErr.Message == "internal server error failed reading get permissions error response body"
+			},
 		},
 		{
 			desc: "should return expected error if response body not valid permissions json",
 			body: toJson(t, 666),
-			err:  errors.New("json: cannot unmarshal number into Go value of type permissions.permissions"),
 			crud: nil,
+			assertErrFunc: func(err error) bool {
+				if permErr, ok := err.(Error); ok {
+					_, isJsonErr := permErr.Cause.(*json.UnmarshalTypeError)
+					return isJsonErr &&
+						permErr.Status == 500 &&
+						permErr.Message == "internal server error failed marshalling response to permissions"
+
+				}
+				return false
+			},
 		},
 		{
 			desc: "should return CRUD for permissions json [Create, Read, Update,  Delete]",
 			body: toJson(t, callerPermissions{List: []permission{Create, Read, Update, Delete}}),
 			err:  nil,
 			crud: &CRUD{Create: true, Read: true, Update: true, Delete: true},
+			assertErrFunc: func(err error) bool {
+				return err == nil
+			},
 		},
 		{
 			desc: "should return R for permissions json [Read]",
 			body: toJson(t, callerPermissions{List: []permission{Read}}),
 			err:  nil,
 			crud: &CRUD{Create: false, Read: true, Update: false, Delete: false},
+			assertErrFunc: func(err error) bool {
+				return err == nil
+			},
+		},
+		{
+			desc: "should return expected error if caller has no permissions",
+			body: toJson(t, callerPermissions{List: []permission{}}),
+			err:  nil,
+			crud: nil,
+			assertErrFunc: func(err error) bool {
+				permErr, ok := err.(Error)
+				return ok && permErr.Status == 403 && permErr.Message == "forbidden"
+			},
 		},
 	}
 
@@ -189,7 +152,7 @@ func TestUnmarshalPermissions(t *testing.T) {
 
 			crud, err := unmarshalPermissions(reader)
 			So(crud, ShouldResemble, s.crud)
-			So(err, ShouldResemble, s.err)
+			So(s.assertErrFunc(err), ShouldBeTrue)
 		})
 	}
 }

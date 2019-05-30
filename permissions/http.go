@@ -62,12 +62,27 @@ func getErrorFromResponse(resp *http.Response) error {
 func unmarshalPermissions(reader io.Reader) (*CRUD, error) {
 	b, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return nil, err
+		return nil, Error{
+			Status:  500,
+			Message: "internal server error failed reading get permissions error response body",
+			Cause:   err,
+		}
 	}
 
 	var callerPerms callerPermissions
 	if err = json.Unmarshal(b, &callerPerms); err != nil {
-		return nil, err
+		return nil, Error{
+			Status:  500,
+			Message: "internal server error failed marshalling response to permissions",
+			Cause:   err,
+		}
+	}
+
+	if len(callerPerms.List) == 0 {
+		return nil, Error{
+			Status:  403,
+			Message: "forbidden",
+		}
 	}
 
 	perms := &CRUD{}

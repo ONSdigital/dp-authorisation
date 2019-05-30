@@ -13,7 +13,7 @@ func New(host string, httpClient HTTPClient) *Permissions {
 	}
 }
 
-func (p *Permissions) Vet(ctx context.Context, required CRUD, serviceToken string, userToken string, collectionID string, datasetID string) (int, error) {
+func (p *Permissions) Vet(ctx context.Context, required CRUD, serviceToken string, userToken string, collectionID string, datasetID string) error {
 	data := log.Data{
 		"collection_id": collectionID,
 		"dataset_id":    datasetID,
@@ -23,34 +23,33 @@ func (p *Permissions) Vet(ctx context.Context, required CRUD, serviceToken strin
 
 	r, err := p.getPermissionsRequest(serviceToken, userToken, collectionID, datasetID)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	resp, err := p.cli.Do(ctx, r)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		err = getErrorFromResponse(resp)
-		if permErr, ok := err.(Error); ok {
-			return permErr.Status, permErr.Cause
-		}
-		return 500, err
+		return getErrorFromResponse(resp)
 	}
 
 	callerPerms, err := unmarshalPermissions(resp.Body)
 	if err != nil {
 		log.Event(ctx, "error unmarshalling caller permissions json", log.Error(err), data)
-		return 500, err
+		return err
 	}
 
 	// If the callers permissions do not satisfy the required permissions return a 403 - we know who they are but they
 	// are not allowed to perform this action.
 	if !required.Satisfied(ctx, callerPerms) {
-		return 403, nil
+		return Error{
+			Status:  403,
+			Message: "caller does not have the required permissons to perform this action",
+		}
 	}
-	return 200, nil
+	return nil
 }
