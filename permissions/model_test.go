@@ -2,7 +2,6 @@ package permissions
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -14,7 +13,7 @@ func TestCRUD_Satisfied(t *testing.T) {
 		then         string
 		required     *CRUD
 		actual       *CRUD
-		assertResult func(err error) bool
+		assertResult func(err error)
 	}
 
 	scenarios := []scenario{
@@ -23,8 +22,8 @@ func TestCRUD_Satisfied(t *testing.T) {
 			then:     "verify should be unsuccessful",
 			required: &CRUD{Create: true, Read: true, Update: true, Delete: true},
 			actual:   &CRUD{Create: false, Read: true, Update: false, Delete: false},
-			assertResult: func(err error) bool {
-				return reflect.DeepEqual(err, Error{
+			assertResult: func(err error) {
+				So(err, ShouldResemble, Error{
 					Status:  403,
 					Message: "caller does not have the required permission to perform the requested action",
 				})
@@ -35,8 +34,8 @@ func TestCRUD_Satisfied(t *testing.T) {
 			then:     "verify should be successful",
 			required: &CRUD{Create: false, Read: true, Update: false, Delete: false},
 			actual:   &CRUD{Create: false, Read: true, Update: false, Delete: false},
-			assertResult: func(err error) bool {
-				return err == nil
+			assertResult: func(err error) {
+				So(err, ShouldBeNil)
 			},
 		},
 		{
@@ -44,8 +43,8 @@ func TestCRUD_Satisfied(t *testing.T) {
 			then:     "verify should be successful",
 			required: &CRUD{Create: false, Read: false, Update: false, Delete: false},
 			actual:   &CRUD{Create: false, Read: true, Update: false, Delete: false},
-			assertResult: func(err error) bool {
-				return err == nil
+			assertResult: func(err error) {
+				So(err, ShouldBeNil)
 			},
 		},
 		{
@@ -53,8 +52,8 @@ func TestCRUD_Satisfied(t *testing.T) {
 			then:     "verify should be unsuccessful",
 			required: &CRUD{Create: true, Read: true, Update: true, Delete: true},
 			actual:   &CRUD{Create: true, Read: true, Update: true, Delete: false},
-			assertResult: func(err error) bool {
-				return reflect.DeepEqual(err, Error{
+			assertResult: func(err error) {
+				So(err, ShouldResemble, Error{
 					Status:  403,
 					Message: "caller does not have the required permission to perform the requested action",
 				})
@@ -65,8 +64,8 @@ func TestCRUD_Satisfied(t *testing.T) {
 			then:     "verify should be successful",
 			required: &CRUD{Create: false, Read: true, Update: false, Delete: false},
 			actual:   &CRUD{Create: true, Read: true, Update: true, Delete: true},
-			assertResult: func(err error) bool {
-				return err == nil
+			assertResult: func(err error) {
+				So(err, ShouldBeNil)
 			},
 		},
 		{
@@ -74,8 +73,8 @@ func TestCRUD_Satisfied(t *testing.T) {
 			then:     "verify should be unsuccessful",
 			required: &CRUD{Create: false, Read: true, Update: false, Delete: false},
 			actual:   &CRUD{Create: true, Read: false, Update: false, Delete: false},
-			assertResult: func(err error) bool {
-				return reflect.DeepEqual(err, Error{
+			assertResult: func(err error) {
+				So(err, ShouldResemble, Error{
 					Status:  403,
 					Message: "caller does not have the required permission to perform the requested action",
 				})
@@ -90,7 +89,7 @@ func TestCRUD_Satisfied(t *testing.T) {
 				err := s.required.Satisfied(nil, s.actual)
 
 				Convey("then the expected error should be returned", func() {
-					So(s.assertResult(err), ShouldBeTrue)
+					s.assertResult(err)
 				})
 			})
 		})

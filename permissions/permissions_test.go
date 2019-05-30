@@ -203,7 +203,6 @@ func TestPermissions_Vet(t *testing.T) {
 				})
 			})
 		})
-
 	}
 }
 

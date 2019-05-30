@@ -20,7 +20,7 @@ func TestGetErrorFromResponse(t *testing.T) {
 		body          []byte
 		readerErr     error
 		status        int
-		assertErrFunc func(err Error) bool
+		assertErrFunc func(err Error)
 	}
 
 	scenarios := []scenario{
@@ -29,8 +29,8 @@ func TestGetErrorFromResponse(t *testing.T) {
 			body:      toJson(t, errorEntity{"unauthorized"}),
 			readerErr: nil,
 			status:    401,
-			assertErrFunc: func(err Error) bool {
-				return reflect.DeepEqual(err, Error{Cause: nil, Status: 401, Message: "unauthorized"})
+			assertErrFunc: func(err Error) {
+				So(err, ShouldResemble, Error{Cause: nil, Status: 401, Message: "unauthorized"})
 			},
 		},
 		{
@@ -38,8 +38,8 @@ func TestGetErrorFromResponse(t *testing.T) {
 			body:      nil,
 			readerErr: errors.New("pop!"),
 			status:    401,
-			assertErrFunc: func(err Error) bool {
-				return reflect.DeepEqual(err, Error{
+			assertErrFunc: func(err Error) {
+				So(err, ShouldResemble, Error{
 					Cause:   errors.New("pop!"),
 					Status:  500,
 					Message: "internal server error failed reading get permissions error response body",
@@ -51,11 +51,11 @@ func TestGetErrorFromResponse(t *testing.T) {
 			body:      toJson(t, []int{1, 2, 3, 4, 5}),
 			readerErr: nil,
 			status:    401,
-			assertErrFunc: func(err Error) bool {
+			assertErrFunc: func(err Error) {
 				_, ok := err.Cause.(*json.UnmarshalTypeError)
-				return ok &&
-					err.Status == 500 &&
-					err.Message == "internal server error failed unmarshalling get permissions error response body"
+				So(ok, ShouldBeTrue)
+				So(err.Status, ShouldEqual, 500)
+				So(err.Message, ShouldEqual, "internal server error failed unmarshalling get permissions error response body")
 			},
 		},
 	}
@@ -68,7 +68,7 @@ func TestGetErrorFromResponse(t *testing.T) {
 
 			permErr, ok := err.(Error)
 			So(ok, ShouldBeTrue)
-			So(s.assertErrFunc(permErr), ShouldBeTrue)
+			s.assertErrFunc(permErr)
 		})
 	}
 }
@@ -81,7 +81,7 @@ func TestUnmarshalPermissions(t *testing.T) {
 		err           error
 		crud          *CRUD
 		perms         callerPermissions
-		assertErrFunc func(err error) bool
+		assertErrFunc func(err error)
 	}
 
 	scenarios := []scenario{
@@ -90,26 +90,25 @@ func TestUnmarshalPermissions(t *testing.T) {
 			body: nil,
 			err:  errors.New("reader error"),
 			crud: nil,
-			assertErrFunc: func(err error) bool {
-				permErr, ok := err.(Error);
-				return ok &&
-					permErr.Status == 500 &&
-					permErr.Message == "internal server error failed reading get permissions response body"
+			assertErrFunc: func(err error) {
+				permErr, ok := err.(Error)
+				So(ok, ShouldBeTrue)
+				So(permErr.Status, ShouldEqual, 500)
+				So(permErr.Message, ShouldEqual, "internal server error failed reading get permissions response body")
 			},
 		},
 		{
 			desc: "should return expected error if response body not valid permissions json",
 			body: toJson(t, 666),
 			crud: nil,
-			assertErrFunc: func(err error) bool {
-				if permErr, ok := err.(Error); ok {
-					_, isJsonErr := permErr.Cause.(*json.UnmarshalTypeError)
-					return isJsonErr &&
-						permErr.Status == 500 &&
-						permErr.Message == "internal server error failed marshalling response to permissions"
+			assertErrFunc: func(err error) {
+				permErr, ok := err.(Error)
+				So(ok, ShouldBeTrue)
+				_, isJsonErr := permErr.Cause.(*json.UnmarshalTypeError)
 
-				}
-				return false
+				So(isJsonErr, ShouldBeTrue)
+				So(permErr.Status, ShouldEqual, 500)
+				So(permErr.Message, ShouldEqual, "internal server error failed marshalling response to permissions")
 			},
 		},
 		{
@@ -117,8 +116,8 @@ func TestUnmarshalPermissions(t *testing.T) {
 			body: toJson(t, callerPermissions{List: []permission{Create, Read, Update, Delete}}),
 			err:  nil,
 			crud: &CRUD{Create: true, Read: true, Update: true, Delete: true},
-			assertErrFunc: func(err error) bool {
-				return err == nil
+			assertErrFunc: func(err error) {
+				So(err, ShouldBeNil)
 			},
 		},
 		{
@@ -126,8 +125,8 @@ func TestUnmarshalPermissions(t *testing.T) {
 			body: toJson(t, callerPermissions{List: []permission{Read}}),
 			err:  nil,
 			crud: &CRUD{Create: false, Read: true, Update: false, Delete: false},
-			assertErrFunc: func(err error) bool {
-				return err == nil
+			assertErrFunc: func(err error) {
+				So(err, ShouldBeNil)
 			},
 		},
 		{
@@ -135,9 +134,11 @@ func TestUnmarshalPermissions(t *testing.T) {
 			body: toJson(t, callerPermissions{List: []permission{}}),
 			err:  nil,
 			crud: nil,
-			assertErrFunc: func(err error) bool {
+			assertErrFunc: func(err error) {
 				permErr, ok := err.(Error)
-				return ok && permErr.Status == 403 && permErr.Message == "forbidden"
+				So(ok, ShouldBeTrue)
+				So(permErr.Status, ShouldEqual, 403)
+				So(permErr.Message, ShouldEqual, "forbidden")
 			},
 		},
 	}
@@ -152,7 +153,7 @@ func TestUnmarshalPermissions(t *testing.T) {
 
 			crud, err := unmarshalPermissions(reader)
 			So(crud, ShouldResemble, s.crud)
-			So(s.assertErrFunc(err), ShouldBeTrue)
+			s.assertErrFunc(err)
 		})
 	}
 }
@@ -166,7 +167,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 		userT         string
 		collectionID  string
 		datasetID     string
-		AssertReqFunc func(r *http.Request) bool
+		AssertReqFunc func(r *http.Request)
 		AssertErrFunc func(err error) bool
 	}
 
@@ -178,8 +179,8 @@ func TestGetPermissionsRequest(t *testing.T) {
 			userT:        "",
 			collectionID: "",
 			datasetID:    "",
-			AssertReqFunc: func(r *http.Request) bool {
-				return r == nil
+			AssertReqFunc: func(r *http.Request) {
+				So(r, ShouldBeNil)
 			},
 			AssertErrFunc: func(err error) bool {
 				return reflect.DeepEqual(err, Error{
@@ -198,12 +199,12 @@ func TestGetPermissionsRequest(t *testing.T) {
 			AssertErrFunc: func(err error) bool {
 				return err == nil
 			},
-			AssertReqFunc: func(r *http.Request) bool {
-				return r != nil &&
-					r.Header.Get(common.AuthHeaderKey) == "111" &&
-					r.Header.Get(common.FlorenceHeaderKey) == "222" &&
-					r.URL.Query().Get("collection_id") == "333" &&
-					r.URL.Query().Get("dataset_id") == "444"
+			AssertReqFunc: func(r *http.Request) {
+				So(r, ShouldNotBeNil)
+				So(r.Header.Get(common.AuthHeaderKey), ShouldEqual, "111")
+				So(r.Header.Get(common.FlorenceHeaderKey), ShouldEqual, "222")
+				So(r.URL.Query().Get("collection_id"), ShouldEqual, "333")
+				So(r.URL.Query().Get("dataset_id"), ShouldEqual, "444")
 			},
 		},
 	}
@@ -211,8 +212,8 @@ func TestGetPermissionsRequest(t *testing.T) {
 	for i, s := range scenarios {
 		Convey(fmt.Sprintf("%d) %s", i, s.desc), t, func() {
 			r, err := s.permissions.getPermissionsRequest(s.serviceT, s.userT, s.collectionID, s.datasetID)
-			So(s.AssertReqFunc(r), ShouldBeTrue)
-			So(s.AssertErrFunc(err), ShouldBeTrue)
+			s.AssertReqFunc(r)
+			s.AssertErrFunc(err)
 		})
 	}
 }
