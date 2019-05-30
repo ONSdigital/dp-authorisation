@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"reflect"
 	"testing"
 
 	"github.com/ONSdigital/dp-permissions/permissions/mocks"
@@ -20,7 +19,7 @@ func TestGetErrorFromResponse(t *testing.T) {
 		body          []byte
 		readerErr     error
 		status        int
-		assertErrFunc func(err Error)
+		assertErrFunc func(err error)
 	}
 
 	scenarios := []scenario{
@@ -29,8 +28,10 @@ func TestGetErrorFromResponse(t *testing.T) {
 			body:      toJson(t, errorEntity{"unauthorized"}),
 			readerErr: nil,
 			status:    401,
-			assertErrFunc: func(err Error) {
-				So(err, ShouldResemble, Error{Cause: nil, Status: 401, Message: "unauthorized"})
+			assertErrFunc: func(err error) {
+				permErr, ok := err.(Error)
+				So(ok, ShouldBeTrue)
+				So(permErr, ShouldResemble, Error{Cause: nil, Status: 401, Message: "unauthorized"})
 			},
 		},
 		{
@@ -38,8 +39,10 @@ func TestGetErrorFromResponse(t *testing.T) {
 			body:      nil,
 			readerErr: errors.New("pop!"),
 			status:    401,
-			assertErrFunc: func(err Error) {
-				So(err, ShouldResemble, Error{
+			assertErrFunc: func(err error) {
+				permErr, ok := err.(Error)
+				So(ok, ShouldBeTrue)
+				So(permErr, ShouldResemble, Error{
 					Cause:   errors.New("pop!"),
 					Status:  500,
 					Message: "internal server error failed reading get permissions error response body",
@@ -51,11 +54,13 @@ func TestGetErrorFromResponse(t *testing.T) {
 			body:      toJson(t, []int{1, 2, 3, 4, 5}),
 			readerErr: nil,
 			status:    401,
-			assertErrFunc: func(err Error) {
-				_, ok := err.Cause.(*json.UnmarshalTypeError)
+			assertErrFunc: func(err error) {
+				permErr, ok := err.(Error)
 				So(ok, ShouldBeTrue)
-				So(err.Status, ShouldEqual, 500)
-				So(err.Message, ShouldEqual, "internal server error failed unmarshalling get permissions error response body")
+				So(permErr.Status, ShouldEqual, 500)
+				So(permErr.Message, ShouldEqual, "internal server error failed unmarshalling get permissions error response body")
+				_, isJsonErr := permErr.Cause.(*json.UnmarshalTypeError)
+				So(isJsonErr, ShouldBeTrue)
 			},
 		},
 	}
@@ -65,10 +70,7 @@ func TestGetErrorFromResponse(t *testing.T) {
 			resp := getMockErrorResponse(s.status, s.body, s.readerErr)
 
 			err := getErrorFromResponse(resp)
-
-			permErr, ok := err.(Error)
-			So(ok, ShouldBeTrue)
-			s.assertErrFunc(permErr)
+			s.assertErrFunc(err)
 		})
 	}
 }
@@ -168,7 +170,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 		collectionID  string
 		datasetID     string
 		AssertReqFunc func(r *http.Request)
-		AssertErrFunc func(err error) bool
+		AssertErrFunc func(err error)
 	}
 
 	scenarios := []scenario{
@@ -182,8 +184,8 @@ func TestGetPermissionsRequest(t *testing.T) {
 			AssertReqFunc: func(r *http.Request) {
 				So(r, ShouldBeNil)
 			},
-			AssertErrFunc: func(err error) bool {
-				return reflect.DeepEqual(err, Error{
+			AssertErrFunc: func(err error) {
+				So(err, ShouldResemble, Error{
 					Status:  500,
 					Message: "error creating permissionsList request host not configured",
 				})
@@ -196,8 +198,8 @@ func TestGetPermissionsRequest(t *testing.T) {
 			userT:        "222",
 			collectionID: "333",
 			datasetID:    "444",
-			AssertErrFunc: func(err error) bool {
-				return err == nil
+			AssertErrFunc: func(err error) {
+				So(err, ShouldBeNil)
 			},
 			AssertReqFunc: func(r *http.Request) {
 				So(r, ShouldNotBeNil)
