@@ -14,24 +14,30 @@ func New(host string, httpClient HTTPClient) *Permissions {
 }
 
 func (p *Permissions) Vet(ctx context.Context, required CRUD, serviceToken string, userToken string, collectionID string, datasetID string) error {
-	data := log.Data{
-		"collection_id": collectionID,
-		"dataset_id":    datasetID,
-		"user_token":    userToken != "",
-		"service_token": serviceToken != "",
-	}
-
 	r, err := p.getPermissionsRequest(serviceToken, userToken, collectionID, datasetID)
 	if err != nil {
-		return err
+		return Error{
+			Status:  500,
+			Message: "error making get permissions http request",
+			Cause:   err,
+		}
 	}
 
 	resp, err := p.cli.Do(ctx, r)
 	if err != nil {
-		return err
+		return Error{
+			Status:  500,
+			Message: "get permissions request returned an error",
+			Cause:   err,
+		}
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Event(ctx, "error closing response body", log.Error(err))
+		}
+
+	}()
 
 	if resp.StatusCode != 200 {
 		return getErrorFromResponse(resp)
@@ -39,7 +45,6 @@ func (p *Permissions) Vet(ctx context.Context, required CRUD, serviceToken strin
 
 	callerPerms, err := unmarshalPermissions(resp.Body)
 	if err != nil {
-		log.Event(ctx, "error unmarshalling caller permissions json", log.Error(err), data)
 		return err
 	}
 

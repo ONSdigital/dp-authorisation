@@ -55,7 +55,12 @@ func getErrorFromResponse(resp *http.Response) error {
 		}
 	}
 
-	return Error{Status: resp.StatusCode, Message: entity.Message}
+	switch resp.StatusCode {
+	case 400, 401, 403, 404:
+		return Error{Status: resp.StatusCode, Message: entity.Message}
+	default:
+		return Error{Status: 500, Message: "internal server error"}
+	}
 }
 
 // unmarshalPermissions read the response body and unmarshall into a CRUD object
@@ -64,7 +69,7 @@ func unmarshalPermissions(reader io.Reader) (*CRUD, error) {
 	if err != nil {
 		return nil, Error{
 			Status:  500,
-			Message: "internal server error failed reading get permissions error response body",
+			Message: "internal server error failed reading get permissions response body",
 			Cause:   err,
 		}
 	}

@@ -94,7 +94,7 @@ func TestUnmarshalPermissions(t *testing.T) {
 				permErr, ok := err.(Error);
 				return ok &&
 					permErr.Status == 500 &&
-					permErr.Message == "internal server error failed reading get permissions error response body"
+					permErr.Message == "internal server error failed reading get permissions response body"
 			},
 		},
 		{
