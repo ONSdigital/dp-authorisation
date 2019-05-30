@@ -14,12 +14,12 @@ import (
 )
 
 // getPermissionsRequest create a new get permissions http request for the specified service/user/collection ID/dataset ID values.
-func (c *Checker) getPermissionsRequest(serviceToken string, userToken string, collectionID string, datasetID string) (*http.Request, error) {
-	if c.host == "" {
+func (p *Permissions) getPermissionsRequest(serviceToken string, userToken string, collectionID string, datasetID string) (*http.Request, error) {
+	if p.host == "" {
 		return nil, errors.New("error creating permissionsList request host not configured")
 	}
 
-	url := fmt.Sprintf(gerPermissionsURL, c.host, datasetID, collectionID)
+	url := fmt.Sprintf(gerPermissionsURL, p.host, datasetID, collectionID)
 	r, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, errors.WithMessage(err, "error making get permissionsList request")
@@ -69,14 +69,14 @@ func unmarshalPermissions(reader io.Reader) (*CRUD, error) {
 		return nil, err
 	}
 
-	var p permissions
-	if err = json.Unmarshal(b, &p); err != nil {
+	var callerPerms callerPermissions
+	if err = json.Unmarshal(b, &callerPerms); err != nil {
 		return nil, err
 	}
 
 	perms := &CRUD{}
-	for _, val := range p.Permissions {
-		switch val {
+	for _, p := range callerPerms.List {
+		switch p {
 		case Create:
 			perms.Create = true
 		case Read:

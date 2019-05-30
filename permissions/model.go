@@ -16,10 +16,15 @@ const (
 	gerPermissionsURL = "%s?dataset_id=%s&collection_id=%s"
 )
 
+type Error struct {
+	Status int
+	Cause  error
+}
+
 type permission string
 
-type permissions struct {
-	Permissions []permission `json:"permissions"`
+type callerPermissions struct {
+	List []permission `json:"permissions"`
 }
 
 type errorEntity struct {
@@ -30,7 +35,7 @@ type HTTPClient interface {
 	Do(ctx context.Context, req *http.Request) (*http.Response, error)
 }
 
-type Checker struct {
+type Permissions struct {
 	host string
 	cli  HTTPClient
 }
@@ -73,4 +78,11 @@ func (required *CRUD) Satisfied(ctx context.Context, caller *CRUD) bool {
 		"caller_permissions":   caller,
 	})
 	return true
+}
+
+func (e Error) Error() string {
+	if e.Cause != nil {
+		return e.Cause.Error()
+	}
+	return "TODO"
 }

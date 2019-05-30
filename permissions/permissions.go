@@ -6,14 +6,14 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
-func NewChecker(host string, httpClient HTTPClient) *Checker {
-	return &Checker{
+func New(host string, httpClient HTTPClient) *Permissions {
+	return &Permissions{
 		host: host,
 		cli:  httpClient,
 	}
 }
 
-func (c *Checker) Check(ctx context.Context, required CRUD, serviceToken string, userToken string, collectionID string, datasetID string) (int, error) {
+func (p *Permissions) Vet(ctx context.Context, required CRUD, serviceToken string, userToken string, collectionID string, datasetID string) (int, error) {
 	data := log.Data{
 		"collection_id": collectionID,
 		"dataset_id":    datasetID,
@@ -21,12 +21,12 @@ func (c *Checker) Check(ctx context.Context, required CRUD, serviceToken string,
 		"service_token": serviceToken != "",
 	}
 
-	r, err := c.getPermissionsRequest(serviceToken, userToken, collectionID, datasetID)
+	r, err := p.getPermissionsRequest(serviceToken, userToken, collectionID, datasetID)
 	if err != nil {
 		return 0, err
 	}
 
-	resp, err := c.cli.Do(ctx, r)
+	resp, err := p.cli.Do(ctx, r)
 	if err != nil {
 		return 0, err
 	}

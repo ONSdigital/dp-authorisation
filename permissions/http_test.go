@@ -26,19 +26,19 @@ func Test_unmarshalPermissionsResponse(t *testing.T) {
 	scenarios := []scenario{
 		{
 			desc:       "Given a valid permissions response",
-			input:      permissions{Permissions: []permission{Create, Read, Update, Delete}},
+			input:      callerPermissions{List: []permission{Create, Read, Update, Delete}},
 			crud:       &CRUD{Create: true, Read: true, Update: true, Delete: true},
 			checkError: func(err error) bool { return true },
 		},
 		{
 			desc:       "Given empty permissions response",
-			input:      permissions{Permissions: []permission{}},
+			input:      callerPermissions{List: []permission{}},
 			crud:       &CRUD{Create: false, Read: false, Update: false, Delete: false},
 			checkError: func(err error) bool { return true },
 		},
 		{
 			desc:       "Given a single permission response",
-			input:      permissions{Permissions: []permission{Read}},
+			input:      callerPermissions{List: []permission{Read}},
 			crud:       &CRUD{Create: false, Read: true, Update: false, Delete: false},
 			checkError: func(err error) bool { return true },
 		},
@@ -131,7 +131,7 @@ func TestUnmarshalPermissions(t *testing.T) {
 		body  []byte
 		err   error
 		crud  *CRUD
-		perms permissions
+		perms callerPermissions
 	}
 
 	scenarios := []scenario{
@@ -149,13 +149,13 @@ func TestUnmarshalPermissions(t *testing.T) {
 		},
 		{
 			desc: "should return CRUD for permissions json [Create, Read, Update,  Delete]",
-			body: toJson(t, permissions{Permissions: []permission{Create, Read, Update, Delete}}),
+			body: toJson(t, callerPermissions{List: []permission{Create, Read, Update, Delete}}),
 			err:  nil,
 			crud: &CRUD{Create: true, Read: true, Update: true, Delete: true},
 		},
 		{
 			desc: "should return R for permissions json [Read]",
-			body: toJson(t, permissions{Permissions: []permission{Read}}),
+			body: toJson(t, callerPermissions{List: []permission{Read}}),
 			err:  nil,
 			crud: &CRUD{Create: false, Read: true, Update: false, Delete: false},
 		},
@@ -180,7 +180,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 
 	type scenario struct {
 		desc          string
-		checker       *Checker
+		permissions   *Permissions
 		serviceT      string
 		userT         string
 		collectionID  string
@@ -192,7 +192,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 	scenarios := []scenario{
 		{
 			desc:         "should return the expected error if the checker has not been configured with a host",
-			checker:      &Checker{},
+			permissions:  &Permissions{},
 			serviceT:     "",
 			userT:        "",
 			collectionID: "",
@@ -206,7 +206,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 		},
 		{
 			desc:         "should return the expected request if the check is correctly configured",
-			checker:      &Checker{host: "http://localhost:8082/permissionsList"},
+			permissions:  &Permissions{host: "http://localhost:8082/permissionsList"},
 			serviceT:     "111",
 			userT:        "222",
 			collectionID: "333",
@@ -226,7 +226,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 
 	for i, s := range scenarios {
 		Convey(fmt.Sprintf("%d) %s", i, s.desc), t, func() {
-			r, err := s.checker.getPermissionsRequest(s.serviceT, s.userT, s.collectionID, s.datasetID)
+			r, err := s.permissions.getPermissionsRequest(s.serviceT, s.userT, s.collectionID, s.datasetID)
 			So(s.AssertReqFunc(r), ShouldBeTrue)
 			So(s.AssertErrFunc(err), ShouldBeTrue)
 		})
