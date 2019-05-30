@@ -2,90 +2,51 @@ package permissions
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 
-	"github.com/ONSdigital/go-ns/common"
 	"github.com/ONSdigital/log.go/log"
-	"github.com/pkg/errors"
 )
 
-const gerPermissionsURL = "%s?dataset_id=%s&collection_id=%s"
-
-type HTTPClient interface {
-	Do(ctx context.Context, req *http.Request) (*http.Response, error)
-}
-
-// CRUD is a representation of permissions required by an endpoint or held by a user/service.
-type CRUD struct {
-	Create bool
-	Read   bool
-	Update bool
-	Delete bool
-}
-
-type Checker struct {
-	host string
-	c    HTTPClient
-}
-
-func NewChecker(host string, httpClient HTTPClient) *Checker {
-	return &Checker{
+func New(host string, httpClient HTTPClient) *Permissions {
+	return &Permissions{
 		host: host,
-		c:    httpClient,
+		cli:  httpClient,
 	}
 }
 
-func (c *Checker) Check(ctx context.Context, required CRUD, serviceToken string, userToken string, collectionID string, datasetID string) (int, error) {
-	// TODO
-	return 0, nil
-}
-
-func (c *Checker) getPermissionsRequest(serviceToken string, userToken string, collectionID string, datasetID string) (*http.Request, error) {
-	if c.host == "" {
-		return nil, errors.New("error creating permissions request host not configured")
-	}
-
-	url := fmt.Sprintf(gerPermissionsURL, c.host, datasetID, collectionID)
-	r, err := http.NewRequest("GET", url, nil)
+func (p *Permissions) Vet(ctx context.Context, required CRUD, serviceToken string, userToken string, collectionID string, datasetID string) error {
+	r, err := p.getPermissionsRequest(serviceToken, userToken, collectionID, datasetID)
 	if err != nil {
-		return nil, err
+		return Error{
+			Status:  500,
+			Message: "error making get permissions http request",
+			Cause:   err,
+		}
 	}
 
-	r.Header.Set(common.FlorenceHeaderKey, userToken)
-	r.Header.Set(common.AuthHeaderKey, serviceToken)
-
-	return r, nil
-}
-
-func (required *CRUD) Satisfied(ctx context.Context, caller *CRUD) bool {
-	missingPermissions := make([]string, 0)
-
-	if required.Create && !caller.Create {
-		missingPermissions = append(missingPermissions, "CREATE")
-	}
-	if required.Read && !caller.Read {
-		missingPermissions = append(missingPermissions, "READ")
-	}
-	if required.Update && !caller.Update {
-		missingPermissions = append(missingPermissions, "UPDATE")
-	}
-	if required.Delete && !caller.Delete {
-		missingPermissions = append(missingPermissions, "DELETE")
+	resp, err := p.cli.Do(ctx, r)
+	if err != nil {
+		return Error{
+			Status:  500,
+			Message: "get permissions request returned an error",
+			Cause:   err,
+		}
 	}
 
-	if len(missingPermissions) > 0 {
-		log.Event(ctx, "caller does not have the required permission", log.Data{
-			"required_permissions": required,
-			"caller_permissions":   caller,
-			"missing_permissions": missingPermissions,
-		})
-		return false
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Event(ctx, "error closing response body", log.Error(err))
+		}
+
+	}()
+
+	if resp.StatusCode != 200 {
+		return getErrorFromResponse(resp)
 	}
 
-	log.Event(ctx, "caller has permissions required required permission", log.Data{
-		"required_permissions": required,
-		"caller_permissions":   caller,
-	})
-	return true
+	callerPerms, err := unmarshalPermissions(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return required.Satisfied(ctx, callerPerms)
 }
