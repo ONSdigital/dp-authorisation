@@ -13,7 +13,7 @@ const (
 	Update permission = "UPDATE"
 	Delete permission = "DELETE"
 
-	gerPermissionsURL = "%s?dataset_id=%s&collection_id=%s"
+	gerPermissionsURL = "%s/permissions?dataset_id=%s&collection_id=%s"
 )
 
 type Error struct {
