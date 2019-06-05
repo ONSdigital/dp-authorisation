@@ -32,13 +32,13 @@ type errorEntity struct {
 	Message string `json:"message"`
 }
 
-type HTTPClient interface {
+type HTTPClienter interface {
 	Do(ctx context.Context, req *http.Request) (*http.Response, error)
 }
 
 type Permissions struct {
 	host string
-	cli  HTTPClient
+	cli  HTTPClienter
 }
 
 // CRUD is a representation of permissionsList required by an endpoint or held by a user/service.

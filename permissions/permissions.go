@@ -6,7 +6,7 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
-func New(host string, httpClient HTTPClient) *Permissions {
+func New(host string, httpClient HTTPClienter) *Permissions {
 	return &Permissions{
 		host: host,
 		cli:  httpClient,
