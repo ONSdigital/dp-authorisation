@@ -35,7 +35,7 @@ var vertPermissionsTestCases = []vetPermissionsTestCase{
 			permErr, ok := err.(Error)
 			So(ok, ShouldBeTrue)
 			So(permErr.Status, ShouldEqual, 403)
-			So(permErr.Message, ShouldEqual, "caller does not have the required permission to perform the requested action")
+			So(permErr.Message, ShouldEqual, "action forbidden caller does not process the required permissions")
 			So(permErr.Cause, ShouldBeNil)
 		},
 	},
@@ -56,7 +56,7 @@ var vertPermissionsTestCases = []vetPermissionsTestCase{
 	},
 	{
 		given:          "the request is not valid",
-		then:           "a 400 error is returned",
+		then:           "a 401 error is returned",
 		responseStatus: 400,
 		body:           errorEntity{Message: "bad request"},
 		bodyErr:        nil,
@@ -64,14 +64,14 @@ var vertPermissionsTestCases = []vetPermissionsTestCase{
 		assertErrorExpected: func(err error) {
 			permErr, ok := err.(Error)
 			So(ok, ShouldBeTrue)
-			So(permErr.Status, ShouldEqual, 400)
-			So(permErr.Message, ShouldEqual, "bad request")
+			So(permErr.Status, ShouldEqual, 401)
+			So(permErr.Message, ShouldEqual, "unauthorized")
 			So(permErr.Cause, ShouldBeNil)
 		},
 	},
 	{
 		given:          "the requested collectionID & dataset combination does not exist",
-		then:           "a 404 error is returned",
+		then:           "a 401 error is returned",
 		responseStatus: 404,
 		body:           errorEntity{Message: "not found"},
 		bodyErr:        nil,
@@ -79,8 +79,23 @@ var vertPermissionsTestCases = []vetPermissionsTestCase{
 		assertErrorExpected: func(err error) {
 			permErr, ok := err.(Error)
 			So(ok, ShouldBeTrue)
-			So(permErr.Status, ShouldEqual, 404)
-			So(permErr.Message, ShouldEqual, "not found")
+			So(permErr.Status, ShouldEqual, 401)
+			So(permErr.Message, ShouldEqual, "unauthorized")
+			So(permErr.Cause, ShouldBeNil)
+		},
+	},
+	{
+		given:          "the caller is known but does not have any permissions for the collection and dataset",
+		then:           "a 403 error is returned",
+		responseStatus: 403,
+		body:           errorEntity{Message: "forbidden"},
+		bodyErr:        nil,
+		require:        CRUD{Create: true, Read: true, Update: true, Delete: true},
+		assertErrorExpected: func(err error) {
+			permErr, ok := err.(Error)
+			So(ok, ShouldBeTrue)
+			So(permErr.Status, ShouldEqual, 403)
+			So(permErr.Message, ShouldEqual, "forbidden")
 			So(permErr.Cause, ShouldBeNil)
 		},
 	},

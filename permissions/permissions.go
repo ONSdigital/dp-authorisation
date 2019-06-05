@@ -40,7 +40,7 @@ func (p *Permissions) Vet(ctx context.Context, required CRUD, serviceToken strin
 	}()
 
 	if resp.StatusCode != 200 {
-		return getErrorFromResponse(resp)
+		return getErrorFromResponse(r.Context(), resp)
 	}
 
 	callerPerms, err := unmarshalPermissions(resp.Body)

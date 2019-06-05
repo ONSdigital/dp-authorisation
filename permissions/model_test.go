@@ -25,7 +25,7 @@ func TestCRUD_Satisfied(t *testing.T) {
 			assertResult: func(err error) {
 				So(err, ShouldResemble, Error{
 					Status:  403,
-					Message: "caller does not have the required permission to perform the requested action",
+					Message: "action forbidden caller does not process the required permissions",
 				})
 			},
 		},
@@ -55,7 +55,7 @@ func TestCRUD_Satisfied(t *testing.T) {
 			assertResult: func(err error) {
 				So(err, ShouldResemble, Error{
 					Status:  403,
-					Message: "caller does not have the required permission to perform the requested action",
+					Message: "action forbidden caller does not process the required permissions",
 				})
 			},
 		},
@@ -76,7 +76,7 @@ func TestCRUD_Satisfied(t *testing.T) {
 			assertResult: func(err error) {
 				So(err, ShouldResemble, Error{
 					Status:  403,
-					Message: "caller does not have the required permission to perform the requested action",
+					Message: "action forbidden caller does not process the required permissions",
 				})
 			},
 		},

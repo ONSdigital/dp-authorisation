@@ -1,6 +1,7 @@
 package permissions
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/go-ns/common"
+	"github.com/ONSdigital/log.go/log"
 )
 
 // getPermissionsRequest create a new get permissions http request for the specified service/user/collection ID/dataset ID values.
@@ -36,7 +38,7 @@ func (p *Permissions) getPermissionsRequest(serviceToken string, userToken strin
 }
 
 // getErrorFromResponse handle get permission responses with a non 200 status code.
-func getErrorFromResponse(resp *http.Response) error {
+func getErrorFromResponse(ctx context.Context, resp *http.Response) error {
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return Error{
@@ -55,9 +57,28 @@ func getErrorFromResponse(resp *http.Response) error {
 		}
 	}
 
-	switch resp.StatusCode {
-	case 400, 401, 403, 404:
-		return Error{Status: resp.StatusCode, Message: entity.Message}
+	log.Event(ctx, "get caller permissions request returned an error status", log.Data{
+		"status_code": resp.StatusCode,
+		"body":        entity,
+	})
+
+	permErr := toPermissionError(resp.StatusCode)
+	log.Event(ctx, "mapped get permissions error response status to permissions.Error", log.Data{
+		"original_error_status":     resp.StatusCode,
+		"original_error_message":    entity.Message,
+		"permissions_error_status":  permErr.Status,
+		"permissions_error_message": permErr.Message,
+	})
+	return permErr
+}
+
+func toPermissionError(status int) (err Error) {
+	switch status {
+	case 400, 401, 404:
+		// treat as caller unauthorized
+		return Error{Status: 401, Message: "unauthorized"}
+	case 403:
+		return Error{Status: 403, Message: "forbidden"}
 	default:
 		return Error{Status: 500, Message: "internal server error"}
 	}

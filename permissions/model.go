@@ -68,18 +68,18 @@ func (required *CRUD) Satisfied(ctx context.Context, caller *CRUD) error {
 	}
 
 	if len(missingPermissions) > 0 {
-		log.Event(ctx, "caller does not have the required permission", log.Data{
+		log.Event(ctx, "action forbidden caller does not process the required permissions", log.Data{
 			"required_permissions": required,
 			"caller_permissions":   caller,
 			"missing_permissions":  missingPermissions,
 		})
 		return Error{
 			Status:  403,
-			Message: "caller does not have the required permission to perform the requested action",
+			Message: "action forbidden caller does not process the required permissions",
 		}
 	}
 
-	log.Event(ctx, "caller has permissionsList required required permission", log.Data{
+	log.Event(ctx, "caller has the required permissions to perform the requested action", log.Data{
 		"required_permissions": required,
 		"caller_permissions":   caller,
 	})

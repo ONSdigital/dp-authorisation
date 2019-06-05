@@ -69,7 +69,7 @@ func TestGetErrorFromResponse(t *testing.T) {
 		Convey(fmt.Sprintf("%d) %s", i, s.desc), t, func() {
 			resp := getMockErrorResponse(s.status, s.body, s.readerErr)
 
-			err := getErrorFromResponse(resp)
+			err := getErrorFromResponse(nil, resp)
 			s.assertErrFunc(err)
 		})
 	}
