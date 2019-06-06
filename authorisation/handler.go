@@ -27,18 +27,22 @@ func Configure(DatasetIDKey string, GetRequestVarsFunc func(r *http.Request) map
 	getRequestVars = GetRequestVarsFunc
 	authoriser = Authoriser
 }
+
 // Allow given a policy, service and or user token, a collection ID and dataset ID determined if the caller has the
 // necessary permissions to perform the requested action.
 type Authoriser interface {
 	Allow(ctx context.Context, required Policy, serviceToken string, userToken string, collectionID string, datasetID string) error
 }
 
-// Handler is a http.HandlerFunc that verifies the caller holds the required permissions for the wrapped
-// http.HandlerFunc If the caller has all of the required permissions then the request will continue to the wrapped
-// handlerFunc. If the caller does not have all the required permissions then the the request is rejected with the
-// appropriate http status and the wrapped handler is not invoked. If there is an error whilst attempting to check the
-// callers permissions then a 500 status is returned and the wrapped handler is not invoked.
-func Handler(required Policy, endpoint func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
+// Check is an authorisation wrapper that decorates another http.HandlerFunc. The provided policy determines what
+// permissions are required by the caller to be able to perform the requested action.
+//
+// If the caller has each of the required permissions then authorisation is successfully and the request is delegated to
+// the wrapped handlerFunc. If the caller does not have the required permissions then authorisation is unsuccessfully.
+// The request is rejected with the appropriate http status and the wrapped handlerFunc is not invoked. If there is
+// an error whilst checking the caller's permissions then a 500 status is returned and the wrapped handlerFunc is not
+// invoked.
+func Check(required Policy, handlerFunc func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		logD := log.Data{"requested_uri": r.URL.RequestURI()}
 
@@ -53,8 +57,8 @@ func Handler(required Policy, endpoint func(http.ResponseWriter, *http.Request))
 			return
 		}
 
-		log.Event(r.Context(), "endpoint permissions requirements met by caller", logD)
-		endpoint(w, r)
+		log.Event(r.Context(), "caller authorised to perform requested action", logD)
+		handlerFunc(w, r)
 	})
 }
 

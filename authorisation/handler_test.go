@@ -32,7 +32,7 @@ type handlerCalls struct {
 // when their request is received
 // then the authoriser confirms the caller holds the required permissions
 // and the request is allowed to continue
-func TestRequire_CallerAuthorised(t *testing.T) {
+func TestCheck_CallerAuthorised(t *testing.T) {
 	Convey("given an authorized caller", t, func() {
 		authoriserMock := getAuthoriserMock(nil)
 
@@ -48,7 +48,7 @@ func TestRequire_CallerAuthorised(t *testing.T) {
 		handlerCalls := make([]handlerCalls, 0)
 		handler := getHandlerMoq(&handlerCalls)
 
-		authHandler := Handler(requiredPermissions, handler)
+		authHandler := Check(requiredPermissions, handler)
 
 		req := getRequest(t)
 		w := httptest.NewRecorder()
@@ -80,7 +80,7 @@ func TestRequire_CallerAuthorised(t *testing.T) {
 // then the authoriser confirms the caller is not authorized to perform the requested action
 // and a 401 response is returned
 // and the request does not continue
-func TestRequire_CallerNotAuthorised(t *testing.T) {
+func TestCheck_CallerNotAuthorised(t *testing.T) {
 	Convey("given an unauthorized caller", t, func() {
 		authoriserMock := getAuthoriserMock(Error{
 			Message: "unauthorized",
@@ -98,7 +98,7 @@ func TestRequire_CallerNotAuthorised(t *testing.T) {
 			Update: false,
 			Delete: false,
 		}
-		authHandler := Handler(requiredPermissions, handler)
+		authHandler := Check(requiredPermissions, handler)
 
 		req := getRequest(t)
 		w := httptest.NewRecorder()
@@ -132,7 +132,7 @@ func TestRequire_CallerNotAuthorised(t *testing.T) {
 // then the authoriser is called with the expected parameters
 // and a 500 response is returned
 // and the request does not continue
-func TestRequire_CheckPermissionsError(t *testing.T) {
+func TestCheck_CheckPermissionsError(t *testing.T) {
 	Convey("given permissions check returns an error", t, func() {
 		authoriserMock := getAuthoriserMock(errors.New("wubba lubba dub dub"))
 
@@ -148,7 +148,7 @@ func TestRequire_CheckPermissionsError(t *testing.T) {
 			Delete: false,
 		}
 
-		authHandler := Handler(requiredPermissions, handler)
+		authHandler := Check(requiredPermissions, handler)
 
 		req, _ := http.NewRequest("GET", "/something", nil)
 		req.Header.Set(common.AuthHeaderKey, serviceAuthToken)

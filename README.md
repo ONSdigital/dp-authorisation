@@ -38,17 +38,19 @@ Apply the authorisation to a `http.HandlerFunc`.
 r := mux.NewRouter()
 ...
 policy := authorisation.Policy{Read: true}
-r.HandleFunc("/datasets/{dataset_id}",  authorisation.Handler(policy,  func(w http.ResponseWriter, r *http.Request) { ... })
+r.HandleFunc("/datasets/{dataset_id}",  authorisation.Check(policy,  func(w http.ResponseWriter, r *http.Request) { ... })
 ```
 Any service or user calling this endpoint **must** have all of the permissions defined in the policy to be able to 
 successful reach the wrapped `http.HandlerFunc`. If the policy requirements are not satisfied then the appropriate http 
 error status is returned and the caller is denied access to the handler. 
 
-As long as the caller has **at least** the required permissions they will be granted access to the endpoint.
+As long as the caller has **at least** the required permissions then authorisation will be successful.
 
 ##### Example 1
-The permissions policy is `R` and the  caller has permissions `CRUD` they will be granted access.
+If the authorisation policy requires permissions `R` and the caller has permissions `CRUD` then authorisation is 
+successful
 
 ##### Example 2
-The permissions policy is `CRUD` and the  caller has permissions `CRD` they will be denied access.
+If the authorisation policy requires permissions `CRUD` and the caller has permissions `CRD` then authorisation is 
+unsuccessful
 
