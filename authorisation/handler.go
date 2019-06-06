@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ONSdigital/dp-api-permissions/permissions"
 	"github.com/ONSdigital/go-ns/common"
 	"github.com/ONSdigital/log.go/log"
 )
@@ -28,9 +27,10 @@ func Configure(DatasetIDKey string, GetRequestVarsFunc func(r *http.Request) map
 	getRequestVars = GetRequestVarsFunc
 	authoriser = Authoriser
 }
-
+// Allow given a policy, service and or user token, a collection ID and dataset ID determined if the caller has the
+// necessary permissions to perform the requested action.
 type Authoriser interface {
-	Allow(ctx context.Context, required permissions.Policy, serviceToken string, userToken string, collectionID string, datasetID string) error
+	Allow(ctx context.Context, required Policy, serviceToken string, userToken string, collectionID string, datasetID string) error
 }
 
 // Handler is a http.HandlerFunc that verifies the caller holds the required permissions for the wrapped
@@ -38,7 +38,7 @@ type Authoriser interface {
 // handlerFunc. If the caller does not have all the required permissions then the the request is rejected with the
 // appropriate http status and the wrapped handler is not invoked. If there is an error whilst attempting to check the
 // callers permissions then a 500 status is returned and the wrapped handler is not invoked.
-func Handler(required permissions.Policy, endpoint func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
+func Handler(required Policy, endpoint func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		logD := log.Data{"requested_uri": r.URL.RequestURI()}
 
@@ -59,7 +59,7 @@ func Handler(required permissions.Policy, endpoint func(http.ResponseWriter, *ht
 }
 
 func handleAuthoriseError(ctx context.Context, err error, w http.ResponseWriter, logD log.Data) {
-	permErr, ok := err.(permissions.Error)
+	permErr, ok := err.(Error)
 	if ok {
 		writeErr(ctx, w, permErr.Status, permErr.Message, logD)
 		return

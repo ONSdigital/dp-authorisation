@@ -1,4 +1,4 @@
-package permissions
+package authorisation
 
 import (
 	"encoding/json"
@@ -7,12 +7,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/ONSdigital/dp-api-permissions/permissions/mocks"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 // test fixture for authoriser.Allow test
-var vertPermissionsTestCases = []vetPermissionsTestCase{
+var authAllowTestCases = []authAllowTestCase{
 	{
 		given:          "the caller has the required permissions",
 		then:           "no error is returned",
@@ -193,8 +192,8 @@ var vertPermissionsTestCases = []vetPermissionsTestCase{
 	},
 }
 
-// vetPermissionsTestCase is a struct representation of permissoins.Vet test case scenario
-type vetPermissionsTestCase struct {
+// authAllowTestCase is a struct representation of authorisation.Allow test case scenario
+type authAllowTestCase struct {
 	given               string
 	then                string
 	responseStatus      int
@@ -210,11 +209,11 @@ type vetPermissionsTestCase struct {
 
 func TestPermissions_Vet(t *testing.T) {
 
-	for i, tc := range vertPermissionsTestCases {
+	for i, tc := range authAllowTestCases {
 		Convey(fmt.Sprintf("%d) Given %s", i, tc.given), t, func() {
 
 			// set up the mock client to return the test case response
-			client := &mocks.HTTPClient{
+			client := &httpClientMock{
 				DoFunc: func() (response *http.Response, e error) {
 					return tc.getClientResponse()
 				},
@@ -233,15 +232,22 @@ func TestPermissions_Vet(t *testing.T) {
 	}
 }
 
-func (tc vetPermissionsTestCase) getResponseBody() ([]byte, error) {
+func TestNopAuthoriser_Allow(t *testing.T) {
+	Convey("NopAuthoriser_Allow should return nil", t, func() {
+		nop := &NopAuthoriser{}
+		So(nop.Allow(nil, Policy{Create: true}, "", "", "", ""), ShouldBeNil)
+	})
+}
+
+func (tc authAllowTestCase) getResponseBody() ([]byte, error) {
 	b, _ := json.Marshal(tc.body)
 	return b, tc.bodyErr
 }
 
-func (tc vetPermissionsTestCase) getClientResponse() (*http.Response, error) {
+func (tc authAllowTestCase) getClientResponse() (*http.Response, error) {
 	r := &http.Response{
 		StatusCode: tc.responseStatus,
-		Body: &mocks.ReadCloser{
+		Body: &readCloserMock{
 			GetEntityFunc: func() ([]byte, error) {
 				return tc.getResponseBody()
 			},

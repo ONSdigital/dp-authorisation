@@ -5,7 +5,6 @@ package authorisation
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-api-permissions/permissions"
 	"sync"
 )
 
@@ -19,7 +18,7 @@ var (
 //
 //         // make and configure a mocked Authoriser
 //         mockedAuthoriser := &AuthoriserMock{
-//             AllowFunc: func(ctx context.Context, required permissions.Policy, serviceToken string, userToken string, collectionID string, datasetID string) error {
+//             AllowFunc: func(ctx context.Context, required Policy, serviceToken string, userToken string, collectionID string, datasetID string) error {
 // 	               panic("TODO: mock out the Allow method")
 //             },
 //         }
@@ -30,7 +29,7 @@ var (
 //     }
 type AuthoriserMock struct {
 	// AllowFunc mocks the Allow method.
-	AllowFunc func(ctx context.Context, required permissions.Policy, serviceToken string, userToken string, collectionID string, datasetID string) error
+	AllowFunc func(ctx context.Context, required Policy, serviceToken string, userToken string, collectionID string, datasetID string) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -39,7 +38,7 @@ type AuthoriserMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// Required is the required argument value.
-			Required permissions.Policy
+			Required Policy
 			// ServiceToken is the serviceToken argument value.
 			ServiceToken string
 			// UserToken is the userToken argument value.
@@ -53,13 +52,13 @@ type AuthoriserMock struct {
 }
 
 // Allow calls AllowFunc.
-func (mock *AuthoriserMock) Allow(ctx context.Context, required permissions.Policy, serviceToken string, userToken string, collectionID string, datasetID string) error {
+func (mock *AuthoriserMock) Allow(ctx context.Context, required Policy, serviceToken string, userToken string, collectionID string, datasetID string) error {
 	if mock.AllowFunc == nil {
 		panic("moq: AuthoriserMock.AllowFunc is nil but Authoriser.Allow was just called")
 	}
 	callInfo := struct {
 		Ctx          context.Context
-		Required     permissions.Policy
+		Required     Policy
 		ServiceToken string
 		UserToken    string
 		CollectionID string
@@ -83,7 +82,7 @@ func (mock *AuthoriserMock) Allow(ctx context.Context, required permissions.Poli
 //     len(mockedAuthoriser.AllowCalls())
 func (mock *AuthoriserMock) AllowCalls() []struct {
 	Ctx          context.Context
-	Required     permissions.Policy
+	Required     Policy
 	ServiceToken string
 	UserToken    string
 	CollectionID string
@@ -91,7 +90,7 @@ func (mock *AuthoriserMock) AllowCalls() []struct {
 } {
 	var calls []struct {
 		Ctx          context.Context
-		Required     permissions.Policy
+		Required     Policy
 		ServiceToken string
 		UserToken    string
 		CollectionID string

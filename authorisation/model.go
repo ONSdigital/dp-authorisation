@@ -1,4 +1,4 @@
-package permissions
+package authorisation
 
 import (
 	"context"
@@ -36,7 +36,9 @@ type HTTPClienter interface {
 	Do(ctx context.Context, req *http.Request) (*http.Response, error)
 }
 
-type Authoriser struct {
+type NopAuthoriser struct {}
+
+type PermissionsAuthoriser struct {
 	host string
 	cli  HTTPClienter
 }

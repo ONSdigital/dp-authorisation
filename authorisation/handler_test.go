@@ -8,7 +8,6 @@ import (
 
 	"context"
 
-	"github.com/ONSdigital/dp-api-permissions/permissions"
 	"github.com/ONSdigital/go-ns/common"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/pkg/errors"
@@ -29,7 +28,7 @@ type handlerCalls struct {
 }
 
 // Scenario: Request from an authorized caller
-// given an authorized caller
+// given an authorised caller
 // when their request is received
 // then the authoriser confirms the caller holds the required permissions
 // and the request is allowed to continue
@@ -39,7 +38,7 @@ func TestRequire_CallerAuthorised(t *testing.T) {
 
 		Configure(datsetIDKey, getRequestVarsMoq(), authoriserMock)
 
-		requiredPermissions := permissions.Policy{
+		requiredPermissions := Policy{
 			Create: true,
 			Read:   true,
 			Update: true,
@@ -83,7 +82,7 @@ func TestRequire_CallerAuthorised(t *testing.T) {
 // and the request does not continue
 func TestRequire_CallerNotAuthorised(t *testing.T) {
 	Convey("given an unauthorized caller", t, func() {
-		authoriserMock := getAuthoriserMock(permissions.Error{
+		authoriserMock := getAuthoriserMock(Error{
 			Message: "unauthorized",
 			Status:  401,
 		})
@@ -93,7 +92,7 @@ func TestRequire_CallerNotAuthorised(t *testing.T) {
 		handlerCalls := make([]handlerCalls, 0)
 		handler := getHandlerMoq(&handlerCalls)
 
-		requiredPermissions := permissions.Policy{
+		requiredPermissions := Policy{
 			Create: false,
 			Read:   true,
 			Update: false,
@@ -142,7 +141,7 @@ func TestRequire_CheckPermissionsError(t *testing.T) {
 		handlerCalls := make([]handlerCalls, 0)
 		handler := getHandlerMoq(&handlerCalls)
 
-		requiredPermissions := permissions.Policy{
+		requiredPermissions := Policy{
 			Create: false,
 			Read:   true,
 			Update: false,
@@ -185,7 +184,7 @@ func TestWriteErr(t *testing.T) {
 	type TC struct {
 		scenario     string
 		given        string
-		w            *ResponseWriterMoq
+		w            *responseWriterMock
 		status       int
 		body         string
 		assertStatus func(calls []int)
@@ -196,7 +195,7 @@ func TestWriteErr(t *testing.T) {
 		{
 			scenario: "The response body and status are written without error",
 			given:    "Given a valid body and status",
-			w: &ResponseWriterMoq{
+			w: &responseWriterMock{
 				WriteHeaderCalls: []int{},
 				WriteHeaderFunc:  func(statusCode int) {},
 				WriteCalls:       []string{},
@@ -218,7 +217,7 @@ func TestWriteErr(t *testing.T) {
 		{
 			scenario: "An error occurs while writing the response body so a 500 status is returned",
 			given:    "Given write returns an error",
-			w: &ResponseWriterMoq{
+			w: &responseWriterMock{
 				WriteHeaderCalls: []int{},
 				WriteHeaderFunc:  func(statusCode int) {},
 				WriteCalls:       []string{},
@@ -263,7 +262,7 @@ func TestHandleAuthoriseError(t *testing.T) {
 		desc         string
 		given        string
 		inputErr     error
-		w            *ResponseWriterMoq
+		w            *responseWriterMock
 		assertStatus func(calls []int)
 		assertBody   func(calls []string)
 	}
@@ -272,11 +271,11 @@ func TestHandleAuthoriseError(t *testing.T) {
 		{
 			desc:  "write a permission.Error to the response",
 			given: "given a permissions.Error",
-			inputErr: permissions.Error{
+			inputErr: Error{
 				Status:  400,
 				Message: "bad request",
 			},
-			w: &ResponseWriterMoq{
+			w: &responseWriterMock{
 				WriteHeaderCalls: []int{},
 				WriteHeaderFunc:  func(statusCode int) {},
 				WriteCalls:       []string{},
@@ -294,10 +293,10 @@ func TestHandleAuthoriseError(t *testing.T) {
 			},
 		},
 		{
-			desc:  "write a standard error to the response",
-			given: "given a error",
+			desc:     "write a standard error to the response",
+			given:    "given a error",
 			inputErr: errors.New("bork bork bork"),
-			w: &ResponseWriterMoq{
+			w: &responseWriterMock{
 				WriteHeaderCalls: []int{},
 				WriteHeaderFunc:  func(statusCode int) {},
 				WriteCalls:       []string{},
@@ -360,7 +359,7 @@ func getRequest(t *testing.T) *http.Request {
 
 func getAuthoriserMock(err error) *AuthoriserMock {
 	return &AuthoriserMock{
-		AllowFunc: func(ctx context.Context, required permissions.Policy, serviceToken string, userToken string, collectionID string, datasetID string) error {
+		AllowFunc: func(ctx context.Context, required Policy, serviceToken string, userToken string, collectionID string, datasetID string) error {
 			return err
 		},
 	}

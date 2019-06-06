@@ -1,4 +1,4 @@
-package permissions
+package authorisation
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 )
 
 // getPermissionsRequest create a new get permissions http request for the specified service/user/collection ID/dataset ID values.
-func (p *Authoriser) getPermissionsRequest(serviceToken string, userToken string, collectionID string, datasetID string) (*http.Request, error) {
+func (p *PermissionsAuthoriser) getPermissionsRequest(serviceToken string, userToken string, collectionID string, datasetID string) (*http.Request, error) {
 	if p.host == "" {
 		return nil, Error{
 			Status:  500,

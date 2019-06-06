@@ -4,11 +4,10 @@ TODO
 ### Configure
 Create new `authoriser` providing:
  - The permissions API host. 
- - A `permissions.HTTPClienter` implementation.
+ - A `authorisation.HTTPClienter` implementation.
 
 ```go
-rc := rchttp.NewClient()
-authoriser := permissions.NewAuthoriser("http://localhost:8082/permissions", rc)
+authoriser := authorisation.NewAuthoriser("http://localhost:8082/permissions", httpClienter)
 ```
 
 Configure the `authorisation` package specifying:
@@ -17,14 +16,14 @@ Configure the `authorisation` package specifying:
  - An `authoriser`
 
 ```go
-auth.Configure("dataset_id", mux.Vars, authenticator)
+authorisation.Configure("dataset_id", mux.Vars, authenticator)
 ```
 
-Define a permissions policy. A policy defines the `CRUD` permissions the caller **must** have to be allowed to perform 
+Define a authorisation policy. A policy defines the `CRUD` permissions the caller **must** have to be allowed to perform 
 the requested action
 
 ```go
-policy := permissions.Policy{
+policy := authorisation.Policy{
     Create: true,
     Read:   true,
     Update: true,
@@ -36,8 +35,8 @@ Apply the authorisation to a `http.HandlerFunc`.
 ```go
 r := mux.NewRouter()
 ...
-policy := permissions.Policy{Read: true}
-r.HandleFunc("/datasets/{dataset_id}",  authorization.Handler((policy,  func(w http.ResponseWriter, r *http.Request) { ... }))
+policy := authorisation.Policy{Read: true}
+r.HandleFunc("/datasets/{dataset_id}",  authorisation.Handler(policy,  func(w http.ResponseWriter, r *http.Request) { ... })
 ```
 Any service or user calling this endpoint **must** have all of the permissions defined in the policy to be able to 
 successful reach the wrapped `http.HandlerFunc`. If the policy requirements are not satisfied then the appropriate http 

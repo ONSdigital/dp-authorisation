@@ -1,4 +1,4 @@
-package permissions
+package authorisation
 
 import (
 	"encoding/json"
@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/ONSdigital/dp-api-permissions/permissions/mocks"
 	"github.com/ONSdigital/go-ns/common"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -147,7 +146,7 @@ func TestUnmarshalPermissions(t *testing.T) {
 
 	for i, s := range scenarios {
 		Convey(fmt.Sprintf("%d) %s", i, s.desc), t, func() {
-			reader := &mocks.ReadCloser{
+			reader := &readCloserMock{
 				GetEntityFunc: func() (i []byte, e error) {
 					return s.body, s.err
 				},
@@ -164,7 +163,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 
 	type scenario struct {
 		desc          string
-		authoriser    *Authoriser
+		authoriser    *PermissionsAuthoriser
 		serviceT      string
 		userT         string
 		collectionID  string
@@ -176,7 +175,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 	scenarios := []scenario{
 		{
 			desc:         "should return the expected error if the checker has not been configured with a host",
-			authoriser:   &Authoriser{},
+			authoriser:   &PermissionsAuthoriser{},
 			serviceT:     "",
 			userT:        "",
 			collectionID: "",
@@ -193,7 +192,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 		},
 		{
 			desc:         "should return the expected request if the check is correctly configured",
-			authoriser:   &Authoriser{host: "http://localhost:8082/permissionsList"},
+			authoriser:   &PermissionsAuthoriser{host: "http://localhost:8082/permissionsList"},
 			serviceT:     "111",
 			userT:        "222",
 			collectionID: "333",
@@ -223,7 +222,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 func getMockErrorResponse(status int, b []byte, err error) *http.Response {
 	return &http.Response{
 		StatusCode: status,
-		Body: &mocks.ReadCloser{
+		Body: &readCloserMock{
 			GetEntityFunc: func() ([]byte, error) {
 				return b, err
 			},
