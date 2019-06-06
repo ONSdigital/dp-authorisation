@@ -1,4 +1,4 @@
-package authorization
+package authorisation
 
 import (
 	"fmt"
@@ -31,13 +31,13 @@ type handlerCalls struct {
 // Scenario: Request from an authorized caller
 // given an authorized caller
 // when their request is received
-// then the authorizer confirms the caller holds the required permissions
+// then the authoriser confirms the caller holds the required permissions
 // and the request is allowed to continue
-func TestRequire_CallerAuthorized(t *testing.T) {
+func TestRequire_CallerAuthorised(t *testing.T) {
 	Convey("given an authorized caller", t, func() {
-		authorizerMock := getAuthorizerMock(nil)
+		authoriserMock := getAuthoriserMock(nil)
 
-		Configure(datsetIDKey, getRequestVarsMoq(), authorizerMock)
+		Configure(datsetIDKey, getRequestVarsMoq(), authoriserMock)
 
 		requiredPermissions := permissions.Policy{
 			Create: true,
@@ -57,13 +57,13 @@ func TestRequire_CallerAuthorized(t *testing.T) {
 		Convey("when their request is received", func() {
 			authHandler(w, req)
 
-			Convey("then the authorizer confirms the caller holds the required permissions", func() {
-				So(authorizerMock.AllowCalls(), ShouldHaveLength, 1)
-				So(authorizerMock.AllowCalls()[0].Required, ShouldResemble, requiredPermissions)
-				So(authorizerMock.AllowCalls()[0].ServiceToken, ShouldEqual, serviceAuthToken)
-				So(authorizerMock.AllowCalls()[0].UserToken, ShouldEqual, userAuthToken)
-				So(authorizerMock.AllowCalls()[0].CollectionID, ShouldEqual, collectionID)
-				So(authorizerMock.AllowCalls()[0].DatasetID, ShouldEqual, datasetID)
+			Convey("then the authoriser confirms the caller holds the required permissions", func() {
+				So(authoriserMock.AllowCalls(), ShouldHaveLength, 1)
+				So(authoriserMock.AllowCalls()[0].Required, ShouldResemble, requiredPermissions)
+				So(authoriserMock.AllowCalls()[0].ServiceToken, ShouldEqual, serviceAuthToken)
+				So(authoriserMock.AllowCalls()[0].UserToken, ShouldEqual, userAuthToken)
+				So(authoriserMock.AllowCalls()[0].CollectionID, ShouldEqual, collectionID)
+				So(authoriserMock.AllowCalls()[0].DatasetID, ShouldEqual, datasetID)
 			})
 
 			Convey("and the request is allowed to continue", func() {
@@ -78,17 +78,17 @@ func TestRequire_CallerAuthorized(t *testing.T) {
 // Scenario: Request from an unauthorized caller
 // given an unauthorized caller
 // when their request is received
-// then the authorizer confirms the caller is not authorized to perform the requested action
+// then the authoriser confirms the caller is not authorized to perform the requested action
 // and a 401 response is returned
 // and the request does not continue
-func TestRequire_CallerNotAuthorized(t *testing.T) {
+func TestRequire_CallerNotAuthorised(t *testing.T) {
 	Convey("given an unauthorized caller", t, func() {
-		authorizerMock := getAuthorizerMock(permissions.Error{
+		authoriserMock := getAuthoriserMock(permissions.Error{
 			Message: "unauthorized",
 			Status:  401,
 		})
 
-		Configure(datsetIDKey, getRequestVarsMoq(), authorizerMock)
+		Configure(datsetIDKey, getRequestVarsMoq(), authoriserMock)
 
 		handlerCalls := make([]handlerCalls, 0)
 		handler := getHandlerMoq(&handlerCalls)
@@ -107,13 +107,13 @@ func TestRequire_CallerNotAuthorized(t *testing.T) {
 		Convey("when their request is received", func() {
 			authHandler(w, req)
 
-			Convey("then the authorizer confirms the caller is not authorized to perform the requested action", func() {
-				So(authorizerMock.AllowCalls(), ShouldHaveLength, 1)
-				So(authorizerMock.AllowCalls()[0].Required, ShouldResemble, requiredPermissions)
-				So(authorizerMock.AllowCalls()[0].ServiceToken, ShouldEqual, serviceAuthToken)
-				So(authorizerMock.AllowCalls()[0].UserToken, ShouldEqual, userAuthToken)
-				So(authorizerMock.AllowCalls()[0].CollectionID, ShouldEqual, collectionID)
-				So(authorizerMock.AllowCalls()[0].DatasetID, ShouldEqual, datasetID)
+			Convey("then the authoriser confirms the caller is not authorized to perform the requested action", func() {
+				So(authoriserMock.AllowCalls(), ShouldHaveLength, 1)
+				So(authoriserMock.AllowCalls()[0].Required, ShouldResemble, requiredPermissions)
+				So(authoriserMock.AllowCalls()[0].ServiceToken, ShouldEqual, serviceAuthToken)
+				So(authoriserMock.AllowCalls()[0].UserToken, ShouldEqual, userAuthToken)
+				So(authoriserMock.AllowCalls()[0].CollectionID, ShouldEqual, collectionID)
+				So(authoriserMock.AllowCalls()[0].DatasetID, ShouldEqual, datasetID)
 			})
 
 			Convey("and a 401 response is returned", func() {
@@ -130,14 +130,14 @@ func TestRequire_CallerNotAuthorized(t *testing.T) {
 // Scenario: checking caller permissions returns an error
 // given permissions check returns an error
 // when a request is received
-// then the authorizer is called with the expected parameters
+// then the authoriser is called with the expected parameters
 // and a 500 response is returned
 // and the request does not continue
 func TestRequire_CheckPermissionsError(t *testing.T) {
 	Convey("given permissions check returns an error", t, func() {
-		authorizerMock := getAuthorizerMock(errors.New("wubba lubba dub dub"))
+		authoriserMock := getAuthoriserMock(errors.New("wubba lubba dub dub"))
 
-		Configure(datsetIDKey, getRequestVarsMoq(), authorizerMock)
+		Configure(datsetIDKey, getRequestVarsMoq(), authoriserMock)
 
 		handlerCalls := make([]handlerCalls, 0)
 		handler := getHandlerMoq(&handlerCalls)
@@ -161,13 +161,13 @@ func TestRequire_CheckPermissionsError(t *testing.T) {
 		Convey("when a request is received", func() {
 			authHandler(w, req)
 
-			Convey("then the authorizer is called with the expected parameters", func() {
-				So(authorizerMock.AllowCalls(), ShouldHaveLength, 1)
-				So(authorizerMock.AllowCalls()[0].Required, ShouldResemble, requiredPermissions)
-				So(authorizerMock.AllowCalls()[0].ServiceToken, ShouldEqual, serviceAuthToken)
-				So(authorizerMock.AllowCalls()[0].UserToken, ShouldEqual, userAuthToken)
-				So(authorizerMock.AllowCalls()[0].CollectionID, ShouldEqual, collectionID)
-				So(authorizerMock.AllowCalls()[0].DatasetID, ShouldEqual, datasetID)
+			Convey("then the authoriser is called with the expected parameters", func() {
+				So(authoriserMock.AllowCalls(), ShouldHaveLength, 1)
+				So(authoriserMock.AllowCalls()[0].Required, ShouldResemble, requiredPermissions)
+				So(authoriserMock.AllowCalls()[0].ServiceToken, ShouldEqual, serviceAuthToken)
+				So(authoriserMock.AllowCalls()[0].UserToken, ShouldEqual, userAuthToken)
+				So(authoriserMock.AllowCalls()[0].CollectionID, ShouldEqual, collectionID)
+				So(authoriserMock.AllowCalls()[0].DatasetID, ShouldEqual, datasetID)
 			})
 
 			Convey("and a 500 response is returned", func() {
@@ -258,7 +258,7 @@ func TestWriteErr(t *testing.T) {
 	}
 }
 
-func TestHandleAuthorizeError(t *testing.T) {
+func TestHandleAuthoriseError(t *testing.T) {
 	type tc struct {
 		desc         string
 		given        string
@@ -320,7 +320,7 @@ func TestHandleAuthorizeError(t *testing.T) {
 		Convey(fmt.Sprintf("%d) %s", i, tc.given), t, func() {
 
 			Convey("When handleAuthorizeError is called", func() {
-				handleAuthorizeError(nil, tc.inputErr, tc.w, log.Data{})
+				handleAuthoriseError(nil, tc.inputErr, tc.w, log.Data{})
 
 				Convey("Then the expected status is set", func() {
 					tc.assertStatus(tc.w.WriteHeaderCalls)
@@ -358,8 +358,8 @@ func getRequest(t *testing.T) *http.Request {
 	return req
 }
 
-func getAuthorizerMock(err error) *AuthorizerMock {
-	return &AuthorizerMock{
+func getAuthoriserMock(err error) *AuthoriserMock {
+	return &AuthoriserMock{
 		AllowFunc: func(ctx context.Context, required permissions.Policy, serviceToken string, userToken string, collectionID string, datasetID string) error {
 			return err
 		},

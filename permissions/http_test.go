@@ -164,7 +164,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 
 	type scenario struct {
 		desc          string
-		permissions   *Authorizer
+		authoriser    *Authoriser
 		serviceT      string
 		userT         string
 		collectionID  string
@@ -176,7 +176,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 	scenarios := []scenario{
 		{
 			desc:         "should return the expected error if the checker has not been configured with a host",
-			permissions:  &Authorizer{},
+			authoriser:   &Authoriser{},
 			serviceT:     "",
 			userT:        "",
 			collectionID: "",
@@ -193,7 +193,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 		},
 		{
 			desc:         "should return the expected request if the check is correctly configured",
-			permissions:  &Authorizer{host: "http://localhost:8082/permissionsList"},
+			authoriser:   &Authoriser{host: "http://localhost:8082/permissionsList"},
 			serviceT:     "111",
 			userT:        "222",
 			collectionID: "333",
@@ -213,7 +213,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 
 	for i, s := range scenarios {
 		Convey(fmt.Sprintf("%d) %s", i, s.desc), t, func() {
-			r, err := s.permissions.getPermissionsRequest(s.serviceT, s.userT, s.collectionID, s.datasetID)
+			r, err := s.authoriser.getPermissionsRequest(s.serviceT, s.userT, s.collectionID, s.datasetID)
 			s.AssertReqFunc(r)
 			s.AssertErrFunc(err)
 		})

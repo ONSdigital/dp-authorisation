@@ -6,14 +6,14 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
-func NewAuthorizer(host string, httpClient HTTPClienter) *Authorizer {
-	return &Authorizer{
+func NewAuthoriser(host string, httpClient HTTPClienter) *Authoriser {
+	return &Authoriser{
 		host: host,
 		cli:  httpClient,
 	}
 }
 
-func (a *Authorizer) Allow(ctx context.Context, required Policy, serviceToken string, userToken string, collectionID string, datasetID string) error {
+func (a *Authoriser) Allow(ctx context.Context, required Policy, serviceToken string, userToken string, collectionID string, datasetID string) error {
 	r, err := a.getPermissionsRequest(serviceToken, userToken, collectionID, datasetID)
 	if err != nil {
 		return Error{

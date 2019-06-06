@@ -36,7 +36,7 @@ type HTTPClienter interface {
 	Do(ctx context.Context, req *http.Request) (*http.Response, error)
 }
 
-type Authorizer struct {
+type Authoriser struct {
 	host string
 	cli  HTTPClienter
 }
@@ -49,7 +49,7 @@ type Policy struct {
 	Delete bool
 }
 
-// Satisfied is a authorization function that checks a caller's permissions contains each of the required permissions.
+// Satisfied is a authorisation function that checks a caller's permissions contains each of the required permissions.
 // Returns nil if the caller has all of the stated required permissions otherwise returns Error with Status 403
 func (required *Policy) Satisfied(ctx context.Context, caller *Policy) error {
 	missingPermissions := make([]permission, 0)

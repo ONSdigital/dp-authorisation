@@ -1,4 +1,4 @@
-package authorization
+package authorisation
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
-//go:generate moq -out generated_auth_mocks.go -pkg authorization . Authorizer
+//go:generate moq -out generated_auth_mocks.go -pkg authorisation . Authoriser
 
 const (
 	CollectionIDHeader = "Collection-Id"
@@ -17,19 +17,19 @@ const (
 
 var (
 	getRequestVars func(r *http.Request) map[string]string
-	authorizer     Authorizer
+	authoriser     Authoriser
 	datasetIDKey   string
 )
 
-// Configure set up function for the authorization pkg. Requires the datasetID parameter key, a function for getting
+// Configure set up function for the authorisation pkg. Requires the datasetID parameter key, a function for getting
 // request parameters and a PermissionsAuthenticator implementation
-func Configure(DatasetIDKey string, GetRequestVarsFunc func(r *http.Request) map[string]string, Authorizer Authorizer) {
+func Configure(DatasetIDKey string, GetRequestVarsFunc func(r *http.Request) map[string]string, Authoriser Authoriser) {
 	datasetIDKey = DatasetIDKey
 	getRequestVars = GetRequestVarsFunc
-	authorizer = Authorizer
+	authoriser = Authoriser
 }
 
-type Authorizer interface {
+type Authoriser interface {
 	Allow(ctx context.Context, required permissions.Policy, serviceToken string, userToken string, collectionID string, datasetID string) error
 }
 
@@ -47,9 +47,9 @@ func Handler(required permissions.Policy, endpoint func(http.ResponseWriter, *ht
 		collectionID := r.Header.Get(CollectionIDHeader)
 		datasetID := getRequestVars(r)[datasetIDKey]
 
-		err := authorizer.Allow(r.Context(), required, serviceAuthToken, userAuthToken, collectionID, datasetID)
+		err := authoriser.Allow(r.Context(), required, serviceAuthToken, userAuthToken, collectionID, datasetID)
 		if err != nil {
-			handleAuthorizeError(r.Context(), err, w, logD)
+			handleAuthoriseError(r.Context(), err, w, logD)
 			return
 		}
 
@@ -58,7 +58,7 @@ func Handler(required permissions.Policy, endpoint func(http.ResponseWriter, *ht
 	})
 }
 
-func handleAuthorizeError(ctx context.Context, err error, w http.ResponseWriter, logD log.Data) {
+func handleAuthoriseError(ctx context.Context, err error, w http.ResponseWriter, logD log.Data) {
 	permErr, ok := err.(permissions.Error)
 	if ok {
 		writeErr(ctx, w, permErr.Status, permErr.Message, logD)

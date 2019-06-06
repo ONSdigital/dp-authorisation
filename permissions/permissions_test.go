@@ -11,7 +11,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-// test fixture for permissions.Vet test
+// test fixture for authoriser.Allow test
 var vertPermissionsTestCases = []vetPermissionsTestCase{
 	{
 		given:          "the caller has the required permissions",
@@ -219,11 +219,11 @@ func TestPermissions_Vet(t *testing.T) {
 					return tc.getClientResponse()
 				},
 			}
-			// init permissions
-			authorizer := NewAuthorizer("host", client)
+			// init authoriser
+			authoriser := NewAuthoriser("host", client)
 
 			Convey("when permissions.Vet is called", func() {
-				err := authorizer.Allow(nil, tc.require, "", "", "", "")
+				err := authoriser.Allow(nil, tc.require, "", "", "", "")
 
 				Convey(tc.then, func() {
 					tc.assertErrorExpected(err)
