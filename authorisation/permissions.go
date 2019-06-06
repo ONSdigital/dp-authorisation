@@ -56,6 +56,8 @@ func (a *PermissionsAuthoriser) Allow(ctx context.Context, required Policy, serv
 
 // Allow NOP implementation. No authorisation check is applied, always returns nil
 func (nop *NopAuthoriser) Allow(ctx context.Context, required Policy, serviceToken string, userToken string, collectionID string, datasetID string) error {
-	log.Event(ctx, "NopAuthoriser.Allow configured no authorisation check applied to caller")
+	log.Event(ctx, "WARNING: dp-authorisation has been configured to use NopAuthoriser. Requests to the API will "+
+		"NOT be protected by an authorisation check. If this is intentional you can ignore this message otherwise it is"+
+		"strongly advised you investigate and fix your service configuration")
 	return nil
 }
