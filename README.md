@@ -1,5 +1,7 @@
-# dp-permissions
-TODO
+# dp-api-permissions
+Library provides functionality for wrapping a `http.HandlerFunc` in an authorisation check. The auth handler accepts 
+an `authorisation.Policy` (a list of `CRUD` permissions) that the caller has to have in order to ve granted access to 
+the wrapped http handler.
 
 ### Configure
 Create new `authoriser` providing:
@@ -16,7 +18,7 @@ Configure the `authorisation` package specifying:
  - An `authoriser`
 
 ```go
-authorisation.Configure("dataset_id", mux.Vars, authenticator)
+authorisation.Configure("dataset_id", mux.Vars, authoriser)
 ```
 
 Define a authorisation policy. A policy defines the `CRUD` permissions the caller **must** have to be allowed to perform 
