@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/ONSdigital/dp-permissions/permissions/mocks"
+	"github.com/ONSdigital/dp-api-permissions/permissions/mocks"
 	"github.com/ONSdigital/go-ns/common"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -81,17 +81,17 @@ func TestUnmarshalPermissions(t *testing.T) {
 		desc          string
 		body          []byte
 		err           error
-		crud          *CRUD
+		policy        *Policy
 		perms         callerPermissions
 		assertErrFunc func(err error)
 	}
 
 	scenarios := []scenario{
 		{
-			desc: "should return expected error if read response body fails",
-			body: nil,
-			err:  errors.New("reader error"),
-			crud: nil,
+			desc:   "should return expected error if read response body fails",
+			body:   nil,
+			err:    errors.New("reader error"),
+			policy: nil,
 			assertErrFunc: func(err error) {
 				permErr, ok := err.(Error)
 				So(ok, ShouldBeTrue)
@@ -100,9 +100,9 @@ func TestUnmarshalPermissions(t *testing.T) {
 			},
 		},
 		{
-			desc: "should return expected error if response body not valid permissions json",
-			body: toJson(t, 666),
-			crud: nil,
+			desc:   "should return expected error if response body not valid permissions json",
+			body:   toJson(t, 666),
+			policy: nil,
 			assertErrFunc: func(err error) {
 				permErr, ok := err.(Error)
 				So(ok, ShouldBeTrue)
@@ -114,28 +114,28 @@ func TestUnmarshalPermissions(t *testing.T) {
 			},
 		},
 		{
-			desc: "should return CRUD for permissions json [Create, Read, Update,  Delete]",
-			body: toJson(t, callerPermissions{List: []permission{Create, Read, Update, Delete}}),
-			err:  nil,
-			crud: &CRUD{Create: true, Read: true, Update: true, Delete: true},
+			desc:   "should return CRUD for permissions json [Create, Read, Update,  Delete]",
+			body:   toJson(t, callerPermissions{List: []permission{Create, Read, Update, Delete}}),
+			err:    nil,
+			policy: &Policy{Create: true, Read: true, Update: true, Delete: true},
 			assertErrFunc: func(err error) {
 				So(err, ShouldBeNil)
 			},
 		},
 		{
-			desc: "should return R for permissions json [Read]",
-			body: toJson(t, callerPermissions{List: []permission{Read}}),
-			err:  nil,
-			crud: &CRUD{Create: false, Read: true, Update: false, Delete: false},
+			desc:   "should return R for permissions json [Read]",
+			body:   toJson(t, callerPermissions{List: []permission{Read}}),
+			err:    nil,
+			policy: &Policy{Create: false, Read: true, Update: false, Delete: false},
 			assertErrFunc: func(err error) {
 				So(err, ShouldBeNil)
 			},
 		},
 		{
-			desc: "should return expected error if caller has no permissions",
-			body: toJson(t, callerPermissions{List: []permission{}}),
-			err:  nil,
-			crud: nil,
+			desc:   "should return expected error if caller has no permissions",
+			body:   toJson(t, callerPermissions{List: []permission{}}),
+			err:    nil,
+			policy: nil,
 			assertErrFunc: func(err error) {
 				permErr, ok := err.(Error)
 				So(ok, ShouldBeTrue)
@@ -154,7 +154,7 @@ func TestUnmarshalPermissions(t *testing.T) {
 			}
 
 			crud, err := unmarshalPermissions(reader)
-			So(crud, ShouldResemble, s.crud)
+			So(crud, ShouldResemble, s.policy)
 			s.assertErrFunc(err)
 		})
 	}
@@ -164,7 +164,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 
 	type scenario struct {
 		desc          string
-		permissions   *Permissions
+		permissions   *Authorizer
 		serviceT      string
 		userT         string
 		collectionID  string
@@ -176,7 +176,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 	scenarios := []scenario{
 		{
 			desc:         "should return the expected error if the checker has not been configured with a host",
-			permissions:  &Permissions{},
+			permissions:  &Authorizer{},
 			serviceT:     "",
 			userT:        "",
 			collectionID: "",
@@ -193,7 +193,7 @@ func TestGetPermissionsRequest(t *testing.T) {
 		},
 		{
 			desc:         "should return the expected request if the check is correctly configured",
-			permissions:  &Permissions{host: "http://localhost:8082/permissionsList"},
+			permissions:  &Authorizer{host: "http://localhost:8082/permissionsList"},
 			serviceT:     "111",
 			userT:        "222",
 			collectionID: "333",

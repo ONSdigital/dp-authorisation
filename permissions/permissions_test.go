@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/ONSdigital/dp-permissions/permissions/mocks"
+	"github.com/ONSdigital/dp-api-permissions/permissions/mocks"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -19,7 +19,7 @@ var vertPermissionsTestCases = []vetPermissionsTestCase{
 		responseStatus: 200,
 		body:           callerPermissions{List: []permission{Create, Read, Update, Delete}},
 		bodyErr:        nil,
-		require:        CRUD{Create: true, Read: true, Update: true, Delete: true},
+		require:        Policy{Create: true, Read: true, Update: true, Delete: true},
 		assertErrorExpected: func(err error) {
 			So(err, ShouldBeNil)
 		},
@@ -30,7 +30,7 @@ var vertPermissionsTestCases = []vetPermissionsTestCase{
 		responseStatus: 200,
 		body:           callerPermissions{List: []permission{Read}},
 		bodyErr:        nil,
-		require:        CRUD{Create: true, Read: true, Update: true, Delete: true},
+		require:        Policy{Create: true, Read: true, Update: true, Delete: true},
 		assertErrorExpected: func(err error) {
 			permErr, ok := err.(Error)
 			So(ok, ShouldBeTrue)
@@ -45,7 +45,7 @@ var vertPermissionsTestCases = []vetPermissionsTestCase{
 		responseStatus: 401,
 		body:           errorEntity{Message: "unauthorized"},
 		bodyErr:        nil,
-		require:        CRUD{Create: true, Read: true, Update: true, Delete: true},
+		require:        Policy{Create: true, Read: true, Update: true, Delete: true},
 		assertErrorExpected: func(err error) {
 			permErr, ok := err.(Error)
 			So(ok, ShouldBeTrue)
@@ -60,7 +60,7 @@ var vertPermissionsTestCases = []vetPermissionsTestCase{
 		responseStatus: 400,
 		body:           errorEntity{Message: "bad request"},
 		bodyErr:        nil,
-		require:        CRUD{Create: true, Read: true, Update: true, Delete: true},
+		require:        Policy{Create: true, Read: true, Update: true, Delete: true},
 		assertErrorExpected: func(err error) {
 			permErr, ok := err.(Error)
 			So(ok, ShouldBeTrue)
@@ -75,7 +75,7 @@ var vertPermissionsTestCases = []vetPermissionsTestCase{
 		responseStatus: 404,
 		body:           errorEntity{Message: "not found"},
 		bodyErr:        nil,
-		require:        CRUD{Create: true, Read: true, Update: true, Delete: true},
+		require:        Policy{Create: true, Read: true, Update: true, Delete: true},
 		assertErrorExpected: func(err error) {
 			permErr, ok := err.(Error)
 			So(ok, ShouldBeTrue)
@@ -90,7 +90,7 @@ var vertPermissionsTestCases = []vetPermissionsTestCase{
 		responseStatus: 403,
 		body:           errorEntity{Message: "forbidden"},
 		bodyErr:        nil,
-		require:        CRUD{Create: true, Read: true, Update: true, Delete: true},
+		require:        Policy{Create: true, Read: true, Update: true, Delete: true},
 		assertErrorExpected: func(err error) {
 			permErr, ok := err.(Error)
 			So(ok, ShouldBeTrue)
@@ -105,7 +105,7 @@ var vertPermissionsTestCases = []vetPermissionsTestCase{
 		responseStatus: 500,
 		body:           nil,
 		responseErr:    errors.New("pop"),
-		require:        CRUD{Create: true, Read: true, Update: true, Delete: true},
+		require:        Policy{Create: true, Read: true, Update: true, Delete: true},
 		assertErrorExpected: func(err error) {
 			permErr, ok := err.(Error)
 			So(ok, ShouldBeTrue)
@@ -120,7 +120,7 @@ var vertPermissionsTestCases = []vetPermissionsTestCase{
 		responseStatus: 500,
 		body:           666,
 		bodyErr:        nil,
-		require:        CRUD{Create: true, Read: true, Update: true, Delete: true},
+		require:        Policy{Create: true, Read: true, Update: true, Delete: true},
 		assertErrorExpected: func(err error) {
 			permErr, ok := err.(Error)
 			So(ok, ShouldBeTrue)
@@ -136,7 +136,7 @@ var vertPermissionsTestCases = []vetPermissionsTestCase{
 		responseStatus: 200,
 		body:           666,
 		bodyErr:        nil,
-		require:        CRUD{Create: true, Read: true, Update: true, Delete: true},
+		require:        Policy{Create: true, Read: true, Update: true, Delete: true},
 		assertErrorExpected: func(err error) {
 			permErr, ok := err.(Error)
 			So(ok, ShouldBeTrue)
@@ -152,7 +152,7 @@ var vertPermissionsTestCases = []vetPermissionsTestCase{
 		responseStatus: 500,
 		body:           666,
 		bodyErr:        errors.New("pow"),
-		require:        CRUD{Create: true, Read: true, Update: true, Delete: true},
+		require:        Policy{Create: true, Read: true, Update: true, Delete: true},
 		assertErrorExpected: func(err error) {
 			permErr, ok := err.(Error)
 			So(ok, ShouldBeTrue)
@@ -167,7 +167,7 @@ var vertPermissionsTestCases = []vetPermissionsTestCase{
 		responseStatus: 200,
 		body:           666,
 		bodyErr:        errors.New("pow"),
-		require:        CRUD{Create: true, Read: true, Update: true, Delete: true},
+		require:        Policy{Create: true, Read: true, Update: true, Delete: true},
 		assertErrorExpected: func(err error) {
 			permErr, ok := err.(Error)
 			So(ok, ShouldBeTrue)
@@ -182,7 +182,7 @@ var vertPermissionsTestCases = []vetPermissionsTestCase{
 		responseStatus: 418,
 		body:           errorEntity{"I'm a teapot"},
 		bodyErr:        nil,
-		require:        CRUD{Create: true, Read: true, Update: true, Delete: true},
+		require:        Policy{Create: true, Read: true, Update: true, Delete: true},
 		assertErrorExpected: func(err error) {
 			permErr, ok := err.(Error)
 			So(ok, ShouldBeTrue)
@@ -201,7 +201,7 @@ type vetPermissionsTestCase struct {
 	body                interface{}
 	bodyErr             error
 	responseErr         error
-	require             CRUD
+	require             Policy
 	serviceT            string
 	userT               string
 	collectionID        string
@@ -220,10 +220,10 @@ func TestPermissions_Vet(t *testing.T) {
 				},
 			}
 			// init permissions
-			p := New("host", client)
+			authorizer := NewAuthorizer("host", client)
 
 			Convey("when permissions.Vet is called", func() {
-				err := p.Vet(nil, tc.require, "", "", "", "")
+				err := authorizer.Allow(nil, tc.require, "", "", "", "")
 
 				Convey(tc.then, func() {
 					tc.assertErrorExpected(err)

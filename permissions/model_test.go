@@ -7,12 +7,12 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestCRUD_Satisfied(t *testing.T) {
+func TestPolicy_Satisfied(t *testing.T) {
 	type scenario struct {
 		given        string
 		then         string
-		required     *CRUD
-		actual       *CRUD
+		required     *Policy
+		actual       *Policy
 		assertResult func(err error)
 	}
 
@@ -20,8 +20,8 @@ func TestCRUD_Satisfied(t *testing.T) {
 		{
 			given:    "required permissions: CRUD & caller permissions: R",
 			then:     "verify should be unsuccessful",
-			required: &CRUD{Create: true, Read: true, Update: true, Delete: true},
-			actual:   &CRUD{Create: false, Read: true, Update: false, Delete: false},
+			required: &Policy{Create: true, Read: true, Update: true, Delete: true},
+			actual:   &Policy{Create: false, Read: true, Update: false, Delete: false},
 			assertResult: func(err error) {
 				So(err, ShouldResemble, Error{
 					Status:  403,
@@ -32,8 +32,8 @@ func TestCRUD_Satisfied(t *testing.T) {
 		{
 			given:    "required permissions: R & caller permissions: R",
 			then:     "verify should be successful",
-			required: &CRUD{Create: false, Read: true, Update: false, Delete: false},
-			actual:   &CRUD{Create: false, Read: true, Update: false, Delete: false},
+			required: &Policy{Create: false, Read: true, Update: false, Delete: false},
+			actual:   &Policy{Create: false, Read: true, Update: false, Delete: false},
 			assertResult: func(err error) {
 				So(err, ShouldBeNil)
 			},
@@ -41,8 +41,8 @@ func TestCRUD_Satisfied(t *testing.T) {
 		{
 			given:    "required permissions: none & caller permissions: R",
 			then:     "verify should be successful",
-			required: &CRUD{Create: false, Read: false, Update: false, Delete: false},
-			actual:   &CRUD{Create: false, Read: true, Update: false, Delete: false},
+			required: &Policy{Create: false, Read: false, Update: false, Delete: false},
+			actual:   &Policy{Create: false, Read: true, Update: false, Delete: false},
 			assertResult: func(err error) {
 				So(err, ShouldBeNil)
 			},
@@ -50,8 +50,8 @@ func TestCRUD_Satisfied(t *testing.T) {
 		{
 			given:    "required permissions: CRUD & caller permissions: CRU",
 			then:     "verify should be unsuccessful",
-			required: &CRUD{Create: true, Read: true, Update: true, Delete: true},
-			actual:   &CRUD{Create: true, Read: true, Update: true, Delete: false},
+			required: &Policy{Create: true, Read: true, Update: true, Delete: true},
+			actual:   &Policy{Create: true, Read: true, Update: true, Delete: false},
 			assertResult: func(err error) {
 				So(err, ShouldResemble, Error{
 					Status:  403,
@@ -62,8 +62,8 @@ func TestCRUD_Satisfied(t *testing.T) {
 		{
 			given:    "required permissions: R & caller permissions: CRUD",
 			then:     "verify should be successful",
-			required: &CRUD{Create: false, Read: true, Update: false, Delete: false},
-			actual:   &CRUD{Create: true, Read: true, Update: true, Delete: true},
+			required: &Policy{Create: false, Read: true, Update: false, Delete: false},
+			actual:   &Policy{Create: true, Read: true, Update: true, Delete: true},
 			assertResult: func(err error) {
 				So(err, ShouldBeNil)
 			},
@@ -71,8 +71,8 @@ func TestCRUD_Satisfied(t *testing.T) {
 		{
 			given:    "required permissions: R & caller permissions: C",
 			then:     "verify should be unsuccessful",
-			required: &CRUD{Create: false, Read: true, Update: false, Delete: false},
-			actual:   &CRUD{Create: true, Read: false, Update: false, Delete: false},
+			required: &Policy{Create: false, Read: true, Update: false, Delete: false},
+			actual:   &Policy{Create: true, Read: false, Update: false, Delete: false},
 			assertResult: func(err error) {
 				So(err, ShouldResemble, Error{
 					Status:  403,

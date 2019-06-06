@@ -13,7 +13,7 @@ import (
 )
 
 // getPermissionsRequest create a new get permissions http request for the specified service/user/collection ID/dataset ID values.
-func (p *Permissions) getPermissionsRequest(serviceToken string, userToken string, collectionID string, datasetID string) (*http.Request, error) {
+func (p *Authorizer) getPermissionsRequest(serviceToken string, userToken string, collectionID string, datasetID string) (*http.Request, error) {
 	if p.host == "" {
 		return nil, Error{
 			Status:  500,
@@ -85,7 +85,7 @@ func toPermissionError(status int) (err Error) {
 }
 
 // unmarshalPermissions read the response body and unmarshall into a CRUD object
-func unmarshalPermissions(reader io.Reader) (*CRUD, error) {
+func unmarshalPermissions(reader io.Reader) (*Policy, error) {
 	b, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return nil, Error{
@@ -111,7 +111,7 @@ func unmarshalPermissions(reader io.Reader) (*CRUD, error) {
 		}
 	}
 
-	perms := &CRUD{}
+	perms := &Policy{}
 	for _, p := range callerPerms.List {
 		switch p {
 		case Create:

@@ -36,22 +36,22 @@ type HTTPClienter interface {
 	Do(ctx context.Context, req *http.Request) (*http.Response, error)
 }
 
-type Permissions struct {
+type Authorizer struct {
 	host string
 	cli  HTTPClienter
 }
 
-// CRUD is a representation of permissionsList required by an endpoint or held by a user/service.
-type CRUD struct {
+// Policy is a definition of permissions required by an endpoint or held by a user/service.
+type Policy struct {
 	Create bool
 	Read   bool
 	Update bool
 	Delete bool
 }
 
-// Satisfied is a verification function that checks a callers permissions contains each of the required permissions.
+// Satisfied is a authorization function that checks a caller's permissions contains each of the required permissions.
 // Returns nil if the caller has all of the stated required permissions otherwise returns Error with Status 403
-func (required *CRUD) Satisfied(ctx context.Context, caller *CRUD) error {
+func (required *Policy) Satisfied(ctx context.Context, caller *Policy) error {
 	missingPermissions := make([]permission, 0)
 
 	if required.Create && !caller.Create {

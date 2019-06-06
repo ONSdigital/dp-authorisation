@@ -1,15 +1,15 @@
-package auth
+package authorization
 
 import (
 	"context"
 	"net/http"
 
-	"github.com/ONSdigital/dp-permissions/permissions"
+	"github.com/ONSdigital/dp-api-permissions/permissions"
 	"github.com/ONSdigital/go-ns/common"
 	"github.com/ONSdigital/log.go/log"
 )
 
-//go:generate moq -out generated_auth_mocks.go -pkg auth . Authenticator
+//go:generate moq -out generated_auth_mocks.go -pkg authorization . Authorizer
 
 const (
 	CollectionIDHeader = "Collection-Id"
@@ -17,28 +17,28 @@ const (
 
 var (
 	getRequestVars func(r *http.Request) map[string]string
-	authenticator  Authenticator
+	authorizer     Authorizer
 	datasetIDKey   string
 )
 
-// Configure set up function for the auth pkg. Requires the datasetID parameter key, a function for getting request
-// parameters and a PermissionsAuthenticator implementation
-func Configure(DatasetIDKey string, GetRequestVarsFunc func(r *http.Request) map[string]string, Authenticator Authenticator) {
+// Configure set up function for the authorization pkg. Requires the datasetID parameter key, a function for getting
+// request parameters and a PermissionsAuthenticator implementation
+func Configure(DatasetIDKey string, GetRequestVarsFunc func(r *http.Request) map[string]string, Authorizer Authorizer) {
 	datasetIDKey = DatasetIDKey
 	getRequestVars = GetRequestVarsFunc
-	authenticator = Authenticator
+	authorizer = Authorizer
 }
 
-type Authenticator interface {
-	Vet(ctx context.Context, required permissions.CRUD, serviceToken string, userToken string, collectionID string, datasetID string) error
+type Authorizer interface {
+	Allow(ctx context.Context, required permissions.Policy, serviceToken string, userToken string, collectionID string, datasetID string) error
 }
 
-// Require is a http.HandlerFunc that verifies the caller holds the required permissions for the wrapped
+// Handler is a http.HandlerFunc that verifies the caller holds the required permissions for the wrapped
 // http.HandlerFunc If the caller has all of the required permissions then the request will continue to the wrapped
 // handlerFunc. If the caller does not have all the required permissions then the the request is rejected with the
 // appropriate http status and the wrapped handler is not invoked. If there is an error whilst attempting to check the
 // callers permissions then a 500 status is returned and the wrapped handler is not invoked.
-func Require(required permissions.CRUD, endpoint func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
+func Handler(required permissions.Policy, endpoint func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		logD := log.Data{"requested_uri": r.URL.RequestURI()}
 
@@ -47,9 +47,9 @@ func Require(required permissions.CRUD, endpoint func(http.ResponseWriter, *http
 		collectionID := r.Header.Get(CollectionIDHeader)
 		datasetID := getRequestVars(r)[datasetIDKey]
 
-		err := authenticator.Vet(r.Context(), required, serviceAuthToken, userAuthToken, collectionID, datasetID)
+		err := authorizer.Allow(r.Context(), required, serviceAuthToken, userAuthToken, collectionID, datasetID)
 		if err != nil {
-			handleVetError(r.Context(), err, w, logD)
+			handleAuthorizeError(r.Context(), err, w, logD)
 			return
 		}
 
@@ -58,7 +58,7 @@ func Require(required permissions.CRUD, endpoint func(http.ResponseWriter, *http
 	})
 }
 
-func handleVetError(ctx context.Context, err error, w http.ResponseWriter, logD log.Data) {
+func handleAuthorizeError(ctx context.Context, err error, w http.ResponseWriter, logD log.Data) {
 	permErr, ok := err.(permissions.Error)
 	if ok {
 		writeErr(ctx, w, permErr.Status, permErr.Message, logD)

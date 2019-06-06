@@ -6,15 +6,15 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
-func New(host string, httpClient HTTPClienter) *Permissions {
-	return &Permissions{
+func NewAuthorizer(host string, httpClient HTTPClienter) *Authorizer {
+	return &Authorizer{
 		host: host,
 		cli:  httpClient,
 	}
 }
 
-func (p *Permissions) Vet(ctx context.Context, required CRUD, serviceToken string, userToken string, collectionID string, datasetID string) error {
-	r, err := p.getPermissionsRequest(serviceToken, userToken, collectionID, datasetID)
+func (a *Authorizer) Allow(ctx context.Context, required Policy, serviceToken string, userToken string, collectionID string, datasetID string) error {
+	r, err := a.getPermissionsRequest(serviceToken, userToken, collectionID, datasetID)
 	if err != nil {
 		return Error{
 			Status:  500,
@@ -23,7 +23,7 @@ func (p *Permissions) Vet(ctx context.Context, required CRUD, serviceToken strin
 		}
 	}
 
-	resp, err := p.cli.Do(ctx, r)
+	resp, err := a.cli.Do(ctx, r)
 	if err != nil {
 		return Error{
 			Status:  500,
@@ -36,7 +36,6 @@ func (p *Permissions) Vet(ctx context.Context, required CRUD, serviceToken strin
 		if err := resp.Body.Close(); err != nil {
 			log.Event(ctx, "error closing response body", log.Error(err))
 		}
-
 	}()
 
 	if resp.StatusCode != 200 {
