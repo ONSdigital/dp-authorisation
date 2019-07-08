@@ -1,6 +1,7 @@
 package authv2
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -18,6 +19,11 @@ var (
 		Status:  400,
 	}
 
+	callerUnauthorisedError = Error{
+		Message: "access denied caller does not have the required permissions to perform this action",
+		Status:  403,
+	}
+
 	userDatasetPermissionsURL    = "%s/userDatasetPermissions?dataset_id=%s&collection_id=%s"
 	serviceDatasetPermissionsURL = "%s/serviceDatasetPermissions?dataset_id=%s"
 )
@@ -28,6 +34,7 @@ type Error struct {
 	Cause   error
 }
 
+// Permissions is a struct
 type Permissions struct {
 	Create bool
 	Read   bool
@@ -43,6 +50,16 @@ type Parameters struct {
 	DatasetID    string
 }
 
+type HTTPClienter interface {
+	Do(ctx context.Context, req *http.Request) (*http.Response, error)
+}
+
+type PermissionsClient struct {
+	host string
+	cli  HTTPClienter
+}
+
+// newUserParameters is a constructor function for creating a new Parameters object for a user auth request.
 func newUserParameters(userToken string, collectionID string, datasetID string) *Parameters {
 	return &Parameters{
 		UserToken:    userToken,
@@ -51,6 +68,7 @@ func newUserParameters(userToken string, collectionID string, datasetID string) 
 	}
 }
 
+// newUserParameters is a constructor function for creating a new Parameters object for a service account auth request.
 func newServiceParameters(serviceToken string, datasetID string) *Parameters {
 	return &Parameters{
 		ServiceToken: serviceToken,
@@ -65,6 +83,7 @@ func (e Error) Error() string {
 	return e.Message
 }
 
+// createUserDatasetPermissionsRequest create a new get user dataset permissions HTTP request.
 func (params *Parameters) createUserDatasetPermissionsRequest(host string) (*http.Request, error) {
 	if host == "" {
 		return nil, hostRequiredButEmptyError
@@ -84,6 +103,7 @@ func (params *Parameters) createUserDatasetPermissionsRequest(host string) (*htt
 	return httpRequest, nil
 }
 
+// createServiceDatasetPermissionsRequest create a new get service account dataset permissions HTTP request.
 func (params *Parameters) createServiceDatasetPermissionsRequest(host string) (*http.Request, error) {
 	if host == "" {
 		return nil, hostRequiredButEmptyError

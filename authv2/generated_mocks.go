@@ -4,82 +4,139 @@
 package authv2
 
 import (
-	"context"
 	"sync"
 )
 
 var (
-	lockAuthoriserMockCheckCallerDatasetPermissions sync.RWMutex
+	lockClienterMockGetCallerPermissions sync.RWMutex
 )
 
-// AuthoriserMock is a mock implementation of Authoriser.
+// ClienterMock is a mock implementation of Clienter.
 //
-//     func TestSomethingThatUsesAuthoriser(t *testing.T) {
+//     func TestSomethingThatUsesClienter(t *testing.T) {
 //
-//         // make and configure a mocked Authoriser
-//         mockedAuthoriser := &AuthoriserMock{
-//             CheckCallerDatasetPermissionsFunc: func(ctx context.Context, required *Permissions, params *Parameters) error {
-// 	               panic("TODO: mock out the CheckCallerDatasetPermissions method")
+//         // make and configure a mocked Clienter
+//         mockedClienter := &ClienterMock{
+//             GetCallerPermissionsFunc: func(params *Parameters) (*Permissions, error) {
+// 	               panic("TODO: mock out the GetCallerPermissions method")
 //             },
 //         }
 //
-//         // TODO: use mockedAuthoriser in code that requires Authoriser
+//         // TODO: use mockedClienter in code that requires Clienter
 //         //       and then make assertions.
 //
 //     }
-type AuthoriserMock struct {
-	// CheckCallerDatasetPermissionsFunc mocks the CheckCallerDatasetPermissions method.
-	CheckCallerDatasetPermissionsFunc func(ctx context.Context, required *Permissions, params *Parameters) error
+type ClienterMock struct {
+	// GetCallerPermissionsFunc mocks the GetCallerPermissions method.
+	GetCallerPermissionsFunc func(params *Parameters) (*Permissions, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// CheckCallerDatasetPermissions holds details about calls to the CheckCallerDatasetPermissions method.
-		CheckCallerDatasetPermissions []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// Required is the required argument value.
-			Required *Permissions
+		// GetCallerPermissions holds details about calls to the GetCallerPermissions method.
+		GetCallerPermissions []struct {
 			// Params is the params argument value.
 			Params *Parameters
 		}
 	}
 }
 
-// CheckCallerDatasetPermissions calls CheckCallerDatasetPermissionsFunc.
-func (mock *AuthoriserMock) CheckCallerDatasetPermissions(ctx context.Context, required *Permissions, params *Parameters) error {
-	if mock.CheckCallerDatasetPermissionsFunc == nil {
-		panic("moq: AuthoriserMock.CheckCallerDatasetPermissionsFunc is nil but Authoriser.CheckCallerDatasetPermissions was just called")
+// GetCallerPermissions calls GetCallerPermissionsFunc.
+func (mock *ClienterMock) GetCallerPermissions(params *Parameters) (*Permissions, error) {
+	if mock.GetCallerPermissionsFunc == nil {
+		panic("moq: ClienterMock.GetCallerPermissionsFunc is nil but Clienter.GetCallerPermissions was just called")
 	}
 	callInfo := struct {
-		Ctx      context.Context
-		Required *Permissions
-		Params   *Parameters
+		Params *Parameters
 	}{
-		Ctx:      ctx,
-		Required: required,
-		Params:   params,
+		Params: params,
 	}
-	lockAuthoriserMockCheckCallerDatasetPermissions.Lock()
-	mock.calls.CheckCallerDatasetPermissions = append(mock.calls.CheckCallerDatasetPermissions, callInfo)
-	lockAuthoriserMockCheckCallerDatasetPermissions.Unlock()
-	return mock.CheckCallerDatasetPermissionsFunc(ctx, required, params)
+	lockClienterMockGetCallerPermissions.Lock()
+	mock.calls.GetCallerPermissions = append(mock.calls.GetCallerPermissions, callInfo)
+	lockClienterMockGetCallerPermissions.Unlock()
+	return mock.GetCallerPermissionsFunc(params)
 }
 
-// CheckCallerDatasetPermissionsCalls gets all the calls that were made to CheckCallerDatasetPermissions.
+// GetCallerPermissionsCalls gets all the calls that were made to GetCallerPermissions.
 // Check the length with:
-//     len(mockedAuthoriser.CheckCallerDatasetPermissionsCalls())
-func (mock *AuthoriserMock) CheckCallerDatasetPermissionsCalls() []struct {
-	Ctx      context.Context
-	Required *Permissions
-	Params   *Parameters
+//     len(mockedClienter.GetCallerPermissionsCalls())
+func (mock *ClienterMock) GetCallerPermissionsCalls() []struct {
+	Params *Parameters
 } {
 	var calls []struct {
-		Ctx      context.Context
-		Required *Permissions
-		Params   *Parameters
+		Params *Parameters
 	}
-	lockAuthoriserMockCheckCallerDatasetPermissions.RLock()
-	calls = mock.calls.CheckCallerDatasetPermissions
-	lockAuthoriserMockCheckCallerDatasetPermissions.RUnlock()
+	lockClienterMockGetCallerPermissions.RLock()
+	calls = mock.calls.GetCallerPermissions
+	lockClienterMockGetCallerPermissions.RUnlock()
+	return calls
+}
+
+var (
+	lockVerifierMockCheckPermissionsRequirementsSatisfied sync.RWMutex
+)
+
+// VerifierMock is a mock implementation of Verifier.
+//
+//     func TestSomethingThatUsesVerifier(t *testing.T) {
+//
+//         // make and configure a mocked Verifier
+//         mockedVerifier := &VerifierMock{
+//             CheckPermissionsRequirementsSatisfiedFunc: func(callerPermissions *Permissions, requiredPermissions *Permissions) error {
+// 	               panic("TODO: mock out the CheckPermissionsRequirementsSatisfied method")
+//             },
+//         }
+//
+//         // TODO: use mockedVerifier in code that requires Verifier
+//         //       and then make assertions.
+//
+//     }
+type VerifierMock struct {
+	// CheckPermissionsRequirementsSatisfiedFunc mocks the CheckPermissionsRequirementsSatisfied method.
+	CheckPermissionsRequirementsSatisfiedFunc func(callerPermissions *Permissions, requiredPermissions *Permissions) error
+
+	// calls tracks calls to the methods.
+	calls struct {
+		// CheckPermissionsRequirementsSatisfied holds details about calls to the CheckPermissionsRequirementsSatisfied method.
+		CheckPermissionsRequirementsSatisfied []struct {
+			// CallerPermissions is the callerPermissions argument value.
+			CallerPermissions *Permissions
+			// RequiredPermissions is the requiredPermissions argument value.
+			RequiredPermissions *Permissions
+		}
+	}
+}
+
+// CheckPermissionsRequirementsSatisfied calls CheckPermissionsRequirementsSatisfiedFunc.
+func (mock *VerifierMock) CheckPermissionsRequirementsSatisfied(callerPermissions *Permissions, requiredPermissions *Permissions) error {
+	if mock.CheckPermissionsRequirementsSatisfiedFunc == nil {
+		panic("moq: VerifierMock.CheckPermissionsRequirementsSatisfiedFunc is nil but Verifier.CheckPermissionsRequirementsSatisfied was just called")
+	}
+	callInfo := struct {
+		CallerPermissions   *Permissions
+		RequiredPermissions *Permissions
+	}{
+		CallerPermissions:   callerPermissions,
+		RequiredPermissions: requiredPermissions,
+	}
+	lockVerifierMockCheckPermissionsRequirementsSatisfied.Lock()
+	mock.calls.CheckPermissionsRequirementsSatisfied = append(mock.calls.CheckPermissionsRequirementsSatisfied, callInfo)
+	lockVerifierMockCheckPermissionsRequirementsSatisfied.Unlock()
+	return mock.CheckPermissionsRequirementsSatisfiedFunc(callerPermissions, requiredPermissions)
+}
+
+// CheckPermissionsRequirementsSatisfiedCalls gets all the calls that were made to CheckPermissionsRequirementsSatisfied.
+// Check the length with:
+//     len(mockedVerifier.CheckPermissionsRequirementsSatisfiedCalls())
+func (mock *VerifierMock) CheckPermissionsRequirementsSatisfiedCalls() []struct {
+	CallerPermissions   *Permissions
+	RequiredPermissions *Permissions
+} {
+	var calls []struct {
+		CallerPermissions   *Permissions
+		RequiredPermissions *Permissions
+	}
+	lockVerifierMockCheckPermissionsRequirementsSatisfied.RLock()
+	calls = mock.calls.CheckPermissionsRequirementsSatisfied
+	lockVerifierMockCheckPermissionsRequirementsSatisfied.RUnlock()
 	return calls
 }

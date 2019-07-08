@@ -8,15 +8,11 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
-//go:generate moq -out generated_mocks.go -pkg authv2 . Authoriser
-
-// Allow given a policy, service and or user token, a collection ID and dataset ID determined if the caller has the
-// necessary permissions to perform the requested action.
-type Authoriser interface {
-	CheckCallerDatasetPermissions(ctx context.Context, required *Permissions, params *Parameters) error
+func RequireReadDatasetPermission(endpoint http.HandlerFunc) http.HandlerFunc {
+	return RequireDatasetPermissions(&Permissions{Read: true}, endpoint)
 }
 
-func CheckDatasetPermissions(requiredPermissions *Permissions, wrappedHandler http.HandlerFunc) http.HandlerFunc {
+func RequireDatasetPermissions(requiredPermissions *Permissions, wrappedHandler http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		logD := log.Data{"requested_uri": req.URL.RequestURI()}
 
@@ -26,7 +22,14 @@ func CheckDatasetPermissions(requiredPermissions *Permissions, wrappedHandler ht
 			return
 		}
 
-		if err = authoriser.CheckCallerDatasetPermissions(req.Context(), requiredPermissions, parameters); err != nil {
+		callerPermissions, err := permissionsCli.GetCallerPermissions(parameters)
+		if err != nil {
+			handleAuthoriseError(req.Context(), err, w, logD)
+			return
+		}
+
+		err = permissionsVerifier.CheckPermissionsRequirementsSatisfied(callerPermissions, requiredPermissions)
+		if err != nil {
 			handleAuthoriseError(req.Context(), err, w, logD)
 			return
 		}
