@@ -1,6 +1,7 @@
 package authv2
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -358,7 +359,7 @@ func getRequest(userAuthToken, serviceAuthToken, collectionID string) *http.Requ
 
 func getClienterMock(p *Permissions, err error) *ClienterMock {
 	return &ClienterMock{
-		GetCallerPermissionsFunc: func(params *Parameters) (permissions *Permissions, e error) {
+		GetCallerPermissionsFunc: func(ctx context.Context, params Parameters) (permissions *Permissions, e error) {
 			return p, err
 		},
 	}
@@ -366,7 +367,7 @@ func getClienterMock(p *Permissions, err error) *ClienterMock {
 
 func getVerifierMock(err error) *VerifierMock {
 	return &VerifierMock{
-		CheckPermissionsRequirementsSatisfiedFunc: func(callerPermissions *Permissions, requiredPermissions *Permissions) error {
+		CheckPermissionsRequirementsSatisfiedFunc: func(ctx context.Context, callerPermissions *Permissions, requiredPermissions *Permissions) error {
 			return err
 		},
 	}

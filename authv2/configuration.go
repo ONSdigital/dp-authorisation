@@ -1,6 +1,7 @@
 package authv2
 
 import (
+	"context"
 	"net/http"
 )
 
@@ -19,12 +20,16 @@ var (
 
 type GetRequestVarsFunc func(r *http.Request) map[string]string
 
+type HTTPClienter interface {
+	Do(ctx context.Context, req *http.Request) (*http.Response, error)
+}
+
 type Clienter interface {
-	GetCallerPermissions(params *Parameters) (callerPermissions *Permissions, err error)
+	GetCallerPermissions(ctx context.Context, params Parameters) (callerPermissions *Permissions, err error)
 }
 
 type Verifier interface {
-	CheckPermissionsRequirementsSatisfied(callerPermissions *Permissions, requiredPermissions *Permissions) error
+	CheckPermissionsRequirementsSatisfied(ctx context.Context, callerPermissions *Permissions, requiredPermissions *Permissions) error
 }
 
 // Configure set up function for the authorisation pkg. Requires the datasetID parameter key, a function for getting

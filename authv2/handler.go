@@ -14,21 +14,22 @@ func RequireReadDatasetPermission(endpoint http.HandlerFunc) http.HandlerFunc {
 
 func RequireDatasetPermissions(requiredPermissions *Permissions, wrappedHandler http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		ctx := req.Context()
 		logD := log.Data{"requested_uri": req.URL.RequestURI()}
 
-		parameters, err := extractAuthorisationParameters(req)
+		parameters, err := createAuthorisationParameters(req)
 		if err != nil {
 			handleAuthoriseError(req.Context(), err, w, logD)
 			return
 		}
 
-		callerPermissions, err := permissionsCli.GetCallerPermissions(parameters)
+		callerPermissions, err := permissionsCli.GetCallerPermissions(ctx, parameters)
 		if err != nil {
 			handleAuthoriseError(req.Context(), err, w, logD)
 			return
 		}
 
-		err = permissionsVerifier.CheckPermissionsRequirementsSatisfied(callerPermissions, requiredPermissions)
+		err = permissionsVerifier.CheckPermissionsRequirementsSatisfied(ctx, callerPermissions, requiredPermissions)
 		if err != nil {
 			handleAuthoriseError(req.Context(), err, w, logD)
 			return
@@ -39,7 +40,7 @@ func RequireDatasetPermissions(requiredPermissions *Permissions, wrappedHandler 
 	})
 }
 
-func extractAuthorisationParameters(req *http.Request) (*Parameters, error) {
+func createAuthorisationParameters(req *http.Request) (Parameters, error) {
 	userAuthToken := req.Header.Get(common.FlorenceHeaderKey)
 	serviceAuthToken := req.Header.Get(common.AuthHeaderKey)
 	collectionID := req.Header.Get(CollectionIDHeader)
