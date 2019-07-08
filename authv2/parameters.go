@@ -7,7 +7,6 @@ import (
 	"github.com/ONSdigital/go-ns/common"
 )
 
-// Parameters is a model encapsulating details about the authorisation request.
 type Parameters interface {
 	NewGetDatasetPermissionsRequest(host string) (*http.Request, error)
 }
@@ -23,7 +22,6 @@ type ServiceParameters struct {
 	DatasetID    string
 }
 
-// newUserParameters is a constructor function for creating a new Parameters object for a user auth request.
 func newUserParameters(userToken string, collectionID string, datasetID string) Parameters {
 	return &UserParameters{
 		UserToken:    userToken,
@@ -32,7 +30,6 @@ func newUserParameters(userToken string, collectionID string, datasetID string) 
 	}
 }
 
-// newUserParameters is a constructor function for creating a new Parameters object for a service account auth request.
 func newServiceParameters(serviceToken string, datasetID string) Parameters {
 	return &ServiceParameters{
 		ServiceToken: serviceToken,
@@ -40,7 +37,6 @@ func newServiceParameters(serviceToken string, datasetID string) Parameters {
 	}
 }
 
-// createUserDatasetPermissionsRequest create a new get user dataset permissions HTTP request.
 func (params *UserParameters) NewGetDatasetPermissionsRequest(host string) (*http.Request, error) {
 	if host == "" {
 		return nil, hostRequiredButEmptyError
@@ -60,7 +56,6 @@ func (params *UserParameters) NewGetDatasetPermissionsRequest(host string) (*htt
 	return httpRequest, nil
 }
 
-// createServiceDatasetPermissionsRequest create a new get service account dataset permissions HTTP request.
 func (params *ServiceParameters) NewGetDatasetPermissionsRequest(host string) (*http.Request, error) {
 	if host == "" {
 		return nil, hostRequiredButEmptyError

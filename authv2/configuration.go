@@ -25,11 +25,11 @@ type HTTPClienter interface {
 }
 
 type Clienter interface {
-	GetCallerPermissions(ctx context.Context, params Parameters) (callerPermissions *Permissions, err error)
+	GetCallerDatasetPermissions(ctx context.Context, params Parameters) (callerPermissions *Permissions, err error)
 }
 
 type Verifier interface {
-	CheckPermissionsRequirementsSatisfied(ctx context.Context, callerPermissions *Permissions, requiredPermissions *Permissions) error
+	CheckAuthorisation(ctx context.Context, callerPermissions *Permissions, requiredPermissions *Permissions) error
 }
 
 // Configure set up function for the authorisation pkg. Requires the datasetID parameter key, a function for getting
