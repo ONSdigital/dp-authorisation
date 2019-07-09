@@ -2,7 +2,9 @@ package authv2
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -132,6 +134,88 @@ func TestUnmarshalPermissionsResponseEntity(t *testing.T) {
 
 				Convey("then the expected permissionsResponseEntity is returned", func() {
 					tc.assertEntity(actual)
+				})
+
+				Convey("and the expected error is returned", func() {
+					tc.assertError(err)
+				})
+			})
+		})
+	}
+}
+
+func TestGetResponseBytes(t *testing.T) {
+	testCases := []struct {
+		scenario    string
+		reader      io.Reader
+		assertBytes func([]byte)
+		assertError func(error)
+	}{
+		{
+			scenario: "Given a nil reader",
+			reader:   nil,
+			assertBytes: func(b []byte) {
+				So(b, ShouldBeNil)
+			},
+			assertError: func(err error) {
+				So(err, ShouldResemble, getPermissionsResponseBodyNilError)
+			},
+		},
+		{
+			scenario: "Given reader returns an empty byte array",
+			reader: &readCloserMock{
+				GetEntityFunc: func() (bytes []byte, e error) {
+					return []byte{}, nil
+				},
+			},
+			assertBytes: func(b []byte) {
+				So(b, ShouldBeEmpty)
+			},
+			assertError: func(err error) {
+				So(err, ShouldBeNil)
+			},
+		},
+		{
+			scenario: "Given ioutil.ReadAll returns an error",
+			reader: &readCloserMock{
+				GetEntityFunc: func() (bytes []byte, e error) {
+					return nil, errors.New("bork")
+				},
+			},
+			assertBytes: func(b []byte) {
+				So(b, ShouldBeNil)
+			},
+			assertError: func(err error) {
+				permErr, ok := err.(Error)
+				So(ok, ShouldBeTrue)
+				So(permErr.Message, ShouldEqual, "internal server error failed reading get permissions response body")
+				So(permErr.Status, ShouldEqual, 500)
+			},
+		},
+		{
+			scenario: "Given reader returns a valid byte array",
+			reader: &readCloserMock{
+				GetEntityFunc: func() (bytes []byte, e error) {
+					return []byte("hello world"), nil
+				},
+			},
+			assertBytes: func(b []byte) {
+				So(b, ShouldResemble, []byte("hello world"))
+			},
+			assertError: func(err error) {
+				So(err, ShouldBeNil)
+			},
+		},
+	}
+
+	for i, tc := range testCases {
+		Convey(fmt.Sprintf("%d/%d) %s", i+1, len(testCases), tc.scenario), t, func() {
+
+			Convey("when getResponseBytes is called", func() {
+				actual, err := getResponseBytes(tc.reader)
+
+				Convey("then the expected bytes are returned", func() {
+					tc.assertBytes(actual)
 				})
 
 				Convey("and the expected error is returned", func() {
