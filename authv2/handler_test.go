@@ -56,7 +56,7 @@ func TestRequireDatasetPermissions_userRequests(t *testing.T) {
 
 			Convey("then permissionsClient getCallerDatasetPermissions is called once with the expected params", func() {
 				getPermissionsCaller := clienterMock.GetCallerDatasetPermissionsCalls()
-				expectedParams := newUserParameters(userAuthToken, collectionID, datasetID)
+				expectedParams := newUserDatasetParameters(userAuthToken, collectionID, datasetID)
 
 				So(getPermissionsCaller, ShouldHaveLength, 1)
 				So(getPermissionsCaller[0].Params, ShouldResemble, expectedParams)
@@ -101,7 +101,7 @@ func TestRequireDatasetPermissions_userRequests(t *testing.T) {
 
 			Convey("then permissionsClient getCallerDatasetPermissions is called once with the expected params", func() {
 				calls := clientMock.GetCallerDatasetPermissionsCalls()
-				expectedParams := newUserParameters(userAuthToken, collectionID, datasetID)
+				expectedParams := newUserDatasetParameters(userAuthToken, collectionID, datasetID)
 
 				So(calls, ShouldHaveLength, 1)
 				So(calls[0].Params, ShouldResemble, expectedParams)
@@ -144,7 +144,7 @@ func TestRequireDatasetPermissions_userRequests(t *testing.T) {
 			authHandler.ServeHTTP(w, r)
 
 			Convey("then permissionsClient getCallerDatasetPermissions is called once with the expected params", func() {
-				expectedParams := newUserParameters(userAuthToken, collectionID, datasetID)
+				expectedParams := newUserDatasetParameters(userAuthToken, collectionID, datasetID)
 
 				calls := clientMock.GetCallerDatasetPermissionsCalls()
 				So(calls, ShouldHaveLength, 1)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ONSdigital/go-ns/common"
 	"github.com/ONSdigital/log.go/log"
 )
 
@@ -17,7 +16,7 @@ func RequireDatasetPermissions(requiredPermissions *Permissions, wrappedHandler 
 		ctx := req.Context()
 		logD := log.Data{"requested_uri": req.URL.RequestURI()}
 
-		parameters, err := createAuthorisationParameters(req)
+		parameters, err := createDatasetAuthorisationParameters(req)
 		if err != nil {
 			handleAuthoriseError(req.Context(), err, w, logD)
 			return
@@ -38,23 +37,6 @@ func RequireDatasetPermissions(requiredPermissions *Permissions, wrappedHandler 
 		log.Event(req.Context(), "caller authorised to perform requested action", logD)
 		wrappedHandler(w, req)
 	})
-}
-
-func createAuthorisationParameters(req *http.Request) (Parameters, error) {
-	userAuthToken := req.Header.Get(common.FlorenceHeaderKey)
-	serviceAuthToken := req.Header.Get(common.AuthHeaderKey)
-	collectionID := req.Header.Get(CollectionIDHeader)
-	datasetID := getRequestVars(req)[datasetIDKey]
-
-	if userAuthToken != "" {
-		return newUserParameters(userAuthToken, collectionID, datasetID), nil
-	}
-
-	if serviceAuthToken != "" {
-		return newServiceParameters(serviceAuthToken, datasetID), nil
-	}
-
-	return nil, noUserOrServiceAuthTokenProvidedError
 }
 
 func handleAuthoriseError(ctx context.Context, err error, w http.ResponseWriter, logD log.Data) {

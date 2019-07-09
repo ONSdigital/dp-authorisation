@@ -11,19 +11,36 @@ type Parameters interface {
 	NewGetDatasetPermissionsRequest(host string) (*http.Request, error)
 }
 
-type UserParameters struct {
+type UserDatasetParameters struct {
 	UserToken    string
 	CollectionID string
 	DatasetID    string
 }
 
-type ServiceParameters struct {
+type ServiceDatasetParameters struct {
 	ServiceToken string
 	DatasetID    string
 }
 
-func newUserParameters(userToken string, collectionID string, datasetID string) Parameters {
-	return &UserParameters{
+func createDatasetAuthorisationParameters(req *http.Request) (Parameters, error) {
+	userAuthToken := req.Header.Get(common.FlorenceHeaderKey)
+	serviceAuthToken := req.Header.Get(common.AuthHeaderKey)
+	collectionID := req.Header.Get(CollectionIDHeader)
+	datasetID := getRequestVars(req)[datasetIDKey]
+
+	if userAuthToken != "" {
+		return newUserDatasetParameters(userAuthToken, collectionID, datasetID), nil
+	}
+
+	if serviceAuthToken != "" {
+		return newServiceParameters(serviceAuthToken, datasetID), nil
+	}
+
+	return nil, noUserOrServiceAuthTokenProvidedError
+}
+
+func newUserDatasetParameters(userToken string, collectionID string, datasetID string) Parameters {
+	return &UserDatasetParameters{
 		UserToken:    userToken,
 		CollectionID: collectionID,
 		DatasetID:    datasetID,
@@ -31,13 +48,13 @@ func newUserParameters(userToken string, collectionID string, datasetID string) 
 }
 
 func newServiceParameters(serviceToken string, datasetID string) Parameters {
-	return &ServiceParameters{
+	return &ServiceDatasetParameters{
 		ServiceToken: serviceToken,
 		DatasetID:    datasetID,
 	}
 }
 
-func (params *UserParameters) NewGetDatasetPermissionsRequest(host string) (*http.Request, error) {
+func (params *UserDatasetParameters) NewGetDatasetPermissionsRequest(host string) (*http.Request, error) {
 	if host == "" {
 		return nil, hostRequiredButEmptyError
 	}
@@ -48,7 +65,7 @@ func (params *UserParameters) NewGetDatasetPermissionsRequest(host string) (*htt
 		return nil, Error{
 			Cause:   err,
 			Status:  500,
-			Message: "error creating new get permissions http request",
+			Message: "error creating new get user dataset permissions http request",
 		}
 	}
 
@@ -56,7 +73,7 @@ func (params *UserParameters) NewGetDatasetPermissionsRequest(host string) (*htt
 	return httpRequest, nil
 }
 
-func (params *ServiceParameters) NewGetDatasetPermissionsRequest(host string) (*http.Request, error) {
+func (params *ServiceDatasetParameters) NewGetDatasetPermissionsRequest(host string) (*http.Request, error) {
 	if host == "" {
 		return nil, hostRequiredButEmptyError
 	}
@@ -67,7 +84,7 @@ func (params *ServiceParameters) NewGetDatasetPermissionsRequest(host string) (*
 		return nil, Error{
 			Cause:   err,
 			Status:  500,
-			Message: "error making get permissions http request",
+			Message: "error creating new get service dataset permissions http request",
 		}
 	}
 
