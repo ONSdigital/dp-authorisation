@@ -28,7 +28,7 @@ var checkAuthTestCases = []checkAuthTestCase{
 		actual:   &Permissions{Read: true},
 		required: &Permissions{Create: true, Read: true, Update: true, Delete: true},
 		assertFunc: func(err error) {
-			So(err, ShouldResemble, callerForbiddenError)
+			So(err, ShouldResemble, checkAuthorisationForbiddenError)
 		},
 	},
 	{
@@ -60,7 +60,7 @@ var checkAuthTestCases = []checkAuthTestCase{
 		actual:   nil,
 		required: &Permissions{Create: true, Read: true, Update: true, Delete: true},
 		assertFunc: func(err error) {
-			So(err, ShouldResemble, callerForbiddenError)
+			So(err, ShouldResemble, checkAuthorisationForbiddenError)
 		},
 	},
 }

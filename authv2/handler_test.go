@@ -261,7 +261,7 @@ func TestRequireDatasetPermissions_serviceRequests(t *testing.T) {
 
 		clientMock := getClienterMock(readPermissions, nil)
 
-		verifierMock := getVerifierMock(callerForbiddenError)
+		verifierMock := getVerifierMock(checkAuthorisationForbiddenError)
 
 		Configure("dataset_id", getVarsFunc, clientMock, verifierMock)
 
@@ -297,8 +297,8 @@ func TestRequireDatasetPermissions_serviceRequests(t *testing.T) {
 			})
 
 			Convey("and the appropriate error status is returned", func() {
-				So(w.Code, ShouldEqual, callerForbiddenError.Status)
-				So(w.Body.String(), ShouldEqual, callerForbiddenError.Message)
+				So(w.Code, ShouldEqual, checkAuthorisationForbiddenError.Status)
+				So(w.Body.String(), ShouldEqual, checkAuthorisationForbiddenError.Message)
 			})
 		})
 	})

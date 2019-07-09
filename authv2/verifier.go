@@ -14,7 +14,7 @@ func NewPermissionsVerifier() *PermissionsVerifier {
 }
 
 // CheckAuthorisation check the actual Permissions satisfy the required Permissions. Returns nil if requirements are satisfied
-// returns callerForbiddenError otherwise.
+// returns CheckAuthorisation otherwise.
 func (verifier *PermissionsVerifier) CheckAuthorisation(ctx context.Context, actual *Permissions, required *Permissions) error {
 	required = defaultIfBlank(required)
 	actual = defaultIfBlank(actual)
@@ -39,7 +39,7 @@ func (verifier *PermissionsVerifier) CheckAuthorisation(ctx context.Context, act
 			"caller_permissions":   actual,
 			"missing_permissions":  missingPermissions,
 		})
-		return callerForbiddenError
+		return checkAuthorisationForbiddenError
 	}
 
 	log.Event(ctx, "caller authorised to perform the requested action")

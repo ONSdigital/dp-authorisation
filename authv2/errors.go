@@ -3,8 +3,9 @@ package authv2
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"io/ioutil"
-	"net/http"
 
 	"github.com/ONSdigital/log.go/log"
 )
@@ -20,14 +21,19 @@ var (
 		Status:  400,
 	}
 
-	callerForbiddenError = Error{
+	checkAuthorisationForbiddenError = Error{
 		Message: "access denied caller does not have the required permissions to perform this action",
 		Status:  403,
 	}
 
-	responseBodyNilError = Error{
+	getPermissionsResponseBodyNilError = Error{
 		Status:  500,
 		Message: "internal server error response body was nil",
+	}
+
+	getPermissionsUnauthorizedError = Error{
+		Status:  401,
+		Message: "error making get permissions request: unauthorized",
 	}
 )
 
@@ -39,15 +45,34 @@ type Error struct {
 
 func (e Error) Error() string {
 	if e.Cause != nil {
-		return e.Cause.Error()
+		return fmt.Sprintf("%s: %s", e.Message, e.Cause.Error())
 	}
 	return e.Message
 }
 
-func errorEntityToError(ctx context.Context, resp *http.Response) error {
-	body, err := ioutil.ReadAll(resp.Body)
+func handleGetPermissionsErrorResponse(ctx context.Context, body io.Reader, status int) error {
+	errorEntity, err := getErrorEntityFromResponse(body)
 	if err != nil {
-		return Error{
+		log.Event(
+			ctx, "error unmarshalling get permissions error response. Returning 401 status as unable to verify caller permissions", log.Error(err), log.Data{
+				"get_permissions_status_code": status,
+			})
+		return getPermissionsUnauthorizedError
+	}
+
+	log.Event(ctx, "get permissions request returned error status. Returning 401 status as unable to verify caller permissions",
+		log.Data{
+			"get_permissions_status_code": status,
+			"get_permissions_body":        errorEntity,
+		})
+
+	return getPermissionsUnauthorizedError
+}
+
+func getErrorEntityFromResponse(body io.Reader) (*errorEntity, error) {
+	jBytes, err := ioutil.ReadAll(body)
+	if err != nil {
+		return nil, Error{
 			Status:  500,
 			Message: "internal server error failed reading get permissions error response body",
 			Cause:   err,
@@ -55,37 +80,13 @@ func errorEntityToError(ctx context.Context, resp *http.Response) error {
 	}
 
 	var entity errorEntity
-	if err = json.Unmarshal(body, &entity); err != nil {
-		return Error{
+	if err = json.Unmarshal(jBytes, &entity); err != nil {
+		return nil, Error{
 			Status:  500,
 			Message: "internal server error failed unmarshalling get permissions error response body",
 			Cause:   err,
 		}
 	}
 
-	log.Event(ctx, "get caller permissions request returned an error status", log.Data{
-		"status_code": resp.StatusCode,
-		"body":        entity,
-	})
-
-	permErr := statusCodeToError(resp.StatusCode)
-	log.Event(ctx, "mapped get permissions error response status to permissions.Error", log.Data{
-		"original_error_status":     resp.StatusCode,
-		"original_error_message":    entity.Message,
-		"permissions_error_status":  permErr.Status,
-		"permissions_error_message": permErr.Message,
-	})
-	return permErr
-}
-
-func statusCodeToError(status int) (err Error) {
-	switch status {
-	case 400, 401, 404:
-		// treat as caller unauthorized
-		return Error{Status: 401, Message: "unauthorized"}
-	case 403:
-		return Error{Status: 403, Message: "forbidden"}
-	default:
-		return Error{Status: 500, Message: "internal server error"}
-	}
+	return &entity, nil
 }
