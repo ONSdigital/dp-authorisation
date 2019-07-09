@@ -97,7 +97,7 @@ func getPermissionsEntityFromResponse(reader io.Reader) (*Permissions, error) {
 		return nil, err
 	}
 
-	return permissionsResponseEntityToPermissionsModel(entity), nil
+	return permissionsResponseEntityToPermissions(entity), nil
 }
 
 func getResponseBytes(reader io.Reader) ([]byte, error) {
@@ -133,7 +133,7 @@ func unmarshalPermissionsResponseEntity(b []byte) (*permissionsResponseEntity, e
 	return &entity, nil
 }
 
-func permissionsResponseEntityToPermissionsModel(entity *permissionsResponseEntity) *Permissions {
+func permissionsResponseEntityToPermissions(entity *permissionsResponseEntity) *Permissions {
 	permissions := &Permissions{}
 
 	if entity == nil || entity.List == nil {
