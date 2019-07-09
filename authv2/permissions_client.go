@@ -49,7 +49,7 @@ func NewPermissionsClient(host string, httpClient HTTPClienter) *PermissionsClie
 	}
 }
 
-func (client *PermissionsClient) GetCallerDatasetPermissions(ctx context.Context, params Parameters) (callerPermissions *Permissions, err error) {
+func (client *PermissionsClient) GetCallerPermissions(ctx context.Context, params Parameters) (callerPermissions *Permissions, err error) {
 	getPermissionsRequest, err := params.NewGetDatasetPermissionsRequest(client.host)
 	if err != nil {
 		return nil, err

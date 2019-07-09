@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-//go:generate moq -out generated_mocks.go -pkg authv2 . Clienter Verifier HTTPClienter
+//go:generate moq -out generated_mocks.go -pkg authv2 . Clienter Verifier HTTPClienter Parameters
 
 const (
 	CollectionIDHeader = "Collection-Id"
@@ -25,7 +25,7 @@ type HTTPClienter interface {
 }
 
 type Clienter interface {
-	GetCallerDatasetPermissions(ctx context.Context, params Parameters) (callerPermissions *Permissions, err error)
+	GetCallerPermissions(ctx context.Context, params Parameters) (callerPermissions *Permissions, err error)
 }
 
 type Verifier interface {

@@ -22,7 +22,7 @@ func RequireDatasetPermissions(requiredPermissions *Permissions, wrappedHandler 
 			return
 		}
 
-		callerPermissions, err := permissionsCli.GetCallerDatasetPermissions(ctx, parameters)
+		callerPermissions, err := permissionsCli.GetCallerPermissions(ctx, parameters)
 		if err != nil {
 			handleAuthoriseError(req.Context(), err, w, logD)
 			return

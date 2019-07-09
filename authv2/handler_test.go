@@ -54,8 +54,8 @@ func TestRequireDatasetPermissions_userRequests(t *testing.T) {
 		Convey("when a request is received", func() {
 			authHandler.ServeHTTP(w, r)
 
-			Convey("then permissionsClient getCallerDatasetPermissions is called once with the expected params", func() {
-				getPermissionsCaller := clienterMock.GetCallerDatasetPermissionsCalls()
+			Convey("then permissionsClient GetCallerPermissionsCalls is called once with the expected params", func() {
+				getPermissionsCaller := clienterMock.GetCallerPermissionsCalls()
 				expectedParams := newUserDatasetParameters(userAuthToken, collectionID, datasetID)
 
 				So(getPermissionsCaller, ShouldHaveLength, 1)
@@ -99,8 +99,8 @@ func TestRequireDatasetPermissions_userRequests(t *testing.T) {
 		Convey("when a request is received", func() {
 			authHandler.ServeHTTP(w, r)
 
-			Convey("then permissionsClient getCallerDatasetPermissions is called once with the expected params", func() {
-				calls := clientMock.GetCallerDatasetPermissionsCalls()
+			Convey("then permissionsClient GetCallerPermissionsCalls is called once with the expected params", func() {
+				calls := clientMock.GetCallerPermissionsCalls()
 				expectedParams := newUserDatasetParameters(userAuthToken, collectionID, datasetID)
 
 				So(calls, ShouldHaveLength, 1)
@@ -143,10 +143,10 @@ func TestRequireDatasetPermissions_userRequests(t *testing.T) {
 		Convey("when a request is received", func() {
 			authHandler.ServeHTTP(w, r)
 
-			Convey("then permissionsClient getCallerDatasetPermissions is called once with the expected params", func() {
+			Convey("then permissionsClient GetCallerPermissionsCalls is called once with the expected params", func() {
 				expectedParams := newUserDatasetParameters(userAuthToken, collectionID, datasetID)
 
-				calls := clientMock.GetCallerDatasetPermissionsCalls()
+				calls := clientMock.GetCallerPermissionsCalls()
 				So(calls, ShouldHaveLength, 1)
 				So(calls[0].Params, ShouldResemble, expectedParams)
 			})
@@ -198,7 +198,7 @@ func TestRequireDatasetPermissions_invalidRequest(t *testing.T) {
 			})
 
 			Convey("and permissions client is not called", func() {
-				So(clientMock.GetCallerDatasetPermissionsCalls(), ShouldHaveLength, 0)
+				So(clientMock.GetCallerPermissionsCalls(), ShouldHaveLength, 0)
 			})
 
 			Convey("and permissions verifier is not called", func() {
@@ -238,7 +238,7 @@ func TestRequireDatasetPermissions_serviceRequests(t *testing.T) {
 			Convey("then GetCallerDatasetPermissions is called once with the expected params", func() {
 				expectedParams := newServiceParameters(serviceAuthToken, datasetID)
 
-				calls := clientMock.GetCallerDatasetPermissionsCalls()
+				calls := clientMock.GetCallerPermissionsCalls()
 				So(calls, ShouldHaveLength, 1)
 				So(calls[0].Params, ShouldResemble, expectedParams)
 			})
@@ -277,10 +277,10 @@ func TestRequireDatasetPermissions_serviceRequests(t *testing.T) {
 		Convey("when a request is received", func() {
 			authHandler.ServeHTTP(w, r)
 
-			Convey("then GetCallerDatasetPermissions is called once with the expected params", func() {
+			Convey("then GetCallerPermissionsCalls is called once with the expected params", func() {
 				expectedParams := newServiceParameters(serviceAuthToken, datasetID)
 
-				calls := clientMock.GetCallerDatasetPermissionsCalls()
+				calls := clientMock.GetCallerPermissionsCalls()
 				So(calls, ShouldHaveLength, 1)
 				So(calls[0].Params, ShouldResemble, expectedParams)
 			})
@@ -327,7 +327,7 @@ func TestRequireDatasetPermissions_serviceRequests(t *testing.T) {
 			Convey("then GetCallerPermissions is called once with the expected params", func() {
 				expectedParams := newServiceParameters(serviceAuthToken, datasetID)
 
-				calls := clientMock.GetCallerDatasetPermissionsCalls()
+				calls := clientMock.GetCallerPermissionsCalls()
 				So(calls, ShouldHaveLength, 1)
 				So(calls[0].Params, ShouldResemble, expectedParams)
 			})
@@ -359,7 +359,7 @@ func getRequest(userAuthToken, serviceAuthToken, collectionID string) *http.Requ
 
 func getClienterMock(p *Permissions, err error) *ClienterMock {
 	return &ClienterMock{
-		GetCallerDatasetPermissionsFunc: func(ctx context.Context, params Parameters) (permissions *Permissions, e error) {
+		GetCallerPermissionsFunc: func(ctx context.Context, params Parameters) (permissions *Permissions, e error) {
 			return p, err
 		},
 	}

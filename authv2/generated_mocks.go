@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	lockClienterMockGetCallerDatasetPermissions sync.RWMutex
+	lockClienterMockGetCallerPermissions sync.RWMutex
 )
 
 // ClienterMock is a mock implementation of Clienter.
@@ -19,8 +19,8 @@ var (
 //
 //         // make and configure a mocked Clienter
 //         mockedClienter := &ClienterMock{
-//             GetCallerDatasetPermissionsFunc: func(ctx context.Context, params Parameters) (*Permissions, error) {
-// 	               panic("TODO: mock out the GetCallerDatasetPermissions method")
+//             GetCallerPermissionsFunc: func(ctx context.Context, params Parameters) (*Permissions, error) {
+// 	               panic("TODO: mock out the GetCallerPermissions method")
 //             },
 //         }
 //
@@ -29,13 +29,13 @@ var (
 //
 //     }
 type ClienterMock struct {
-	// GetCallerDatasetPermissionsFunc mocks the GetCallerDatasetPermissions method.
-	GetCallerDatasetPermissionsFunc func(ctx context.Context, params Parameters) (*Permissions, error)
+	// GetCallerPermissionsFunc mocks the GetCallerPermissions method.
+	GetCallerPermissionsFunc func(ctx context.Context, params Parameters) (*Permissions, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// GetCallerDatasetPermissions holds details about calls to the GetCallerDatasetPermissions method.
-		GetCallerDatasetPermissions []struct {
+		// GetCallerPermissions holds details about calls to the GetCallerPermissions method.
+		GetCallerPermissions []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// Params is the params argument value.
@@ -44,10 +44,10 @@ type ClienterMock struct {
 	}
 }
 
-// GetCallerDatasetPermissions calls GetCallerDatasetPermissionsFunc.
-func (mock *ClienterMock) GetCallerDatasetPermissions(ctx context.Context, params Parameters) (*Permissions, error) {
-	if mock.GetCallerDatasetPermissionsFunc == nil {
-		panic("moq: ClienterMock.GetCallerDatasetPermissionsFunc is nil but Clienter.GetCallerDatasetPermissions was just called")
+// GetCallerPermissions calls GetCallerPermissionsFunc.
+func (mock *ClienterMock) GetCallerPermissions(ctx context.Context, params Parameters) (*Permissions, error) {
+	if mock.GetCallerPermissionsFunc == nil {
+		panic("moq: ClienterMock.GetCallerPermissionsFunc is nil but Clienter.GetCallerPermissions was just called")
 	}
 	callInfo := struct {
 		Ctx    context.Context
@@ -56,16 +56,16 @@ func (mock *ClienterMock) GetCallerDatasetPermissions(ctx context.Context, param
 		Ctx:    ctx,
 		Params: params,
 	}
-	lockClienterMockGetCallerDatasetPermissions.Lock()
-	mock.calls.GetCallerDatasetPermissions = append(mock.calls.GetCallerDatasetPermissions, callInfo)
-	lockClienterMockGetCallerDatasetPermissions.Unlock()
-	return mock.GetCallerDatasetPermissionsFunc(ctx, params)
+	lockClienterMockGetCallerPermissions.Lock()
+	mock.calls.GetCallerPermissions = append(mock.calls.GetCallerPermissions, callInfo)
+	lockClienterMockGetCallerPermissions.Unlock()
+	return mock.GetCallerPermissionsFunc(ctx, params)
 }
 
-// GetCallerDatasetPermissionsCalls gets all the calls that were made to GetCallerDatasetPermissions.
+// GetCallerPermissionsCalls gets all the calls that were made to GetCallerPermissions.
 // Check the length with:
-//     len(mockedClienter.GetCallerDatasetPermissionsCalls())
-func (mock *ClienterMock) GetCallerDatasetPermissionsCalls() []struct {
+//     len(mockedClienter.GetCallerPermissionsCalls())
+func (mock *ClienterMock) GetCallerPermissionsCalls() []struct {
 	Ctx    context.Context
 	Params Parameters
 } {
@@ -73,9 +73,9 @@ func (mock *ClienterMock) GetCallerDatasetPermissionsCalls() []struct {
 		Ctx    context.Context
 		Params Parameters
 	}
-	lockClienterMockGetCallerDatasetPermissions.RLock()
-	calls = mock.calls.GetCallerDatasetPermissions
-	lockClienterMockGetCallerDatasetPermissions.RUnlock()
+	lockClienterMockGetCallerPermissions.RLock()
+	calls = mock.calls.GetCallerPermissions
+	lockClienterMockGetCallerPermissions.RUnlock()
 	return calls
 }
 
@@ -222,5 +222,69 @@ func (mock *HTTPClienterMock) DoCalls() []struct {
 	lockHTTPClienterMockDo.RLock()
 	calls = mock.calls.Do
 	lockHTTPClienterMockDo.RUnlock()
+	return calls
+}
+
+var (
+	lockParametersMockNewGetDatasetPermissionsRequest sync.RWMutex
+)
+
+// ParametersMock is a mock implementation of Parameters.
+//
+//     func TestSomethingThatUsesParameters(t *testing.T) {
+//
+//         // make and configure a mocked Parameters
+//         mockedParameters := &ParametersMock{
+//             NewGetDatasetPermissionsRequestFunc: func(host string) (*http.Request, error) {
+// 	               panic("TODO: mock out the NewGetDatasetPermissionsRequest method")
+//             },
+//         }
+//
+//         // TODO: use mockedParameters in code that requires Parameters
+//         //       and then make assertions.
+//
+//     }
+type ParametersMock struct {
+	// NewGetDatasetPermissionsRequestFunc mocks the NewGetDatasetPermissionsRequest method.
+	NewGetDatasetPermissionsRequestFunc func(host string) (*http.Request, error)
+
+	// calls tracks calls to the methods.
+	calls struct {
+		// NewGetDatasetPermissionsRequest holds details about calls to the NewGetDatasetPermissionsRequest method.
+		NewGetDatasetPermissionsRequest []struct {
+			// Host is the host argument value.
+			Host string
+		}
+	}
+}
+
+// NewGetDatasetPermissionsRequest calls NewGetDatasetPermissionsRequestFunc.
+func (mock *ParametersMock) NewGetDatasetPermissionsRequest(host string) (*http.Request, error) {
+	if mock.NewGetDatasetPermissionsRequestFunc == nil {
+		panic("moq: ParametersMock.NewGetDatasetPermissionsRequestFunc is nil but Parameters.NewGetDatasetPermissionsRequest was just called")
+	}
+	callInfo := struct {
+		Host string
+	}{
+		Host: host,
+	}
+	lockParametersMockNewGetDatasetPermissionsRequest.Lock()
+	mock.calls.NewGetDatasetPermissionsRequest = append(mock.calls.NewGetDatasetPermissionsRequest, callInfo)
+	lockParametersMockNewGetDatasetPermissionsRequest.Unlock()
+	return mock.NewGetDatasetPermissionsRequestFunc(host)
+}
+
+// NewGetDatasetPermissionsRequestCalls gets all the calls that were made to NewGetDatasetPermissionsRequest.
+// Check the length with:
+//     len(mockedParameters.NewGetDatasetPermissionsRequestCalls())
+func (mock *ParametersMock) NewGetDatasetPermissionsRequestCalls() []struct {
+	Host string
+} {
+	var calls []struct {
+		Host string
+	}
+	lockParametersMockNewGetDatasetPermissionsRequest.RLock()
+	calls = mock.calls.NewGetDatasetPermissionsRequest
+	lockParametersMockNewGetDatasetPermissionsRequest.RUnlock()
 	return calls
 }
