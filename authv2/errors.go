@@ -35,6 +35,11 @@ var (
 		Status:  401,
 		Message: "error making get permissions request: unauthorized",
 	}
+
+	getPermissionsRequestNilError = Error{
+		Status:  500,
+		Message: "internal server error expected get permissions http request but was nil",
+	}
 )
 
 type Error struct {

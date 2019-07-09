@@ -5,6 +5,7 @@ package authv2
 
 import (
 	"context"
+	"net/http"
 	"sync"
 )
 
@@ -151,5 +152,75 @@ func (mock *VerifierMock) CheckAuthorisationCalls() []struct {
 	lockVerifierMockCheckAuthorisation.RLock()
 	calls = mock.calls.CheckAuthorisation
 	lockVerifierMockCheckAuthorisation.RUnlock()
+	return calls
+}
+
+var (
+	lockHTTPClienterMockDo sync.RWMutex
+)
+
+// HTTPClienterMock is a mock implementation of HTTPClienter.
+//
+//     func TestSomethingThatUsesHTTPClienter(t *testing.T) {
+//
+//         // make and configure a mocked HTTPClienter
+//         mockedHTTPClienter := &HTTPClienterMock{
+//             DoFunc: func(ctx context.Context, req *http.Request) (*http.Response, error) {
+// 	               panic("TODO: mock out the Do method")
+//             },
+//         }
+//
+//         // TODO: use mockedHTTPClienter in code that requires HTTPClienter
+//         //       and then make assertions.
+//
+//     }
+type HTTPClienterMock struct {
+	// DoFunc mocks the Do method.
+	DoFunc func(ctx context.Context, req *http.Request) (*http.Response, error)
+
+	// calls tracks calls to the methods.
+	calls struct {
+		// Do holds details about calls to the Do method.
+		Do []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Req is the req argument value.
+			Req *http.Request
+		}
+	}
+}
+
+// Do calls DoFunc.
+func (mock *HTTPClienterMock) Do(ctx context.Context, req *http.Request) (*http.Response, error) {
+	if mock.DoFunc == nil {
+		panic("moq: HTTPClienterMock.DoFunc is nil but HTTPClienter.Do was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+		Req *http.Request
+	}{
+		Ctx: ctx,
+		Req: req,
+	}
+	lockHTTPClienterMockDo.Lock()
+	mock.calls.Do = append(mock.calls.Do, callInfo)
+	lockHTTPClienterMockDo.Unlock()
+	return mock.DoFunc(ctx, req)
+}
+
+// DoCalls gets all the calls that were made to Do.
+// Check the length with:
+//     len(mockedHTTPClienter.DoCalls())
+func (mock *HTTPClienterMock) DoCalls() []struct {
+	Ctx context.Context
+	Req *http.Request
+} {
+	var calls []struct {
+		Ctx context.Context
+		Req *http.Request
+	}
+	lockHTTPClienterMockDo.RLock()
+	calls = mock.calls.Do
+	lockHTTPClienterMockDo.RUnlock()
 	return calls
 }

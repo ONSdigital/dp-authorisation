@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-//go:generate moq -out generated_mocks.go -pkg authv2 . Clienter Verifier
+//go:generate moq -out generated_mocks.go -pkg authv2 . Clienter Verifier HTTPClienter
 
 const (
 	CollectionIDHeader = "Collection-Id"

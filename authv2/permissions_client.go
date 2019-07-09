@@ -55,7 +55,7 @@ func (client *PermissionsClient) GetCallerDatasetPermissions(ctx context.Context
 		return nil, err
 	}
 
-	resp, err := client.doGetDatasetPermissionsRequest(ctx, getPermissionsRequest)
+	resp, err := client.doGetPermissionsRequest(ctx, getPermissionsRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,11 @@ func (client *PermissionsClient) GetCallerDatasetPermissions(ctx context.Context
 	return permissions, nil
 }
 
-func (client *PermissionsClient) doGetDatasetPermissionsRequest(ctx context.Context, request *http.Request) (*http.Response, error) {
+func (client *PermissionsClient) doGetPermissionsRequest(ctx context.Context, request *http.Request) (*http.Response, error) {
+	if request == nil{
+		return nil, getPermissionsRequestNilError
+	}
+
 	resp, err := client.httpCli.Do(ctx, request)
 	if err != nil {
 		return nil, Error{

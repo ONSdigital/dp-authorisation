@@ -1,10 +1,12 @@
 package authv2
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -308,6 +310,107 @@ func TestGetPermissionsFromResponse(t *testing.T) {
 		})
 	})
 
+}
+
+func TestDoGetPermissionsRequest(t *testing.T) {
+	Convey("given request is nil", t, func() {
+		httpClient := &HTTPClienterMock{}
+
+		permissionsClient := &PermissionsClient{
+			host:    "",
+			httpCli: httpClient,
+		}
+
+		Convey("when doGetPermissionsRequest is called", func() {
+			resp, err := permissionsClient.doGetPermissionsRequest(nil, nil)
+
+			Convey("then response should be nil", func() {
+				So(resp, ShouldBeNil)
+			})
+
+			Convey("and the expected error is returned", func() {
+				So(err, ShouldResemble, getPermissionsRequestNilError)
+			})
+
+			Convey("and httpClient.Do is never called", func() {
+				So(httpClient.DoCalls(), ShouldHaveLength, 0)
+			})
+		})
+	})
+
+	Convey("given httpclient.Do returns an error", t, func() {
+		httpClient := &HTTPClienterMock{
+			DoFunc: func(ctx context.Context, req *http.Request) (response *http.Response, e error) {
+				return nil, errors.New("bork")
+			},
+		}
+
+		permissionsClient := &PermissionsClient{
+			host:    "",
+			httpCli: httpClient,
+		}
+
+		request, err := http.NewRequest("GET", "http://localhost:8080", nil)
+		So(err, ShouldBeNil)
+
+		Convey("when doGetPermissionsRequest is called", func() {
+			resp, err := permissionsClient.doGetPermissionsRequest(nil, request)
+
+			Convey("then response should be nil", func() {
+				So(resp, ShouldBeNil)
+			})
+
+			Convey("and the expected error is returned", func() {
+				So(err, ShouldNotBeNil)
+
+				permErr, ok := err.(Error)
+				So(ok, ShouldBeTrue)
+				So(permErr.Status, ShouldEqual, 500)
+				So(permErr.Message, ShouldEqual, "get permissions request returned an error")
+				So(permErr.Cause, ShouldResemble, errors.New("bork"))
+
+			})
+
+			Convey("and httpClient.Do is called once with the expected parameters", func() {
+				calls := httpClient.DoCalls()
+				So(calls, ShouldHaveLength, 1)
+				So(calls[0].Req, ShouldResemble, request)
+			})
+		})
+	})
+
+	Convey("given a valid request", t, func() {
+		request, err := http.NewRequest("GET", "http://localhost:8080", nil)
+		So(err, ShouldBeNil)
+
+		response := &http.Response{}
+
+		httpClient := &HTTPClienterMock{
+			DoFunc: func(ctx context.Context, req *http.Request) (*http.Response, error) {
+				return response, nil
+			},
+		}
+
+		permissionsClient := &PermissionsClient{host: "", httpCli: httpClient}
+
+		Convey("when doGetPermissionsRequest is called", func() {
+			actual, err := permissionsClient.doGetPermissionsRequest(nil, request)
+
+			Convey("then the expected response is returned", func() {
+				So(actual, ShouldResemble, response)
+			})
+
+			Convey("and error is nil", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("and httpClient.Do is called once with the expected parameters", func() {
+				calls := httpClient.DoCalls()
+				So(calls, ShouldHaveLength, 1)
+				So(calls[0].Req, ShouldResemble, request)
+			})
+		})
+	})
 }
 
 func newReaderFunc(b []byte, err error) func() io.Reader {
