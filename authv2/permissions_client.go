@@ -66,7 +66,7 @@ func (client *PermissionsClient) GetCallerDatasetPermissions(ctx context.Context
 		return nil, handleGetPermissionsErrorResponse(ctx, resp.Body, resp.StatusCode)
 	}
 
-	permissions, err := getPermissionsEntityFromResponse(resp.Body)
+	permissions, err := getPermissionsFromResponse(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (client *PermissionsClient) doGetDatasetPermissionsRequest(ctx context.Cont
 	return resp, err
 }
 
-func getPermissionsEntityFromResponse(reader io.Reader) (*Permissions, error) {
+func getPermissionsFromResponse(reader io.Reader) (*Permissions, error) {
 	b, err := getResponseBytes(reader)
 	if err != nil {
 		return nil, err
@@ -113,6 +113,11 @@ func getResponseBytes(reader io.Reader) ([]byte, error) {
 			Cause:   err,
 		}
 	}
+
+	if b == nil || len(b) == 0 {
+		return nil, getPermissionsResponseBodyNilError
+	}
+
 	return b, nil
 }
 

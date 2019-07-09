@@ -145,15 +145,18 @@ func TestUnmarshalPermissionsResponseEntity(t *testing.T) {
 }
 
 func TestGetResponseBytes(t *testing.T) {
+
 	testCases := []struct {
 		scenario    string
-		reader      io.Reader
+		reader      func() io.Reader
 		assertBytes func([]byte)
 		assertError func(error)
 	}{
 		{
 			scenario: "Given a nil reader",
-			reader:   nil,
+			reader: func() io.Reader {
+				return nil
+			},
 			assertBytes: func(b []byte) {
 				So(b, ShouldBeNil)
 			},
@@ -163,25 +166,18 @@ func TestGetResponseBytes(t *testing.T) {
 		},
 		{
 			scenario: "Given reader returns an empty byte array",
-			reader: &readCloserMock{
-				GetEntityFunc: func() (bytes []byte, e error) {
-					return []byte{}, nil
-				},
-			},
+			reader:   newReaderFunc([]byte{}, nil),
+
 			assertBytes: func(b []byte) {
-				So(b, ShouldBeEmpty)
+				So(b, ShouldBeNil)
 			},
 			assertError: func(err error) {
-				So(err, ShouldBeNil)
+				So(err, ShouldResemble, getPermissionsResponseBodyNilError)
 			},
 		},
 		{
 			scenario: "Given ioutil.ReadAll returns an error",
-			reader: &readCloserMock{
-				GetEntityFunc: func() (bytes []byte, e error) {
-					return nil, errors.New("bork")
-				},
-			},
+			reader:   newReaderFunc(nil, errors.New("bork")),
 			assertBytes: func(b []byte) {
 				So(b, ShouldBeNil)
 			},
@@ -193,12 +189,8 @@ func TestGetResponseBytes(t *testing.T) {
 			},
 		},
 		{
-			scenario: "Given reader returns a valid byte array",
-			reader: &readCloserMock{
-				GetEntityFunc: func() (bytes []byte, e error) {
-					return []byte("hello world"), nil
-				},
-			},
+			scenario: "Given reader returns an invalid byte array",
+			reader:   newReaderFunc([]byte("hello world"), nil),
 			assertBytes: func(b []byte) {
 				So(b, ShouldResemble, []byte("hello world"))
 			},
@@ -212,7 +204,7 @@ func TestGetResponseBytes(t *testing.T) {
 		Convey(fmt.Sprintf("%d/%d) %s", i+1, len(testCases), tc.scenario), t, func() {
 
 			Convey("when getResponseBytes is called", func() {
-				actual, err := getResponseBytes(tc.reader)
+				actual, err := getResponseBytes(tc.reader())
 
 				Convey("then the expected bytes are returned", func() {
 					tc.assertBytes(actual)
@@ -223,5 +215,107 @@ func TestGetResponseBytes(t *testing.T) {
 				})
 			})
 		})
+	}
+}
+
+func TestGetPermissionsFromResponse(t *testing.T) {
+	Convey("given a valid permissions response", t, func() {
+		responseEntity := permissionsResponseEntity{
+			List: []permissionType{Read, Create},
+		}
+
+		expected := &Permissions{Create: true, Read: true}
+
+		responseBody := &readCloserMock{
+			GetEntityFunc: func() (bytes []byte, e error) {
+				return json.Marshal(responseEntity)
+			},
+		}
+
+		Convey("when getPermissionsFromResponse is called", func() {
+			actual, err := getPermissionsFromResponse(responseBody)
+
+			Convey("then the expected permissions object is returned", func() {
+				So(actual, ShouldResemble, expected)
+			})
+
+			Convey("and no error is returned", func() {
+				So(err, ShouldBeNil)
+			})
+		})
+	})
+
+	Convey("given an empty permissions response", t, func() {
+		responseEntity := permissionsResponseEntity{
+			List: []permissionType{},
+		}
+
+		expected := &Permissions{Create: false, Read: false, Update: false, Delete: false}
+
+		responseBody := &readCloserMock{
+			GetEntityFunc: func() (bytes []byte, e error) {
+				return json.Marshal(responseEntity)
+			},
+		}
+
+		Convey("when getPermissionsFromResponse is called", func() {
+			actual, err := getPermissionsFromResponse(responseBody)
+
+			Convey("then the expected permissions object is returned", func() {
+				So(actual, ShouldResemble, expected)
+			})
+
+			Convey("and no error is returned", func() {
+				So(err, ShouldBeNil)
+			})
+		})
+	})
+
+	Convey("given getResponseBytes returns an error", t, func() {
+
+		Convey("when getPermissionsFromResponse is called", func() {
+			getReader := newReaderFunc(nil, nil)
+			actual, err := getPermissionsFromResponse(getReader())
+
+			Convey("then the expected permissions object is returned", func() {
+				So(actual, ShouldBeNil)
+			})
+
+			Convey("and the expected error is returned", func() {
+				So(err, ShouldResemble, getPermissionsResponseBodyNilError)
+			})
+		})
+	})
+
+	Convey("given unmarshalPermissionsResponseEntity returns an error", t, func() {
+
+		Convey("when getPermissionsFromResponse is called", func() {
+			getReader := newReaderFunc([]byte("INVALID ENTITY"), nil)
+
+			actual, err := getPermissionsFromResponse(getReader())
+
+			Convey("then the expected permissions object is returned", func() {
+				So(actual, ShouldBeNil)
+			})
+
+			Convey("and the expected error is returned", func() {
+				So(err, ShouldNotBeNil)
+				permErr, ok := err.(Error)
+				So(ok, ShouldBeTrue)
+				So(permErr.Status, ShouldEqual, 500)
+				So(permErr.Message, ShouldEqual, "internal server error failed marshalling permissions response entity")
+			})
+		})
+	})
+
+}
+
+func newReaderFunc(b []byte, err error) func() io.Reader {
+	return func() io.Reader {
+		return &readCloserMock{
+			GetEntityFunc: func() (bytes []byte, e error) {
+				return b, err
+			},
+		}
 	}
 }
