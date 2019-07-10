@@ -42,12 +42,14 @@ var (
 	}
 )
 
+// Error is an auth package implementation of Error.
 type Error struct {
 	Status  int
 	Message string
 	Cause   error
 }
 
+// Error get the error message & cause if not nil
 func (e Error) Error() string {
 	if e.Cause != nil {
 		return fmt.Sprintf("%s: %s", e.Message, e.Cause.Error())
