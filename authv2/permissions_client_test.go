@@ -471,13 +471,13 @@ func TestPermissionsClient_GetCallerDatasetPermissionsSuccess(t *testing.T) {
 func TestPermissionsClient_GetCallerDatasetPermissionsErrorCases(t *testing.T) {
 	host := "http://localhost:8080"
 
-	Convey("given params.NewGetDatasetPermissionsRequest returns an error", t, func() {
+	Convey("given params.CreateGetPermissionsRequest returns an error", t, func() {
 		httpclient := &HTTPClienterMock{}
 
 		permissionsClient := &PermissionsClient{host: host, httpCli: httpclient}
 
 		params := &ParametersMock{
-			NewGetDatasetPermissionsRequestFunc: func(host string) (*http.Request, error) {
+			CreateGetPermissionsRequestFunc: func(host string) (*http.Request, error) {
 				return nil, errors.New("i am borked")
 			},
 		}
@@ -493,8 +493,8 @@ func TestPermissionsClient_GetCallerDatasetPermissionsErrorCases(t *testing.T) {
 				So(err, ShouldResemble, errors.New("i am borked"))
 			})
 
-			Convey("and params.NewGetDatasetPermissionsRequest is called 1 time with the expected parameters", func() {
-				calls := params.NewGetDatasetPermissionsRequestCalls()
+			Convey("and params.CreateGetPermissionsRequest is called 1 time with the expected parameters", func() {
+				calls := params.CreateGetPermissionsRequestCalls()
 				So(calls, ShouldHaveLength, 1)
 				So(calls[0].Host, ShouldEqual, host)
 			})
@@ -517,7 +517,7 @@ func TestPermissionsClient_GetCallerDatasetPermissionsErrorCases(t *testing.T) {
 		permissionsClient := &PermissionsClient{host: host, httpCli: httpclient}
 
 		params := &ParametersMock{
-			NewGetDatasetPermissionsRequestFunc: func(host string) (*http.Request, error) {
+			CreateGetPermissionsRequestFunc: func(host string) (*http.Request, error) {
 				return request, nil
 			},
 		}
@@ -565,7 +565,7 @@ func TestPermissionsClient_GetCallerDatasetPermissionsErrorCases(t *testing.T) {
 		permissionsClient := &PermissionsClient{host: host, httpCli: httpclient}
 
 		params := &ParametersMock{
-			NewGetDatasetPermissionsRequestFunc: func(host string) (*http.Request, error) {
+			CreateGetPermissionsRequestFunc: func(host string) (*http.Request, error) {
 				return request, nil
 			},
 		}
@@ -609,7 +609,7 @@ func TestPermissionsClient_GetCallerDatasetPermissionsErrorCases(t *testing.T) {
 		permissionsClient := &PermissionsClient{host: host, httpCli: httpclient}
 
 		params := &ParametersMock{
-			NewGetDatasetPermissionsRequestFunc: func(host string) (*http.Request, error) {
+			CreateGetPermissionsRequestFunc: func(host string) (*http.Request, error) {
 				return request, nil
 			},
 		}

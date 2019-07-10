@@ -8,7 +8,7 @@ import (
 )
 
 type Parameters interface {
-	NewGetDatasetPermissionsRequest(host string) (*http.Request, error)
+	CreateGetPermissionsRequest(host string) (*http.Request, error)
 }
 
 type UserDatasetParameters struct {
@@ -22,7 +22,9 @@ type ServiceDatasetParameters struct {
 	DatasetID    string
 }
 
-func createDatasetAuthorisationParameters(req *http.Request) (Parameters, error) {
+type DatasetParameterFactory struct{}
+
+func (f *DatasetParameterFactory) CreateParameters(req *http.Request) (Parameters, error) {
 	userAuthToken := req.Header.Get(common.FlorenceHeaderKey)
 	serviceAuthToken := req.Header.Get(common.AuthHeaderKey)
 	collectionID := req.Header.Get(CollectionIDHeader)
@@ -54,7 +56,7 @@ func newServiceParameters(serviceToken string, datasetID string) Parameters {
 	}
 }
 
-func (params *UserDatasetParameters) NewGetDatasetPermissionsRequest(host string) (*http.Request, error) {
+func (params *UserDatasetParameters) CreateGetPermissionsRequest(host string) (*http.Request, error) {
 	if host == "" {
 		return nil, hostRequiredButEmptyError
 	}
@@ -73,7 +75,7 @@ func (params *UserDatasetParameters) NewGetDatasetPermissionsRequest(host string
 	return httpRequest, nil
 }
 
-func (params *ServiceDatasetParameters) NewGetDatasetPermissionsRequest(host string) (*http.Request, error) {
+func (params *ServiceDatasetParameters) CreateGetPermissionsRequest(host string) (*http.Request, error) {
 	if host == "" {
 		return nil, hostRequiredButEmptyError
 	}

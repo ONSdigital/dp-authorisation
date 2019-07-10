@@ -226,7 +226,7 @@ func (mock *HTTPClienterMock) DoCalls() []struct {
 }
 
 var (
-	lockParametersMockNewGetDatasetPermissionsRequest sync.RWMutex
+	lockParametersMockCreateGetPermissionsRequest sync.RWMutex
 )
 
 // ParametersMock is a mock implementation of Parameters.
@@ -235,8 +235,8 @@ var (
 //
 //         // make and configure a mocked Parameters
 //         mockedParameters := &ParametersMock{
-//             NewGetDatasetPermissionsRequestFunc: func(host string) (*http.Request, error) {
-// 	               panic("TODO: mock out the NewGetDatasetPermissionsRequest method")
+//             CreateGetPermissionsRequestFunc: func(host string) (*http.Request, error) {
+// 	               panic("TODO: mock out the CreateGetPermissionsRequest method")
 //             },
 //         }
 //
@@ -245,46 +245,110 @@ var (
 //
 //     }
 type ParametersMock struct {
-	// NewGetDatasetPermissionsRequestFunc mocks the NewGetDatasetPermissionsRequest method.
-	NewGetDatasetPermissionsRequestFunc func(host string) (*http.Request, error)
+	// CreateGetPermissionsRequestFunc mocks the CreateGetPermissionsRequest method.
+	CreateGetPermissionsRequestFunc func(host string) (*http.Request, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// NewGetDatasetPermissionsRequest holds details about calls to the NewGetDatasetPermissionsRequest method.
-		NewGetDatasetPermissionsRequest []struct {
+		// CreateGetPermissionsRequest holds details about calls to the CreateGetPermissionsRequest method.
+		CreateGetPermissionsRequest []struct {
 			// Host is the host argument value.
 			Host string
 		}
 	}
 }
 
-// NewGetDatasetPermissionsRequest calls NewGetDatasetPermissionsRequestFunc.
-func (mock *ParametersMock) NewGetDatasetPermissionsRequest(host string) (*http.Request, error) {
-	if mock.NewGetDatasetPermissionsRequestFunc == nil {
-		panic("moq: ParametersMock.NewGetDatasetPermissionsRequestFunc is nil but Parameters.NewGetDatasetPermissionsRequest was just called")
+// CreateGetPermissionsRequest calls CreateGetPermissionsRequestFunc.
+func (mock *ParametersMock) CreateGetPermissionsRequest(host string) (*http.Request, error) {
+	if mock.CreateGetPermissionsRequestFunc == nil {
+		panic("moq: ParametersMock.CreateGetPermissionsRequestFunc is nil but Parameters.CreateGetPermissionsRequest was just called")
 	}
 	callInfo := struct {
 		Host string
 	}{
 		Host: host,
 	}
-	lockParametersMockNewGetDatasetPermissionsRequest.Lock()
-	mock.calls.NewGetDatasetPermissionsRequest = append(mock.calls.NewGetDatasetPermissionsRequest, callInfo)
-	lockParametersMockNewGetDatasetPermissionsRequest.Unlock()
-	return mock.NewGetDatasetPermissionsRequestFunc(host)
+	lockParametersMockCreateGetPermissionsRequest.Lock()
+	mock.calls.CreateGetPermissionsRequest = append(mock.calls.CreateGetPermissionsRequest, callInfo)
+	lockParametersMockCreateGetPermissionsRequest.Unlock()
+	return mock.CreateGetPermissionsRequestFunc(host)
 }
 
-// NewGetDatasetPermissionsRequestCalls gets all the calls that were made to NewGetDatasetPermissionsRequest.
+// CreateGetPermissionsRequestCalls gets all the calls that were made to CreateGetPermissionsRequest.
 // Check the length with:
-//     len(mockedParameters.NewGetDatasetPermissionsRequestCalls())
-func (mock *ParametersMock) NewGetDatasetPermissionsRequestCalls() []struct {
+//     len(mockedParameters.CreateGetPermissionsRequestCalls())
+func (mock *ParametersMock) CreateGetPermissionsRequestCalls() []struct {
 	Host string
 } {
 	var calls []struct {
 		Host string
 	}
-	lockParametersMockNewGetDatasetPermissionsRequest.RLock()
-	calls = mock.calls.NewGetDatasetPermissionsRequest
-	lockParametersMockNewGetDatasetPermissionsRequest.RUnlock()
+	lockParametersMockCreateGetPermissionsRequest.RLock()
+	calls = mock.calls.CreateGetPermissionsRequest
+	lockParametersMockCreateGetPermissionsRequest.RUnlock()
+	return calls
+}
+
+var (
+	lockParameterFactoryMockCreateParameters sync.RWMutex
+)
+
+// ParameterFactoryMock is a mock implementation of ParameterFactory.
+//
+//     func TestSomethingThatUsesParameterFactory(t *testing.T) {
+//
+//         // make and configure a mocked ParameterFactory
+//         mockedParameterFactory := &ParameterFactoryMock{
+//             CreateParametersFunc: func(req *http.Request) (Parameters, error) {
+// 	               panic("TODO: mock out the CreateParameters method")
+//             },
+//         }
+//
+//         // TODO: use mockedParameterFactory in code that requires ParameterFactory
+//         //       and then make assertions.
+//
+//     }
+type ParameterFactoryMock struct {
+	// CreateParametersFunc mocks the CreateParameters method.
+	CreateParametersFunc func(req *http.Request) (Parameters, error)
+
+	// calls tracks calls to the methods.
+	calls struct {
+		// CreateParameters holds details about calls to the CreateParameters method.
+		CreateParameters []struct {
+			// Req is the req argument value.
+			Req *http.Request
+		}
+	}
+}
+
+// CreateParameters calls CreateParametersFunc.
+func (mock *ParameterFactoryMock) CreateParameters(req *http.Request) (Parameters, error) {
+	if mock.CreateParametersFunc == nil {
+		panic("moq: ParameterFactoryMock.CreateParametersFunc is nil but ParameterFactory.CreateParameters was just called")
+	}
+	callInfo := struct {
+		Req *http.Request
+	}{
+		Req: req,
+	}
+	lockParameterFactoryMockCreateParameters.Lock()
+	mock.calls.CreateParameters = append(mock.calls.CreateParameters, callInfo)
+	lockParameterFactoryMockCreateParameters.Unlock()
+	return mock.CreateParametersFunc(req)
+}
+
+// CreateParametersCalls gets all the calls that were made to CreateParameters.
+// Check the length with:
+//     len(mockedParameterFactory.CreateParametersCalls())
+func (mock *ParameterFactoryMock) CreateParametersCalls() []struct {
+	Req *http.Request
+} {
+	var calls []struct {
+		Req *http.Request
+	}
+	lockParameterFactoryMockCreateParameters.RLock()
+	calls = mock.calls.CreateParameters
+	lockParameterFactoryMockCreateParameters.RUnlock()
 	return calls
 }

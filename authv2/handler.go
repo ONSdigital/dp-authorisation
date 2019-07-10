@@ -7,35 +7,36 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
-func RequireReadDatasetPermission(endpoint http.HandlerFunc) http.HandlerFunc {
-	return RequireDatasetPermissions(&Permissions{Read: true}, endpoint)
+
+func RequireDatasetPermissions_(required Permissions, handler http.HandlerFunc) http.HandlerFunc {
+	return RequirePermissions(required, &DatasetParameterFactory{}, handler)
 }
 
-func RequireDatasetPermissions(requiredPermissions *Permissions, wrappedHandler http.HandlerFunc) http.HandlerFunc {
+func RequirePermissions(required Permissions, parameterFactory ParameterFactory, handler http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 		logD := log.Data{"requested_uri": req.URL.RequestURI()}
 
-		parameters, err := createDatasetAuthorisationParameters(req)
+		parameters, err := parameterFactory.CreateParameters(req)
 		if err != nil {
 			handleAuthoriseError(req.Context(), err, w, logD)
 			return
 		}
 
-		callerPermissions, err := permissionsCli.GetCallerPermissions(ctx, parameters)
+		callerPermissions, err := permissionsClient.GetCallerPermissions(ctx, parameters)
 		if err != nil {
 			handleAuthoriseError(req.Context(), err, w, logD)
 			return
 		}
 
-		err = permissionsVerifier.CheckAuthorisation(ctx, callerPermissions, requiredPermissions)
+		err = permissionsVerifier.CheckAuthorisation(ctx, callerPermissions, &required)
 		if err != nil {
 			handleAuthoriseError(req.Context(), err, w, logD)
 			return
 		}
 
 		log.Event(req.Context(), "caller authorised to perform requested action", logD)
-		wrappedHandler(w, req)
+		handler(w, req)
 	})
 }
 

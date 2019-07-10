@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-//go:generate moq -out generated_mocks.go -pkg authv2 . Clienter Verifier HTTPClienter Parameters
+//go:generate moq -out generated_mocks.go -pkg authv2 . Clienter Verifier HTTPClienter Parameters ParameterFactory
 
 const (
 	CollectionIDHeader = "Collection-Id"
@@ -13,7 +13,7 @@ const (
 
 var (
 	getRequestVars      func(r *http.Request) map[string]string
-	permissionsCli      Clienter
+	permissionsClient   Clienter
 	permissionsVerifier Verifier
 	datasetIDKey        string
 )
@@ -32,11 +32,15 @@ type Verifier interface {
 	CheckAuthorisation(ctx context.Context, callerPermissions *Permissions, requiredPermissions *Permissions) error
 }
 
+type ParameterFactory interface {
+	CreateParameters(req *http.Request) (Parameters, error)
+}
+
 // Configure set up function for the authorisation pkg. Requires the datasetID parameter key, a function for getting
 // request parameters and a PermissionsAuthenticator implementation
-func Configure(DatasetIDKey string, GetRequestVarsFunc GetRequestVarsFunc, PermissionsClient Clienter, PermissionsVerifier Verifier) {
+func Configure(DatasetIDKey string, GetRequestVarsFunc GetRequestVarsFunc, PermissionsCli Clienter, PermissionsVerifier Verifier) {
 	datasetIDKey = DatasetIDKey
 	getRequestVars = GetRequestVarsFunc
-	permissionsCli = PermissionsClient
+	permissionsClient = PermissionsCli
 	permissionsVerifier = PermissionsVerifier
 }

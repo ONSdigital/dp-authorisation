@@ -9,7 +9,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestCreateDatasetAuthorisationParameters(t *testing.T) {
+func TestDatasetParameterFactory_CreateParameters(t *testing.T) {
 	getRequestVars = func(r2 *http.Request) map[string]string {
 		return map[string]string{datasetIDKey: datasetIDKey}
 	}
@@ -24,13 +24,19 @@ func TestCreateDatasetAuthorisationParameters(t *testing.T) {
 			return map[string]string{datasetIDKey: datasetIDKey}
 		}
 
-		actual, err := createDatasetAuthorisationParameters(req)
+		factory := &DatasetParameterFactory{}
+
+		actual, err := factory.CreateParameters(req)
 		So(err, ShouldBeNil)
 
 		params, ok := actual.(*UserDatasetParameters)
 		So(ok, ShouldBeTrue)
 
-		expected := &UserDatasetParameters{UserToken: common.FlorenceHeaderKey, CollectionID: CollectionIDHeader, DatasetID: datasetIDKey}
+		expected := &UserDatasetParameters{
+			UserToken:    common.FlorenceHeaderKey,
+			CollectionID: CollectionIDHeader,
+			DatasetID:    datasetIDKey,
+		}
 		So(params, ShouldResemble, expected)
 	})
 
@@ -39,7 +45,8 @@ func TestCreateDatasetAuthorisationParameters(t *testing.T) {
 		req.Header.Set(common.AuthHeaderKey, common.AuthHeaderKey)
 		So(err, ShouldBeNil)
 
-		actual, err := createDatasetAuthorisationParameters(req)
+		factory := &DatasetParameterFactory{}
+		actual, err := factory.CreateParameters(req)
 		So(err, ShouldBeNil)
 
 		params, ok := actual.(*ServiceDatasetParameters)
@@ -53,7 +60,8 @@ func TestCreateDatasetAuthorisationParameters(t *testing.T) {
 		req, err := http.NewRequest("GET", "http://localhost:8080", nil)
 		So(err, ShouldBeNil)
 
-		actual, err := createDatasetAuthorisationParameters(req)
+		factory := &DatasetParameterFactory{}
+		actual, err := factory.CreateParameters(req)
 		So(err, ShouldResemble, noUserOrServiceAuthTokenProvidedError)
 		So(actual, ShouldBeNil)
 	})
@@ -69,7 +77,7 @@ func TestUserDatasetParameters_NewGetDatasetPermissionsRequest(t *testing.T) {
 			DatasetID:    datasetIDKey,
 		}
 
-		req, err := params.NewGetDatasetPermissionsRequest(host)
+		req, err := params.CreateGetPermissionsRequest(host)
 		So(err, ShouldBeNil)
 
 		So(req.URL.String(), ShouldResemble, fmt.Sprintf(userDatasetPermissionsURL, host, datasetIDKey, CollectionIDHeader))
@@ -83,7 +91,7 @@ func TestUserDatasetParameters_NewGetDatasetPermissionsRequest(t *testing.T) {
 			DatasetID:    datasetIDKey,
 		}
 
-		req, err := params.NewGetDatasetPermissionsRequest("!@£$%^&*()_")
+		req, err := params.CreateGetPermissionsRequest("!@£$%^&*()_")
 		So(req, ShouldBeNil)
 
 		permErr, ok := err.(Error)
@@ -99,7 +107,7 @@ func TestUserDatasetParameters_NewGetDatasetPermissionsRequest(t *testing.T) {
 			DatasetID:    datasetIDKey,
 		}
 
-		req, err := params.NewGetDatasetPermissionsRequest("")
+		req, err := params.CreateGetPermissionsRequest("")
 		So(err, ShouldResemble, hostRequiredButEmptyError)
 		So(req, ShouldBeNil)
 	})
@@ -115,7 +123,7 @@ func TestServiceDatasetParameters_NewGetDatasetPermissionsRequest(t *testing.T) 
 			DatasetID:    datasetIDKey,
 		}
 
-		req, err := params.NewGetDatasetPermissionsRequest(host)
+		req, err := params.CreateGetPermissionsRequest(host)
 		So(err, ShouldBeNil)
 
 		So(req.URL.String(), ShouldResemble, fmt.Sprintf(serviceDatasetPermissionsURL, host, datasetIDKey))
@@ -124,22 +132,22 @@ func TestServiceDatasetParameters_NewGetDatasetPermissionsRequest(t *testing.T) 
 
 	Convey("should return expected error if host empty", t, func() {
 		params := &ServiceDatasetParameters{
-			ServiceToken:    common.AuthHeaderKey,
+			ServiceToken: common.AuthHeaderKey,
 			DatasetID:    datasetIDKey,
 		}
 
-		req, err := params.NewGetDatasetPermissionsRequest("")
+		req, err := params.CreateGetPermissionsRequest("")
 		So(err, ShouldResemble, hostRequiredButEmptyError)
 		So(req, ShouldBeNil)
 	})
 
 	Convey("should return expected error if fails to create request", t, func() {
 		params := &ServiceDatasetParameters{
-			ServiceToken:    common.AuthHeaderKey,
+			ServiceToken: common.AuthHeaderKey,
 			DatasetID:    datasetIDKey,
 		}
 
-		req, err := params.NewGetDatasetPermissionsRequest("!@£$%^&*()_")
+		req, err := params.CreateGetPermissionsRequest("!@£$%^&*()_")
 		So(req, ShouldBeNil)
 
 		permErr, ok := err.(Error)
