@@ -10,15 +10,18 @@ import (
 )
 
 func main() {
+	parameterFactory := &auth.DatasetParameterFactory{}
+	permissionsVerifier := &auth.PermissionsVerifier{}
 	permissionsClient := auth.NewPermissionsClient("http://localhost:8082", &rchttp.Client{})
-	auth.DefaultConfiguration("dataset_id", permissionsClient)
 
-	requireAuth := auth.RequireDatasetPermissions
+	auth.Configure("dataset_id",mux.Vars, "test")
+
+	authHandler := auth.NewHandler(parameterFactory, permissionsClient, permissionsVerifier)
 
 	readPermission := auth.Permissions{Read: true}
 
 	router := mux.NewRouter()
-	router.HandleFunc("/datasets/{dataset_id}", requireAuth(readPermission, getDataset)).Methods("GET")
+	router.HandleFunc("/datasets/{dataset_id}", authHandler.Require(readPermission, getDataset)).Methods("GET")
 
 	log.Event(nil, "starting server")
 	err := http.ListenAndServe(":8088", router)

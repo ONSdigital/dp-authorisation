@@ -38,16 +38,15 @@ func TestRequirePermissions(t *testing.T) {
 
 		requiredPermissions := readPermissions
 
-		w := httptest.NewRecorder()
+		authHandler := NewHandler(paramFactory, clienterMock, verifierMock)
 
-		r := httptest.NewRequest("GET", host, nil)
-
-		Configure("dataset_id", nil, clienterMock, verifierMock)
-
-		authHandler := RequirePermissions(*requiredPermissions, paramFactory, wrappedHandler.handleFunc)
+		h := authHandler.Require(*requiredPermissions, wrappedHandler.handleFunc)
 
 		Convey("when a request is received", func() {
-			authHandler.ServeHTTP(w, r)
+			w := httptest.NewRecorder()
+			r := httptest.NewRequest("GET", host, nil)
+
+			h.ServeHTTP(w, r)
 
 			Convey("then parameterFactory.CreateParameters is called 1 time", func() {
 				calls := paramFactory.CreateParametersCalls()
@@ -88,16 +87,15 @@ func TestRequirePermissions(t *testing.T) {
 
 		requiredPermissions := readPermissions
 
-		w := httptest.NewRecorder()
+		authHandler := NewHandler(paramFactory, clienterMock, verifierMock)
 
-		r := httptest.NewRequest("GET", host, nil)
-
-		Configure("dataset_id", nil, clienterMock, verifierMock)
-
-		authHandler := RequirePermissions(*requiredPermissions, paramFactory, wrappedHandler.handleFunc)
+		h := authHandler.Require(*requiredPermissions, wrappedHandler.handleFunc)
 
 		Convey("when a request is received", func() {
-			authHandler.ServeHTTP(w, r)
+			w := httptest.NewRecorder()
+			r := httptest.NewRequest("GET", host, nil)
+
+			h.ServeHTTP(w, r)
 
 			Convey("then parameterFactory.CreateParameters is called 1 time", func() {
 				calls := paramFactory.CreateParametersCalls()
@@ -136,16 +134,16 @@ func TestRequirePermissions(t *testing.T) {
 
 		requiredPermissions := readPermissions
 
-		w := httptest.NewRecorder()
 
-		r := httptest.NewRequest("GET", host, nil)
+		authHandler := NewHandler(paramFactory, clienterMock, verifierMock)
 
-		Configure("dataset_id", nil, clienterMock, verifierMock)
-
-		authHandler := RequirePermissions(*requiredPermissions, paramFactory, wrappedHandler.handleFunc)
+		h := authHandler.Require(*requiredPermissions, wrappedHandler.handleFunc)
 
 		Convey("when a request is received", func() {
-			authHandler.ServeHTTP(w, r)
+			w := httptest.NewRecorder()
+			r := httptest.NewRequest("GET", host, nil)
+
+			h.ServeHTTP(w, r)
 
 			Convey("then parameterFactory.CreateParameters is called 1 time", func() {
 				calls := paramFactory.CreateParametersCalls()
@@ -185,16 +183,15 @@ func TestRequirePermissions(t *testing.T) {
 
 		requiredPermissions := readPermissions
 
-		w := httptest.NewRecorder()
 
-		r := httptest.NewRequest("GET", host, nil)
-
-		Configure("dataset_id", nil, clienterMock, verifierMock)
-
-		authHandler := RequirePermissions(*requiredPermissions, paramFactory, wrappedHandler.handleFunc)
+		authHandler := NewHandler(paramFactory, clienterMock, verifierMock)
+		h := authHandler.Require(*requiredPermissions, wrappedHandler.handleFunc)
 
 		Convey("when a request is received", func() {
-			authHandler.ServeHTTP(w, r)
+			w := httptest.NewRecorder()
+
+			r := httptest.NewRequest("GET", host, nil)
+			h.ServeHTTP(w, r)
 
 			Convey("then parameterFactory.CreateParameters is called 1 time", func() {
 				calls := paramFactory.CreateParametersCalls()
