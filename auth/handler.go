@@ -1,65 +1,89 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 
-	"github.com/ONSdigital/dp-permissions/permissions"
-	"github.com/ONSdigital/go-ns/common"
 	"github.com/ONSdigital/log.go/log"
 )
 
-//go:generate moq -out authtest/auth_mocks.go -pkg authtest . PermissionAuthenticator
-
-const (
-	CollectionIDHeader = "Collection-Id"
-)
-
-var (
-	getRequestVars func(r *http.Request) map[string]string
-	authenticator  PermissionAuthenticator
-	datasetIDKey   string
-)
-
-// Configure set up function for the auth pkg. Requires the datasetID parameter key, a function for getting request
-// parameters and a PermissionsAuthenticator implementation
-func Configure(DatasetIDKey string, GetRequestVarsFunc func(r *http.Request) map[string]string, PermissionsAuthenticator PermissionAuthenticator) {
-	datasetIDKey = DatasetIDKey
-	getRequestVars = GetRequestVarsFunc
-	authenticator = PermissionsAuthenticator
+// Handler is object providing functionality for applying authorisation checks to http.HandlerFunc's
+type Handler struct {
+	parameterFactory    ParameterFactory
+	permissionsClient   Clienter
+	permissionsVerifier Verifier
 }
 
-type PermissionAuthenticator interface {
-	Check(required permissions.CRUD, serviceToken string, userToken string, collectionID string, datasetID string) (int, error)
+// NewHandler construct a new Handler.
+//	- parameterFactory is a factory object which generates Parameters object from a HTTP request.
+//	- permissionsClient is a client for communicating with the permissions API.
+//	- permissionsVerifier is an object that checks a caller's permissions satisfy the permissions requirements.
+func NewHandler(parameterFactory ParameterFactory, permissionsClient Clienter, permissionsVerifier Verifier) *Handler {
+	return &Handler{
+		parameterFactory:    parameterFactory,
+		permissionsClient:   permissionsClient,
+		permissionsVerifier: permissionsVerifier,
+	}
 }
 
-// Require is a http.HandlerFunc that verifies the caller holds the required permissions for the wrapped
-// http.HandlerFunc If the caller has all of the required permissions then the request will continue to the wrapped
-// handlerFunc. If the caller does not have all the required permissions then the the request is rejected with the
-// appropriate http status and the wrapped handler is not invoked. If there is an error whilst attempting to check the
-// callers permissions then a 500 status is returned and the wrapped handler is not invoked.
-func Require(required permissions.CRUD, endpoint func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestedURI := r.URL.RequestURI()
+// Require is a http.HandlerFunc that wraps another http.HandlerFunc applying an authorisation check. The
+// provided ParameterFactory determines the context of the permissions being checking.
+//
+// When a request is received the caller's permissions are retrieved from the Permissions API and are compared against
+// the required permissions.
+//
+// If the callers permissions satisfy the requirements authorisation is successful and the
+// the wrapped handler is invoked.
+//
+// If the caller's permissions do not satisfy the permission requirements or there is an issue getting / verifying their
+// permissions then the wrapped handler is NOT called and the appropriate HTTP error status is returned.
+func (h *Handler) Require(required Permissions, handler http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		ctx := req.Context()
+		logD := log.Data{"requested_uri": req.URL.RequestURI()}
 
-		serviceAuthToken := r.Header.Get(common.AuthHeaderKey)
-		userAuthToken := r.Header.Get(common.FlorenceHeaderKey)
-		collectionID := r.Header.Get(CollectionIDHeader)
-		datasetID := getRequestVars(r)[datasetIDKey]
-
-		authStatus, err := authenticator.Check(required, serviceAuthToken, userAuthToken, collectionID, datasetID)
+		parameters, err := h.parameterFactory.CreateParameters(req)
 		if err != nil {
-			log.Event(r.Context(), "error authenticating caller permissions", log.Error(err), log.Data{
-				"requested_uri": requestedURI,
-			})
-			w.WriteHeader(500)
+			handleAuthoriseError(req.Context(), err, w, logD)
 			return
 		}
 
-		if authStatus != 200 {
-			w.WriteHeader(authStatus)
+		callerPermissions, err := h.permissionsClient.GetCallerPermissions(ctx, parameters)
+		if err != nil {
+			handleAuthoriseError(req.Context(), err, w, logD)
 			return
 		}
 
-		endpoint(w, r)
+		err = h.permissionsVerifier.CheckAuthorisation(ctx, callerPermissions, &required)
+		if err != nil {
+			handleAuthoriseError(req.Context(), err, w, logD)
+			return
+		}
+
+		log.Event(req.Context(), "caller authorised to perform requested action", logD)
+		handler(w, req)
 	})
+}
+
+func handleAuthoriseError(ctx context.Context, err error, w http.ResponseWriter, logD log.Data) {
+	permErr, ok := err.(Error)
+	if ok {
+		writeErr(ctx, w, permErr.Status, permErr.Message, logD)
+		return
+	}
+	writeErr(ctx, w, 500, "internal server error", logD)
+}
+
+func writeErr(ctx context.Context, w http.ResponseWriter, status int, body string, logD log.Data) {
+	w.WriteHeader(status)
+	b := []byte(body)
+	_, wErr := w.Write(b)
+	if wErr != nil {
+		w.WriteHeader(500)
+		logD["original_err_body"] = body
+		logD["original_err_status"] = status
+
+		log.Event(ctx, "internal server error failed writing permissions error to response", log.Error(wErr), logD)
+		return
+	}
 }
