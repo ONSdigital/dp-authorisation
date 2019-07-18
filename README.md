@@ -1,4 +1,31 @@
 # dp-autherisation
+Library providing functionality for applying an authorisation check to `http.HandlerFunc`.
+
+## Example
+
+Create a new `auth.Handler`:
+
+```
+authHandler := auth.NewHandler(parameterFactory, permissionsClient, permissionsVerifier)
+```
+
+ - `parameterFactory` - ParameterFactory encapsulates the logic for:
+   - Extracting the required fields from an inbound HTTP request.
+   - Creating the outbound get permissions request.
+   
+    _For example:_ To apply authorisation check to a dataset endpoint then you would use `auth.DatasetParameterFactory`.
+
+ - `permissionsClient` a client for sending HTTP requests to the permissions API.
+
+ - `permissionsVerifier` encapsulates the logic for checking the caller permissions satisfy the required permissions.
+
+    
+
+
+
+
+
+
 Library provides functionality for wrapping a `http.HandlerFunc` in an authorisation check. The auth handler accepts 
 an `authorisation.Policy` (a list of `CRUD` permissions) that the caller has to have in order to ve granted access to 
 the wrapped http handler.
