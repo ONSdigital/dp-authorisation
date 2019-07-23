@@ -9,7 +9,7 @@ import (
 
 func TestNopHandler_Require(t *testing.T) {
 	Convey("should invoke the provided handlerFunc", t, func() {
-		Configure("", nil, "test-test-123")
+		Configure("test-test-123")
 		authHandler := &NopHandler{}
 
 		wrappedEndpoint := &HandlerMock{count: 0}

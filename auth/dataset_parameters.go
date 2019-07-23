@@ -18,21 +18,24 @@ type Parameters interface {
 // UserDatasetParameters is an implementation of Parameters. Requires a user auth token, collection ID and dataset ID
 // and checks a user is authorised to access the specified dataset in the specified collection.
 type UserDatasetParameters struct {
-	UserToken    string
-	CollectionID string
-	DatasetID    string
+	UserAuthToken string
+	CollectionID  string
+	DatasetID     string
 }
 
 // ServiceDatasetParameters is an implementation of Parameters. Requires a service account auth token and dataset ID.
 // Checks a service account is authorised to access the specified dataset.
 type ServiceDatasetParameters struct {
-	ServiceToken string
-	DatasetID    string
+	ServiceAuthToken string
+	DatasetID        string
 }
 
 // DatasetParameterFactory is an implementation of ParameterFactory. Creates Parameters for requesting user & service
 // account permissions for a CMD dataset.
-type DatasetParameterFactory struct{}
+type DatasetParameterFactory struct {
+	DatasetIDKey       string
+	GetRequestVarsFunc func(r *http.Request) map[string]string
+}
 
 // CreateParameters fulfilling the ParameterFactory interface. Generates:
 // 	- A UserDatasetParameters instance if the request contains a user auth token header.
@@ -42,7 +45,7 @@ func (f *DatasetParameterFactory) CreateParameters(req *http.Request) (Parameter
 	userAuthToken := req.Header.Get(common.FlorenceHeaderKey)
 	serviceAuthToken := req.Header.Get(common.AuthHeaderKey)
 	collectionID := req.Header.Get(CollectionIDHeader)
-	datasetID := getRequestVars(req)[datasetIDKey]
+	datasetID := f.GetRequestVarsFunc(req)[f.DatasetIDKey]
 
 	if userAuthToken != "" {
 		return newUserDatasetParameters(userAuthToken, collectionID, datasetID), nil
@@ -57,16 +60,16 @@ func (f *DatasetParameterFactory) CreateParameters(req *http.Request) (Parameter
 
 func newUserDatasetParameters(userToken string, collectionID string, datasetID string) Parameters {
 	return &UserDatasetParameters{
-		UserToken:    userToken,
-		CollectionID: collectionID,
-		DatasetID:    datasetID,
+		UserAuthToken: userToken,
+		CollectionID:  collectionID,
+		DatasetID:     datasetID,
 	}
 }
 
 func newServiceParameters(serviceToken string, datasetID string) Parameters {
 	return &ServiceDatasetParameters{
-		ServiceToken: serviceToken,
-		DatasetID:    datasetID,
+		ServiceAuthToken: serviceToken,
+		DatasetID:        datasetID,
 	}
 }
 
@@ -87,7 +90,7 @@ func (params *UserDatasetParameters) CreateGetPermissionsRequest(host string) (*
 		}
 	}
 
-	httpRequest.Header.Set(common.FlorenceHeaderKey, params.UserToken)
+	httpRequest.Header.Set(common.FlorenceHeaderKey, params.UserAuthToken)
 	return httpRequest, nil
 }
 
@@ -108,6 +111,6 @@ func (params *ServiceDatasetParameters) CreateGetPermissionsRequest(host string)
 		}
 	}
 
-	r.Header.Set(common.AuthHeaderKey, params.ServiceToken)
+	r.Header.Set(common.AuthHeaderKey, params.ServiceAuthToken)
 	return r, nil
 }

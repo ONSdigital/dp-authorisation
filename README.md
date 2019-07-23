@@ -2,82 +2,73 @@
 Library providing functionality for applying an authorisation check to `http.HandlerFunc`.
 
 ## Example
-
-Create a new `auth.Handler`:
-
 ```
-authHandler := auth.NewHandler(parameterFactory, permissionsClient, permissionsVerifier)
-```
+package main
 
- - `parameterFactory` - ParameterFactory encapsulates the logic for:
-   - Extracting the required fields from an inbound HTTP request.
-   - Creating the outbound get permissions request.
-   
-    _For example:_ To apply authorisation check to a dataset endpoint then you would use `auth.DatasetParameterFactory`.
+import (
+	"net/http"
 
- - `permissionsClient` a client for sending HTTP requests to the permissions API.
+	"github.com/ONSdigital/dp-authorisation/auth"
+	"github.com/ONSdigital/go-ns/rchttp"
+	"github.com/ONSdigital/log.go/log"
+	"github.com/gorilla/mux"
+)
 
- - `permissionsVerifier` encapsulates the logic for checking the caller permissions satisfy the required permissions.
+func main() {
+	// Set the auth package log namespace.
+	auth.Configure("some-name-here")
 
-    
+	// create permissions verifier - PermissionsVerifier is the default implementation.
+	permissionsVerifier := &auth.PermissionsVerifier{}
+
+	// create a permissions client
+	permissionsClient := auth.NewPermissionsClient("http://localhost:8082", &rchttp.Client{})
 
 
+	// DatasetParameterFactory is an implementation of ParameterFactory and encapsulate the logic for:
+	// 	- Extracting the required headers and parameters from inbound requests
+	//	- Creating an outbound get dataset permissions request to the dataset API.
+	datasetParamFactory := &auth.DatasetParameterFactory{
+		GetRequestVarsFunc: mux.Vars,
+		DatasetIDKey:       "dataset_id",
+	}
+
+	// create a new auth handler for checking dataset permissions.
+	datasetsAuth := auth.NewHandler(datasetParamFactory, permissionsClient, permissionsVerifier)
 
 
+	// InstanceParameterFactory is an implementation of ParameterFactory and knows how to check instance permissions.
+	instanceParamFactory := &auth.InstanceParameterFactory{}
 
+	// create a new auth handler for checking instance permissions.
+	instancesAuth := auth.NewHandler(instanceParamFactory, permissionsClient, permissionsVerifier)
 
-Library provides functionality for wrapping a `http.HandlerFunc` in an authorisation check. The auth handler accepts 
-an `authorisation.Policy` (a list of `CRUD` permissions) that the caller has to have in order to ve granted access to 
-the wrapped http handler.
+	router := mux.NewRouter()
 
-### Configure
-Create new `authoriser` providing:
- - The permissions API host. 
- - A `authorisation.HTTPClienter` implementation.
+	// permission definitions
+	read := auth.Permissions{Read: true}
+	update := auth.Permissions{Update: true}
 
-```go
-authoriser := authorisation.NewAuthoriser("http://localhost:8082/permissions", httpClienter)
-```
+	// getDatasetHandlerFunc requires the caller to have datasets READ permissions.
+	router.HandleFunc("/datasets/{dataset_id}", datasetsAuth.Require(read, getDatasetHandlerFunc)).Methods("GET")
 
-Configure the `authorisation` package specifying:
- - The dataset ID URI placeholder name
- - A function for retrieving URI path parameters
- - An `authoriser`
+	// putInstanceHandlerFunc requires the caller to have instance UPDATE permissions.
+	router.HandleFunc("/instances/{instance_id}", instancesAuth.Require(update, putInstanceHandlerFunc)).Methods("PUT")
 
-```go
-authorisation.Configure("dataset_id", mux.Vars, authoriser)
-```
-
-Define an authorisation policy for 1 or more of your handlers. A policy defines the `CRUD` permissions the caller **must** have to be allowed to perform 
-the requested action
-
-```go
-policy := authorisation.Policy{
-    Create: true,
-    Read:   true,
-    Update: true,
-    Delete: true,
+	log.Event(nil, "starting server")
+	err := http.ListenAndServe(":8088", router)
+	if err != nil {
+		panic(err)
+	}
 }
-````
 
-Apply the authorisation to a `http.HandlerFunc`.
-```go
-r := mux.NewRouter()
-...
-policy := authorisation.Policy{Read: true}
-r.HandleFunc("/datasets/{dataset_id}",  authorisation.Check(policy,  func(w http.ResponseWriter, r *http.Request) { ... })
+// an example http.HandlerFunc for getting a dataset
+func getDatasetHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("dataset info here"))
+}
+
+func putInstanceHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	log.Event(nil, "auth successful")
+	w.Write([]byte("hello world"))
+}
 ```
-Any service or user calling this endpoint **must** have all of the permissions defined in the policy to be able to 
-successful reach the wrapped `http.HandlerFunc`. If the policy requirements are not satisfied then the appropriate http 
-error status is returned and the caller is denied access to the handler. 
-
-As long as the caller has **at least** the required permissions then authorisation will be successful.
-
-##### Example 1
-If the authorisation policy requires permissions `R` and the caller has permissions `CRUD` then authorisation is 
-successful
-
-##### Example 2
-If the authorisation policy requires permissions `CRUD` and the caller has permissions `CRD` then authorisation is 
-unsuccessful
-

@@ -420,9 +420,9 @@ func TestPermissionsClient_GetCallerDatasetPermissionsSuccess(t *testing.T) {
 
 	Convey("given valid parameters", t, func() {
 		params := &UserDatasetParameters{
-			UserToken:    userAuthToken,
-			CollectionID: collectionID,
-			DatasetID:    datasetID,
+			UserAuthToken: userAuthToken,
+			CollectionID:  collectionID,
+			DatasetID:     datasetID,
 		}
 
 		permissionsEntity := &permissionsResponseEntity{

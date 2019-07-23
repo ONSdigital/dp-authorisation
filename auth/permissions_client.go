@@ -16,8 +16,10 @@ const (
 )
 
 var (
-	userDatasetPermissionsURL    = "%s/userDatasetPermissions?dataset_id=%s&collection_id=%s"
-	serviceDatasetPermissionsURL = "%s/serviceDatasetPermissions?dataset_id=%s"
+	userInstancePermissionsURL    = "%s/userInstancePermissions"
+	serviceInstancePermissionsURL = "%s/serviceInstancePermissions"
+	userDatasetPermissionsURL     = "%s/userDatasetPermissions?dataset_id=%s&collection_id=%s"
+	serviceDatasetPermissionsURL  = "%s/serviceDatasetPermissions?dataset_id=%s"
 )
 
 type permissionType string

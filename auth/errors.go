@@ -11,6 +11,11 @@ import (
 )
 
 var (
+	requestRequiredButNilError = Error{
+		Status:  500,
+		Message: "error creating get permissions request http.Request required but was nil",
+	}
+
 	hostRequiredButEmptyError = Error{
 		Status:  500,
 		Message: "error creating get permissions request host required but was empty",

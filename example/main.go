@@ -10,18 +10,46 @@ import (
 )
 
 func main() {
-	parameterFactory := &auth.DatasetParameterFactory{}
+	// Set the auth package log namespace.
+	auth.Configure("some-name-here")
+
+	// create permissions verifier - PermissionsVerifier is the default implementation.
 	permissionsVerifier := &auth.PermissionsVerifier{}
+
+	// create a permissions client
 	permissionsClient := auth.NewPermissionsClient("http://localhost:8082", &rchttp.Client{})
 
-	auth.Configure("dataset_id",mux.Vars, "test")
 
-	authHandler := auth.NewHandler(parameterFactory, permissionsClient, permissionsVerifier)
+	// DatasetParameterFactory is an implementation of ParameterFactory and encapsulate the logic for:
+	// 	- Extracting the required headers and parameters from inbound requests
+	//	- Creating an outbound get dataset permissions request to the dataset API.
+	datasetParamFactory := &auth.DatasetParameterFactory{
+		GetRequestVarsFunc: mux.Vars,
+		DatasetIDKey:       "dataset_id",
+	}
 
-	readPermission := auth.Permissions{Read: true}
+	// create a new auth handler for checking dataset permissions.
+	datasetsAuth := auth.NewHandler(datasetParamFactory, permissionsClient, permissionsVerifier)
+
+
+	// InstanceParameterFactory is an implementation of ParameterFactory and knows how to check instance permissions.
+	instanceParamFactory := &auth.InstanceParameterFactory{}
+
+	// create a new auth handler for checking instance permissions.
+	instancesAuth := auth.NewHandler(instanceParamFactory, permissionsClient, permissionsVerifier)
 
 	router := mux.NewRouter()
-	router.HandleFunc("/datasets/{dataset_id}", authHandler.Require(readPermission, getDataset)).Methods("GET")
+
+
+	// permission definitions
+	read := auth.Permissions{Read: true}
+	update := auth.Permissions{Update: true}
+
+	// getDatasetHandlerFunc requires the caller to have datasets READ permissions.
+	router.HandleFunc("/datasets/{dataset_id}", datasetsAuth.Require(read, getDatasetHandlerFunc)).Methods("GET")
+
+	// putInstanceHandlerFunc requires the caller to have instance UPDATE permissions.
+	router.HandleFunc("/instances/{instance_id}", instancesAuth.Require(update, putInstanceHandlerFunc)).Methods("PUT")
 
 	log.Event(nil, "starting server")
 	err := http.ListenAndServe(":8088", router)
@@ -30,7 +58,12 @@ func main() {
 	}
 }
 
-func getDataset(w http.ResponseWriter, r *http.Request) {
+// an example http.HandlerFunc for getting a dataset
+func getDatasetHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("dataset info here"))
+}
+
+func putInstanceHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	log.Event(nil, "auth successful")
 	w.Write([]byte("hello world"))
 }

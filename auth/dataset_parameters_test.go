@@ -9,8 +9,10 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const datasetIDKey = "dataset_id"
+
 func TestDatasetParameterFactory_CreateParameters(t *testing.T) {
-	getRequestVars = func(r2 *http.Request) map[string]string {
+	getRequestVars := func(r2 *http.Request) map[string]string {
 		return map[string]string{datasetIDKey: datasetIDKey}
 	}
 
@@ -20,11 +22,14 @@ func TestDatasetParameterFactory_CreateParameters(t *testing.T) {
 		req.Header.Set(CollectionIDHeader, CollectionIDHeader)
 		So(err, ShouldBeNil)
 
-		getRequestVars = func(r2 *http.Request) map[string]string {
+		getRequestVars := func(r2 *http.Request) map[string]string {
 			return map[string]string{datasetIDKey: datasetIDKey}
 		}
 
-		factory := &DatasetParameterFactory{}
+		factory := &DatasetParameterFactory{
+			DatasetIDKey:       datasetIDKey,
+			GetRequestVarsFunc: getRequestVars,
+		}
 
 		actual, err := factory.CreateParameters(req)
 		So(err, ShouldBeNil)
@@ -33,9 +38,9 @@ func TestDatasetParameterFactory_CreateParameters(t *testing.T) {
 		So(ok, ShouldBeTrue)
 
 		expected := &UserDatasetParameters{
-			UserToken:    common.FlorenceHeaderKey,
-			CollectionID: CollectionIDHeader,
-			DatasetID:    datasetIDKey,
+			UserAuthToken: common.FlorenceHeaderKey,
+			CollectionID:  CollectionIDHeader,
+			DatasetID:     datasetIDKey,
 		}
 		So(params, ShouldResemble, expected)
 	})
@@ -45,14 +50,18 @@ func TestDatasetParameterFactory_CreateParameters(t *testing.T) {
 		req.Header.Set(common.AuthHeaderKey, common.AuthHeaderKey)
 		So(err, ShouldBeNil)
 
-		factory := &DatasetParameterFactory{}
+		factory := &DatasetParameterFactory{
+			DatasetIDKey:       datasetIDKey,
+			GetRequestVarsFunc: getRequestVars,
+		}
+
 		actual, err := factory.CreateParameters(req)
 		So(err, ShouldBeNil)
 
 		params, ok := actual.(*ServiceDatasetParameters)
 		So(ok, ShouldBeTrue)
 
-		expected := &ServiceDatasetParameters{ServiceToken: common.AuthHeaderKey, DatasetID: datasetIDKey}
+		expected := &ServiceDatasetParameters{ServiceAuthToken: common.AuthHeaderKey, DatasetID: datasetIDKey}
 		So(params, ShouldResemble, expected)
 	})
 
@@ -60,7 +69,10 @@ func TestDatasetParameterFactory_CreateParameters(t *testing.T) {
 		req, err := http.NewRequest("GET", "http://localhost:8080", nil)
 		So(err, ShouldBeNil)
 
-		factory := &DatasetParameterFactory{}
+		factory := &DatasetParameterFactory{
+			DatasetIDKey:       datasetIDKey,
+			GetRequestVarsFunc: getRequestVars,
+		}
 		actual, err := factory.CreateParameters(req)
 		So(err, ShouldResemble, noUserOrServiceAuthTokenProvidedError)
 		So(actual, ShouldBeNil)
@@ -72,9 +84,9 @@ func TestUserDatasetParameters_NewGetDatasetPermissionsRequest(t *testing.T) {
 
 	Convey("should create expected get user dataset permissions request", t, func() {
 		params := &UserDatasetParameters{
-			UserToken:    common.FlorenceHeaderKey,
-			CollectionID: CollectionIDHeader,
-			DatasetID:    datasetIDKey,
+			UserAuthToken: common.FlorenceHeaderKey,
+			CollectionID:  CollectionIDHeader,
+			DatasetID:     datasetIDKey,
 		}
 
 		req, err := params.CreateGetPermissionsRequest(host)
@@ -86,9 +98,9 @@ func TestUserDatasetParameters_NewGetDatasetPermissionsRequest(t *testing.T) {
 
 	Convey("should return expected error if fails to create request", t, func() {
 		params := &UserDatasetParameters{
-			UserToken:    common.FlorenceHeaderKey,
-			CollectionID: CollectionIDHeader,
-			DatasetID:    datasetIDKey,
+			UserAuthToken: common.FlorenceHeaderKey,
+			CollectionID:  CollectionIDHeader,
+			DatasetID:     datasetIDKey,
 		}
 
 		req, err := params.CreateGetPermissionsRequest("!@£$%^&*()_")
@@ -102,9 +114,9 @@ func TestUserDatasetParameters_NewGetDatasetPermissionsRequest(t *testing.T) {
 
 	Convey("should return expected error if host empty", t, func() {
 		params := &UserDatasetParameters{
-			UserToken:    common.FlorenceHeaderKey,
-			CollectionID: CollectionIDHeader,
-			DatasetID:    datasetIDKey,
+			UserAuthToken: common.FlorenceHeaderKey,
+			CollectionID:  CollectionIDHeader,
+			DatasetID:     datasetIDKey,
 		}
 
 		req, err := params.CreateGetPermissionsRequest("")
@@ -119,8 +131,8 @@ func TestServiceDatasetParameters_NewGetDatasetPermissionsRequest(t *testing.T) 
 
 	Convey("should create expected get service dataset permissions request", t, func() {
 		params := &ServiceDatasetParameters{
-			ServiceToken: common.AuthHeaderKey,
-			DatasetID:    datasetIDKey,
+			ServiceAuthToken: common.AuthHeaderKey,
+			DatasetID:        datasetIDKey,
 		}
 
 		req, err := params.CreateGetPermissionsRequest(host)
@@ -132,8 +144,8 @@ func TestServiceDatasetParameters_NewGetDatasetPermissionsRequest(t *testing.T) 
 
 	Convey("should return expected error if host empty", t, func() {
 		params := &ServiceDatasetParameters{
-			ServiceToken: common.AuthHeaderKey,
-			DatasetID:    datasetIDKey,
+			ServiceAuthToken: common.AuthHeaderKey,
+			DatasetID:        datasetIDKey,
 		}
 
 		req, err := params.CreateGetPermissionsRequest("")
@@ -143,8 +155,8 @@ func TestServiceDatasetParameters_NewGetDatasetPermissionsRequest(t *testing.T) 
 
 	Convey("should return expected error if fails to create request", t, func() {
 		params := &ServiceDatasetParameters{
-			ServiceToken: common.AuthHeaderKey,
-			DatasetID:    datasetIDKey,
+			ServiceAuthToken: common.AuthHeaderKey,
+			DatasetID:        datasetIDKey,
 		}
 
 		req, err := params.CreateGetPermissionsRequest("!@£$%^&*()_")

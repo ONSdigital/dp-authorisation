@@ -14,11 +14,6 @@ const (
 	CollectionIDHeader = "Collection-Id"
 )
 
-var (
-	getRequestVars      func(r *http.Request) map[string]string
-	datasetIDKey        string
-)
-
 // GetRequestVarsFunc is a utility function for retrieving URL path parameters and request headers from a HTTP Request
 type GetRequestVarsFunc func(r *http.Request) map[string]string
 
@@ -46,12 +41,8 @@ type ParameterFactory interface {
 }
 
 // Configure is an initialise function for the auth package.
-// 	- DatasetIDKey is the URL placeholder name for dataset ID variable
-// 	- GetRequestVarsFunc is a function for getting URL path variables and headers form a HTTP request.
 // 	- logNamespace is the namespace to use for auth package logging.
-func Configure(DatasetIDKey string, GetRequestVarsFunc GetRequestVarsFunc, logNamespace string) {
+func Configure(logNamespace string) {
 	log.Namespace = logNamespace
-	datasetIDKey = DatasetIDKey
-	getRequestVars = GetRequestVarsFunc
 }
 
