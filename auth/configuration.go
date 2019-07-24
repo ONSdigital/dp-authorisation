@@ -40,6 +40,10 @@ type ParameterFactory interface {
 	CreateParameters(req *http.Request) (Parameters, error)
 }
 
+type GetPermissionsRequestBuilder interface {
+	NewPermissionsRequest(req *http.Request) (getPermissionsRequest *http.Request, err error)
+}
+
 // Configure is an initialise function for the auth package.
 // 	- logNamespace is the namespace to use for auth package logging.
 func Configure(logNamespace string) {
