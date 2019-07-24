@@ -60,32 +60,6 @@ func (client *PermissionsClient) GetPermissions(ctx context.Context, getPermissi
 	if getPermissionsRequest == nil {
 		return nil, getPermissionsRequestNilError
 	}
-	resp, err := client.doGetPermissionsRequest(ctx, getPermissionsRequest)
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return nil, handleGetPermissionsErrorResponse(ctx, resp.Body, resp.StatusCode)
-	}
-
-	permissions, err := getPermissionsFromResponse(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return permissions, nil
-}
-
-// GetCallerPermissions fulfilling the Clienter interface - get a caller's permissions from the permissions API.
-//	params - a Parameters implementation encapsulating the specifics of the request (see  Parameters doc for more).
-// Return *Permissions if successful or err.
-func (client *PermissionsClient) GetCallerPermissions(ctx context.Context, params Parameters) (callerPermissions *Permissions, err error) {
-	getPermissionsRequest, err := params.CreateGetPermissionsRequest(client.host)
-	if err != nil {
-		return nil, err
-	}
 
 	resp, err := client.doGetPermissionsRequest(ctx, getPermissionsRequest)
 	if err != nil {
@@ -93,7 +67,6 @@ func (client *PermissionsClient) GetCallerPermissions(ctx context.Context, param
 	}
 
 	defer resp.Body.Close()
-
 	if resp.StatusCode != 200 {
 		return nil, handleGetPermissionsErrorResponse(ctx, resp.Body, resp.StatusCode)
 	}

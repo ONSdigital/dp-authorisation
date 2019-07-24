@@ -9,7 +9,7 @@ import (
 
 // Handler is object providing functionality for applying authorisation checks to http.HandlerFunc's
 type Handler struct {
-	parameterFactory    ParameterFactory
+	requestBuilder      GetPermissionsRequestBuilder
 	permissionsClient   Clienter
 	permissionsVerifier Verifier
 }
@@ -18,9 +18,9 @@ type Handler struct {
 //	- parameterFactory is a factory object which generates Parameters object from a HTTP request.
 //	- permissionsClient is a client for communicating with the permissions API.
 //	- permissionsVerifier is an object that checks a caller's permissions satisfy the permissions requirements.
-func NewHandler(parameterFactory ParameterFactory, permissionsClient Clienter, permissionsVerifier Verifier) *Handler {
+func NewHandler(requestBuilder GetPermissionsRequestBuilder, permissionsClient Clienter, permissionsVerifier Verifier) *Handler {
 	return &Handler{
-		parameterFactory:    parameterFactory,
+		requestBuilder:      requestBuilder,
 		permissionsClient:   permissionsClient,
 		permissionsVerifier: permissionsVerifier,
 	}
@@ -42,19 +42,19 @@ func (h *Handler) Require(required Permissions, handler http.HandlerFunc) http.H
 		ctx := req.Context()
 		logD := log.Data{"requested_uri": req.URL.RequestURI()}
 
-		parameters, err := h.parameterFactory.CreateParameters(req)
+		getPermissionsRequest, err := h.requestBuilder.NewPermissionsRequest(req)
 		if err != nil {
 			handleAuthoriseError(req.Context(), err, w, logD)
 			return
 		}
 
-		callerPermissions, err := h.permissionsClient.GetCallerPermissions(ctx, parameters)
+		permissions, err := h.permissionsClient.GetPermissions(ctx, getPermissionsRequest)
 		if err != nil {
 			handleAuthoriseError(req.Context(), err, w, logD)
 			return
 		}
 
-		err = h.permissionsVerifier.CheckAuthorisation(ctx, callerPermissions, &required)
+		err = h.permissionsVerifier.CheckAuthorisation(ctx, permissions, &required)
 		if err != nil {
 			handleAuthoriseError(req.Context(), err, w, logD)
 			return

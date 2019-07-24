@@ -11,7 +11,7 @@ import (
 
 func main() {
 	// Set the auth package log namespace.
-	auth.Configure("some-name-here")
+	auth.LoggerNamespace("some-name-here")
 
 	// create permissions verifier - PermissionsVerifier is the default implementation.
 	permissionsVerifier := &auth.PermissionsVerifier{}

@@ -7,7 +7,7 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
-//go:generate moq -out generated_mocks.go -pkg auth . Clienter Verifier HTTPClienter Parameters ParameterFactory GetPermissionsRequestBuilder
+//go:generate moq -out generated_mocks.go -pkg auth . Clienter Verifier HTTPClienter Parameters GetPermissionsRequestBuilder
 
 const (
 	// CollectionIDHeader is the collection ID request header key.
@@ -25,7 +25,6 @@ type HTTPClienter interface {
 // Clienter is the interface that defines a client for obtaining Permissions from a Permissions API. The Parameters
 // argument encapsulates the specifics of the request to make.
 type Clienter interface {
-	GetCallerPermissions(ctx context.Context, params Parameters) (callerPermissions *Permissions, err error)
 	GetPermissions(ctx context.Context, getPermissionsRequest *http.Request) (*Permissions, error)
 }
 
@@ -35,19 +34,12 @@ type Verifier interface {
 	CheckAuthorisation(ctx context.Context, callerPermissions *Permissions, requiredPermissions *Permissions) error
 }
 
-// ParameterFactory interface defining a parameter factory. ParameterFactory creates a new Parameters instance from a
-// HTTP request
-type ParameterFactory interface {
-	CreateParameters(req *http.Request) (Parameters, error)
-}
-
 type GetPermissionsRequestBuilder interface {
 	NewPermissionsRequest(req *http.Request) (getPermissionsRequest *http.Request, err error)
 }
 
-// Configure is an initialise function for the auth package.
-// 	- logNamespace is the namespace to use for auth package logging.
-func Configure(logNamespace string) {
+// LoggerNamespace set the log namespace for auth package logging.
+func LoggerNamespace(logNamespace string) {
 	log.Namespace = logNamespace
 }
 

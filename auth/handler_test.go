@@ -10,12 +10,6 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-const (
-	datasetID     = "datasetID"
-	collectionID  = "collectionID"
-	userAuthToken = "userAuthToken"
-)
-
 var (
 	readPermissions = &Permissions{
 		Read: true,
@@ -30,35 +24,34 @@ func TestRequirePermissions(t *testing.T) {
 
 		verifierMock := getVerifierMock(nil)
 
-		expectedParams := &ParametersMock{}
-
-		paramFactory := getParameterFactoryMock(expectedParams, nil)
+		getPermsReq := httptest.NewRequest("GET", host, nil)
+		requestBuilder := getGetPermissionsRequestBuilderMock(getPermsReq, nil)
 
 		wrappedHandler := &HandlerMock{count: 0}
 
 		requiredPermissions := readPermissions
 
-		authHandler := NewHandler(paramFactory, clienterMock, verifierMock)
+		authHandler := NewHandler(requestBuilder, clienterMock, verifierMock)
 
 		h := authHandler.Require(*requiredPermissions, wrappedHandler.handleFunc)
 
 		Convey("when a request is received", func() {
+			inboundReq := httptest.NewRequest("GET", host, nil)
 			w := httptest.NewRecorder()
-			r := httptest.NewRequest("GET", host, nil)
 
-			h.ServeHTTP(w, r)
+			h.ServeHTTP(w, inboundReq)
 
-			Convey("then parameterFactory.CreateParameters is called 1 time", func() {
-				calls := paramFactory.CreateParametersCalls()
+			Convey("then requestBuilder.NewPermissionsRequest is called 1 time", func() {
+				calls := requestBuilder.NewPermissionsRequestCalls()
 				So(calls, ShouldHaveLength, 1)
-				So(calls[0].Req, ShouldResemble, r)
+				So(calls[0].Req, ShouldResemble, getPermsReq)
 
 			})
 
-			Convey("and permissionsClient GetCallerPermissions is called once with the expected params", func() {
-				calls := clienterMock.GetCallerPermissionsCalls()
+			Convey("and permissionsClient GetPermissions is called once with the expected parameter", func() {
+				calls := clienterMock.GetPermissionsCalls()
 				So(calls, ShouldHaveLength, 1)
-				So(calls[0].Params, ShouldResemble, expectedParams)
+				So(calls[0].GetPermissionsRequest, ShouldResemble, getPermsReq)
 			})
 
 			Convey("and CheckAuthorisation is called once with the expected values", func() {
@@ -79,35 +72,34 @@ func TestRequirePermissions(t *testing.T) {
 
 		verifierMock := getVerifierMock(checkAuthorisationForbiddenError)
 
-		expectedParams := &ParametersMock{}
-
-		paramFactory := getParameterFactoryMock(expectedParams, nil)
+		getPermsReq := httptest.NewRequest("GET", host, nil)
+		requestBuilder := getGetPermissionsRequestBuilderMock(getPermsReq, nil)
 
 		wrappedHandler := &HandlerMock{count: 0}
 
 		requiredPermissions := readPermissions
 
-		authHandler := NewHandler(paramFactory, clienterMock, verifierMock)
+		authHandler := NewHandler(requestBuilder, clienterMock, verifierMock)
 
 		h := authHandler.Require(*requiredPermissions, wrappedHandler.handleFunc)
 
 		Convey("when a request is received", func() {
 			w := httptest.NewRecorder()
-			r := httptest.NewRequest("GET", host, nil)
+			inboundReq := httptest.NewRequest("GET", host, nil)
 
-			h.ServeHTTP(w, r)
+			h.ServeHTTP(w, inboundReq)
 
-			Convey("then parameterFactory.CreateParameters is called 1 time", func() {
-				calls := paramFactory.CreateParametersCalls()
+			Convey("then requestBuilder.NewPermissionsRequest is called 1 time", func() {
+				calls := requestBuilder.NewPermissionsRequestCalls()
 				So(calls, ShouldHaveLength, 1)
-				So(calls[0].Req, ShouldResemble, r)
+				So(calls[0].Req, ShouldResemble, inboundReq)
 
 			})
 
 			Convey("and permissionsClient GetCallerPermissions is called once with the expected params", func() {
-				calls := clienterMock.GetCallerPermissionsCalls()
+				calls := clienterMock.GetPermissionsCalls()
 				So(calls, ShouldHaveLength, 1)
-				So(calls[0].Params, ShouldResemble, expectedParams)
+				So(calls[0].GetPermissionsRequest, ShouldResemble, getPermsReq)
 			})
 
 			Convey("and CheckAuthorisation is called once with the expected values", func() {
@@ -123,37 +115,38 @@ func TestRequirePermissions(t *testing.T) {
 		})
 	})
 
-	Convey("given parameterFactory.CreateParameters returns an error", t, func() {
+	Convey("given requestBuilder.NewPermissionsRequest returns an error", t, func() {
 		clienterMock := getClienterMock(readPermissions, nil)
 
 		verifierMock := getVerifierMock(checkAuthorisationForbiddenError)
 
-		paramFactory := getParameterFactoryMock(nil, errors.New("internal server error"))
+		expectedErr := errors.New("pop")
+
+		requestBuilder := getGetPermissionsRequestBuilderMock(nil, expectedErr)
 
 		wrappedHandler := &HandlerMock{count: 0}
 
 		requiredPermissions := readPermissions
 
-
-		authHandler := NewHandler(paramFactory, clienterMock, verifierMock)
+		authHandler := NewHandler(requestBuilder, clienterMock, verifierMock)
 
 		h := authHandler.Require(*requiredPermissions, wrappedHandler.handleFunc)
 
 		Convey("when a request is received", func() {
 			w := httptest.NewRecorder()
-			r := httptest.NewRequest("GET", host, nil)
+			inboundReq := httptest.NewRequest("GET", host, nil)
 
-			h.ServeHTTP(w, r)
+			h.ServeHTTP(w, inboundReq)
 
-			Convey("then parameterFactory.CreateParameters is called 1 time", func() {
-				calls := paramFactory.CreateParametersCalls()
+			Convey("then requestBuilder.NewPermissionsRequest is called 1 time", func() {
+				calls := requestBuilder.NewPermissionsRequestCalls()
 				So(calls, ShouldHaveLength, 1)
-				So(calls[0].Req, ShouldResemble, r)
+				So(calls[0].Req, ShouldResemble, inboundReq)
 
 			})
 
-			Convey("and permissionsClient GetCallerPermissions is never called", func() {
-				calls := clienterMock.GetCallerPermissionsCalls()
+			Convey("and permissionsClient GetPermissionsCalls is never called", func() {
+				calls := clienterMock.GetPermissionsCalls()
 				So(calls, ShouldHaveLength, 0)
 			})
 
@@ -172,38 +165,38 @@ func TestRequirePermissions(t *testing.T) {
 		})
 	})
 
-	Convey("given permissionsClient GetCallerPermissions returns an error", t, func() {
+	Convey("given permissionsClient GetPermissions returns an error", t, func() {
 		clienterMock := getClienterMock(nil, errors.New("internal server error"))
 
 		verifierMock := getVerifierMock(checkAuthorisationForbiddenError)
 
-		paramFactory := getParameterFactoryMock(&ParametersMock{}, nil)
+		getPermsReq := httptest.NewRequest("GET", host, nil)
+		requestBuilder := getGetPermissionsRequestBuilderMock(getPermsReq, nil)
 
 		wrappedHandler := &HandlerMock{count: 0}
 
 		requiredPermissions := readPermissions
 
-
-		authHandler := NewHandler(paramFactory, clienterMock, verifierMock)
+		authHandler := NewHandler(requestBuilder, clienterMock, verifierMock)
 		h := authHandler.Require(*requiredPermissions, wrappedHandler.handleFunc)
 
 		Convey("when a request is received", func() {
 			w := httptest.NewRecorder()
 
-			r := httptest.NewRequest("GET", host, nil)
-			h.ServeHTTP(w, r)
+			inboundReq := httptest.NewRequest("GET", host, nil)
+			h.ServeHTTP(w, inboundReq)
 
-			Convey("then parameterFactory.CreateParameters is called 1 time", func() {
-				calls := paramFactory.CreateParametersCalls()
+			Convey("then requestBuilder.NewPermissionsRequest is called 1 time", func() {
+				calls := requestBuilder.NewPermissionsRequestCalls()
 				So(calls, ShouldHaveLength, 1)
-				So(calls[0].Req, ShouldResemble, r)
+				So(calls[0].Req, ShouldResemble, inboundReq)
 
 			})
 
-			Convey("and permissionsClient GetCallerPermissions is called 1 time", func() {
-				calls := clienterMock.GetCallerPermissionsCalls()
+			Convey("and permissionsClient GetPermissions is called 1 time", func() {
+				calls := clienterMock.GetPermissionsCalls()
 				So(calls, ShouldHaveLength, 1)
-				So(calls[0].Params, ShouldResemble, &ParametersMock{})
+				So(calls[0].GetPermissionsRequest, ShouldResemble, inboundReq)
 			})
 
 			Convey("and CheckAuthorisation is never called", func() {
@@ -224,7 +217,7 @@ func TestRequirePermissions(t *testing.T) {
 
 func getClienterMock(p *Permissions, err error) *ClienterMock {
 	return &ClienterMock{
-		GetCallerPermissionsFunc: func(ctx context.Context, params Parameters) (permissions *Permissions, e error) {
+		GetPermissionsFunc: func(ctx context.Context, r *http.Request) (*Permissions, error) {
 			return p, err
 		},
 	}
@@ -238,10 +231,10 @@ func getVerifierMock(err error) *VerifierMock {
 	}
 }
 
-func getParameterFactoryMock(p Parameters, err error) *ParameterFactoryMock {
-	return &ParameterFactoryMock{
-		CreateParametersFunc: func(req *http.Request) (Parameters, error) {
-			return p, err
+func getGetPermissionsRequestBuilderMock(r *http.Request, err error) *GetPermissionsRequestBuilderMock {
+	return &GetPermissionsRequestBuilderMock{
+		NewPermissionsRequestFunc: func(req *http.Request) (*http.Request, error) {
+			return r, err
 		},
 	}
 }

@@ -10,8 +10,7 @@ import (
 )
 
 var (
-	lockClienterMockGetCallerPermissions sync.RWMutex
-	lockClienterMockGetPermissions       sync.RWMutex
+	lockClienterMockGetPermissions sync.RWMutex
 )
 
 // ClienterMock is a mock implementation of Clienter.
@@ -20,9 +19,6 @@ var (
 //
 //         // make and configure a mocked Clienter
 //         mockedClienter := &ClienterMock{
-//             GetCallerPermissionsFunc: func(ctx context.Context, params Parameters) (*Permissions, error) {
-// 	               panic("TODO: mock out the GetCallerPermissions method")
-//             },
 //             GetPermissionsFunc: func(ctx context.Context, getPermissionsRequest *http.Request) (*Permissions, error) {
 // 	               panic("TODO: mock out the GetPermissions method")
 //             },
@@ -33,21 +29,11 @@ var (
 //
 //     }
 type ClienterMock struct {
-	// GetCallerPermissionsFunc mocks the GetCallerPermissions method.
-	GetCallerPermissionsFunc func(ctx context.Context, params Parameters) (*Permissions, error)
-
 	// GetPermissionsFunc mocks the GetPermissions method.
 	GetPermissionsFunc func(ctx context.Context, getPermissionsRequest *http.Request) (*Permissions, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// GetCallerPermissions holds details about calls to the GetCallerPermissions method.
-		GetCallerPermissions []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// Params is the params argument value.
-			Params Parameters
-		}
 		// GetPermissions holds details about calls to the GetPermissions method.
 		GetPermissions []struct {
 			// Ctx is the ctx argument value.
@@ -56,41 +42,6 @@ type ClienterMock struct {
 			GetPermissionsRequest *http.Request
 		}
 	}
-}
-
-// GetCallerPermissions calls GetCallerPermissionsFunc.
-func (mock *ClienterMock) GetCallerPermissions(ctx context.Context, params Parameters) (*Permissions, error) {
-	if mock.GetCallerPermissionsFunc == nil {
-		panic("moq: ClienterMock.GetCallerPermissionsFunc is nil but Clienter.GetCallerPermissions was just called")
-	}
-	callInfo := struct {
-		Ctx    context.Context
-		Params Parameters
-	}{
-		Ctx:    ctx,
-		Params: params,
-	}
-	lockClienterMockGetCallerPermissions.Lock()
-	mock.calls.GetCallerPermissions = append(mock.calls.GetCallerPermissions, callInfo)
-	lockClienterMockGetCallerPermissions.Unlock()
-	return mock.GetCallerPermissionsFunc(ctx, params)
-}
-
-// GetCallerPermissionsCalls gets all the calls that were made to GetCallerPermissions.
-// Check the length with:
-//     len(mockedClienter.GetCallerPermissionsCalls())
-func (mock *ClienterMock) GetCallerPermissionsCalls() []struct {
-	Ctx    context.Context
-	Params Parameters
-} {
-	var calls []struct {
-		Ctx    context.Context
-		Params Parameters
-	}
-	lockClienterMockGetCallerPermissions.RLock()
-	calls = mock.calls.GetCallerPermissions
-	lockClienterMockGetCallerPermissions.RUnlock()
-	return calls
 }
 
 // GetPermissions calls GetPermissionsFunc.
@@ -335,70 +286,6 @@ func (mock *ParametersMock) CreateGetPermissionsRequestCalls() []struct {
 	lockParametersMockCreateGetPermissionsRequest.RLock()
 	calls = mock.calls.CreateGetPermissionsRequest
 	lockParametersMockCreateGetPermissionsRequest.RUnlock()
-	return calls
-}
-
-var (
-	lockParameterFactoryMockCreateParameters sync.RWMutex
-)
-
-// ParameterFactoryMock is a mock implementation of ParameterFactory.
-//
-//     func TestSomethingThatUsesParameterFactory(t *testing.T) {
-//
-//         // make and configure a mocked ParameterFactory
-//         mockedParameterFactory := &ParameterFactoryMock{
-//             CreateParametersFunc: func(req *http.Request) (Parameters, error) {
-// 	               panic("TODO: mock out the CreateParameters method")
-//             },
-//         }
-//
-//         // TODO: use mockedParameterFactory in code that requires ParameterFactory
-//         //       and then make assertions.
-//
-//     }
-type ParameterFactoryMock struct {
-	// CreateParametersFunc mocks the CreateParameters method.
-	CreateParametersFunc func(req *http.Request) (Parameters, error)
-
-	// calls tracks calls to the methods.
-	calls struct {
-		// CreateParameters holds details about calls to the CreateParameters method.
-		CreateParameters []struct {
-			// Req is the req argument value.
-			Req *http.Request
-		}
-	}
-}
-
-// CreateParameters calls CreateParametersFunc.
-func (mock *ParameterFactoryMock) CreateParameters(req *http.Request) (Parameters, error) {
-	if mock.CreateParametersFunc == nil {
-		panic("moq: ParameterFactoryMock.CreateParametersFunc is nil but ParameterFactory.CreateParameters was just called")
-	}
-	callInfo := struct {
-		Req *http.Request
-	}{
-		Req: req,
-	}
-	lockParameterFactoryMockCreateParameters.Lock()
-	mock.calls.CreateParameters = append(mock.calls.CreateParameters, callInfo)
-	lockParameterFactoryMockCreateParameters.Unlock()
-	return mock.CreateParametersFunc(req)
-}
-
-// CreateParametersCalls gets all the calls that were made to CreateParameters.
-// Check the length with:
-//     len(mockedParameterFactory.CreateParametersCalls())
-func (mock *ParameterFactoryMock) CreateParametersCalls() []struct {
-	Req *http.Request
-} {
-	var calls []struct {
-		Req *http.Request
-	}
-	lockParameterFactoryMockCreateParameters.RLock()
-	calls = mock.calls.CreateParameters
-	lockParameterFactoryMockCreateParameters.RUnlock()
 	return calls
 }
 
