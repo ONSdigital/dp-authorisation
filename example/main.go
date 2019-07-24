@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-authorisation/auth"
-	"github.com/ONSdigital/go-ns/rchttp"
 	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
 )
@@ -13,46 +12,29 @@ func main() {
 	// Set the auth package log namespace.
 	auth.LoggerNamespace("some-name-here")
 
-	// create permissions verifier - PermissionsVerifier is the default implementation.
-	permissionsVerifier := &auth.PermissionsVerifier{}
-
-	// create a permissions client
-	permissionsClient := auth.NewPermissionsClient("http://localhost:8082", &rchttp.Client{})
-
-
-	// DatasetParameterFactory is an implementation of ParameterFactory and encapsulate the logic for:
-	// 	- Extracting the required headers and parameters from inbound requests
-	//	- Creating an outbound get dataset permissions request to the dataset API.
-	datasetParamFactory := &auth.DatasetParameterFactory{
-		GetRequestVarsFunc: mux.Vars,
+	datasetPermissionsRequestBuilder := &auth.DatasetPermissionsRequestBuilder{
+		Host:               "http://localhost:8082",
 		DatasetIDKey:       "dataset_id",
+		GetRequestVarsFunc: mux.Vars,
 	}
 
 	// create a new auth handler for checking dataset permissions.
-	datasetsAuth := auth.NewHandler(datasetParamFactory, permissionsClient, permissionsVerifier)
-
-
-	// InstanceParameterFactory is an implementation of ParameterFactory and knows how to check instance permissions.
-	instanceParamFactory := &auth.InstanceParameterFactory{}
-
-	// create a new auth handler for checking instance permissions.
-	instancesAuth := auth.NewHandler(instanceParamFactory, permissionsClient, permissionsVerifier)
+	datasetsAuth := auth.NewHandler(
+		datasetPermissionsRequestBuilder,
+		auth.DefaultPermissionsClient(),
+		auth.DefaultPermissionsVerifier(),
+	)
 
 	router := mux.NewRouter()
 
-
 	// permission definitions
 	read := auth.Permissions{Read: true}
-	update := auth.Permissions{Update: true}
 
 	// getDatasetHandlerFunc requires the caller to have datasets READ permissions.
 	router.HandleFunc("/datasets/{dataset_id}", datasetsAuth.Require(read, getDatasetHandlerFunc)).Methods("GET")
 
-	// putInstanceHandlerFunc requires the caller to have instance UPDATE permissions.
-	router.HandleFunc("/instances/{instance_id}", instancesAuth.Require(update, putInstanceHandlerFunc)).Methods("PUT")
-
 	log.Event(nil, "starting server")
-	err := http.ListenAndServe(":8088", router)
+	err := http.ListenAndServe(":22000", router)
 	if err != nil {
 		panic(err)
 	}

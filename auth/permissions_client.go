@@ -6,6 +6,8 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/ONSdigital/go-ns/rchttp"
 )
 
 const (
@@ -46,14 +48,15 @@ type PermissionsClient struct {
 	httpCli HTTPClienter
 }
 
+func DefaultPermissionsClient() *PermissionsClient {
+	return &PermissionsClient{httpCli: rchttp.NewClient()}
+}
+
 // NewPermissionsClient construct a new PermissionsClient instance.
 //	- host is the URL of the permissions API to call.
 //	- httpClient is instance of HTTPClienter
-func NewPermissionsClient(host string, httpClient HTTPClienter) *PermissionsClient {
-	return &PermissionsClient{
-		host:    host,
-		httpCli: httpClient,
-	}
+func NewPermissionsClient(httpClient HTTPClienter) *PermissionsClient {
+	return &PermissionsClient{httpCli: httpClient}
 }
 
 func (client *PermissionsClient) GetPermissions(ctx context.Context, getPermissionsRequest *http.Request) (*Permissions, error) {

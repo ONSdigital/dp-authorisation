@@ -417,7 +417,7 @@ func TestDoGetPermissionsRequest(t *testing.T) {
 func TestPermissionsClient_GetPermissions(t *testing.T) {
 	Convey("should return the expected error if getPermissionsRequest is nil", t, func() {
 		httpclient := &HTTPClienterMock{}
-		cli := NewPermissionsClient(host, httpclient)
+		cli := NewPermissionsClient(httpclient)
 
 		actual, err := cli.GetPermissions(nil, nil)
 
@@ -434,7 +434,7 @@ func TestPermissionsClient_GetPermissions(t *testing.T) {
 
 		getPermReq := httptest.NewRequest("GET", host, nil)
 
-		cli := NewPermissionsClient(host, httpclient)
+		cli := NewPermissionsClient(httpclient)
 
 		actual, err := cli.GetPermissions(nil, getPermReq)
 
@@ -459,7 +459,7 @@ func TestPermissionsClient_GetPermissions(t *testing.T) {
 
 		getPermReq := httptest.NewRequest("GET", host, nil)
 
-		cli := NewPermissionsClient(host, httpclient)
+		cli := NewPermissionsClient(httpclient)
 
 		actual, err := cli.GetPermissions(nil, getPermReq)
 
@@ -481,7 +481,7 @@ func TestPermissionsClient_GetPermissions(t *testing.T) {
 
 		getPermReq := httptest.NewRequest("GET", host, nil)
 
-		cli := NewPermissionsClient(host, httpclient)
+		cli := NewPermissionsClient(httpclient)
 
 		actual, err := cli.GetPermissions(nil, getPermReq)
 
@@ -509,7 +509,7 @@ func TestPermissionsClient_GetPermissions(t *testing.T) {
 
 		getPermReq := httptest.NewRequest("GET", host, nil)
 
-		cli := NewPermissionsClient(host, httpclient)
+		cli := NewPermissionsClient(httpclient)
 
 		actual, err := cli.GetPermissions(nil, getPermReq)
 
