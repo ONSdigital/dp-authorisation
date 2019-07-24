@@ -7,7 +7,7 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
-//go:generate moq -out generated_mocks.go -pkg auth . Clienter Verifier HTTPClienter Parameters ParameterFactory
+//go:generate moq -out generated_mocks.go -pkg auth . Clienter Verifier HTTPClienter Parameters ParameterFactory GetPermissionsRequestBuilder
 
 const (
 	// CollectionIDHeader is the collection ID request header key.
@@ -26,6 +26,7 @@ type HTTPClienter interface {
 // argument encapsulates the specifics of the request to make.
 type Clienter interface {
 	GetCallerPermissions(ctx context.Context, params Parameters) (callerPermissions *Permissions, err error)
+	GetPermissions(ctx context.Context, getPermissionsRequest *http.Request) (*Permissions, error)
 }
 
 // Verifier is an interface defining a permissions checker. Checks that the caller's permissions satisfy the required

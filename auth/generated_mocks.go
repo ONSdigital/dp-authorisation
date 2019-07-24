@@ -11,6 +11,7 @@ import (
 
 var (
 	lockClienterMockGetCallerPermissions sync.RWMutex
+	lockClienterMockGetPermissions       sync.RWMutex
 )
 
 // ClienterMock is a mock implementation of Clienter.
@@ -22,6 +23,9 @@ var (
 //             GetCallerPermissionsFunc: func(ctx context.Context, params Parameters) (*Permissions, error) {
 // 	               panic("TODO: mock out the GetCallerPermissions method")
 //             },
+//             GetPermissionsFunc: func(ctx context.Context, getPermissionsRequest *http.Request) (*Permissions, error) {
+// 	               panic("TODO: mock out the GetPermissions method")
+//             },
 //         }
 //
 //         // TODO: use mockedClienter in code that requires Clienter
@@ -32,6 +36,9 @@ type ClienterMock struct {
 	// GetCallerPermissionsFunc mocks the GetCallerPermissions method.
 	GetCallerPermissionsFunc func(ctx context.Context, params Parameters) (*Permissions, error)
 
+	// GetPermissionsFunc mocks the GetPermissions method.
+	GetPermissionsFunc func(ctx context.Context, getPermissionsRequest *http.Request) (*Permissions, error)
+
 	// calls tracks calls to the methods.
 	calls struct {
 		// GetCallerPermissions holds details about calls to the GetCallerPermissions method.
@@ -40,6 +47,13 @@ type ClienterMock struct {
 			Ctx context.Context
 			// Params is the params argument value.
 			Params Parameters
+		}
+		// GetPermissions holds details about calls to the GetPermissions method.
+		GetPermissions []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// GetPermissionsRequest is the getPermissionsRequest argument value.
+			GetPermissionsRequest *http.Request
 		}
 	}
 }
@@ -76,6 +90,41 @@ func (mock *ClienterMock) GetCallerPermissionsCalls() []struct {
 	lockClienterMockGetCallerPermissions.RLock()
 	calls = mock.calls.GetCallerPermissions
 	lockClienterMockGetCallerPermissions.RUnlock()
+	return calls
+}
+
+// GetPermissions calls GetPermissionsFunc.
+func (mock *ClienterMock) GetPermissions(ctx context.Context, getPermissionsRequest *http.Request) (*Permissions, error) {
+	if mock.GetPermissionsFunc == nil {
+		panic("moq: ClienterMock.GetPermissionsFunc is nil but Clienter.GetPermissions was just called")
+	}
+	callInfo := struct {
+		Ctx                   context.Context
+		GetPermissionsRequest *http.Request
+	}{
+		Ctx:                   ctx,
+		GetPermissionsRequest: getPermissionsRequest,
+	}
+	lockClienterMockGetPermissions.Lock()
+	mock.calls.GetPermissions = append(mock.calls.GetPermissions, callInfo)
+	lockClienterMockGetPermissions.Unlock()
+	return mock.GetPermissionsFunc(ctx, getPermissionsRequest)
+}
+
+// GetPermissionsCalls gets all the calls that were made to GetPermissions.
+// Check the length with:
+//     len(mockedClienter.GetPermissionsCalls())
+func (mock *ClienterMock) GetPermissionsCalls() []struct {
+	Ctx                   context.Context
+	GetPermissionsRequest *http.Request
+} {
+	var calls []struct {
+		Ctx                   context.Context
+		GetPermissionsRequest *http.Request
+	}
+	lockClienterMockGetPermissions.RLock()
+	calls = mock.calls.GetPermissions
+	lockClienterMockGetPermissions.RUnlock()
 	return calls
 }
 
@@ -350,5 +399,69 @@ func (mock *ParameterFactoryMock) CreateParametersCalls() []struct {
 	lockParameterFactoryMockCreateParameters.RLock()
 	calls = mock.calls.CreateParameters
 	lockParameterFactoryMockCreateParameters.RUnlock()
+	return calls
+}
+
+var (
+	lockGetPermissionsRequestBuilderMockNewPermissionsRequest sync.RWMutex
+)
+
+// GetPermissionsRequestBuilderMock is a mock implementation of GetPermissionsRequestBuilder.
+//
+//     func TestSomethingThatUsesGetPermissionsRequestBuilder(t *testing.T) {
+//
+//         // make and configure a mocked GetPermissionsRequestBuilder
+//         mockedGetPermissionsRequestBuilder := &GetPermissionsRequestBuilderMock{
+//             NewPermissionsRequestFunc: func(req *http.Request) (*http.Request, error) {
+// 	               panic("TODO: mock out the NewPermissionsRequest method")
+//             },
+//         }
+//
+//         // TODO: use mockedGetPermissionsRequestBuilder in code that requires GetPermissionsRequestBuilder
+//         //       and then make assertions.
+//
+//     }
+type GetPermissionsRequestBuilderMock struct {
+	// NewPermissionsRequestFunc mocks the NewPermissionsRequest method.
+	NewPermissionsRequestFunc func(req *http.Request) (*http.Request, error)
+
+	// calls tracks calls to the methods.
+	calls struct {
+		// NewPermissionsRequest holds details about calls to the NewPermissionsRequest method.
+		NewPermissionsRequest []struct {
+			// Req is the req argument value.
+			Req *http.Request
+		}
+	}
+}
+
+// NewPermissionsRequest calls NewPermissionsRequestFunc.
+func (mock *GetPermissionsRequestBuilderMock) NewPermissionsRequest(req *http.Request) (*http.Request, error) {
+	if mock.NewPermissionsRequestFunc == nil {
+		panic("moq: GetPermissionsRequestBuilderMock.NewPermissionsRequestFunc is nil but GetPermissionsRequestBuilder.NewPermissionsRequest was just called")
+	}
+	callInfo := struct {
+		Req *http.Request
+	}{
+		Req: req,
+	}
+	lockGetPermissionsRequestBuilderMockNewPermissionsRequest.Lock()
+	mock.calls.NewPermissionsRequest = append(mock.calls.NewPermissionsRequest, callInfo)
+	lockGetPermissionsRequestBuilderMockNewPermissionsRequest.Unlock()
+	return mock.NewPermissionsRequestFunc(req)
+}
+
+// NewPermissionsRequestCalls gets all the calls that were made to NewPermissionsRequest.
+// Check the length with:
+//     len(mockedGetPermissionsRequestBuilder.NewPermissionsRequestCalls())
+func (mock *GetPermissionsRequestBuilderMock) NewPermissionsRequestCalls() []struct {
+	Req *http.Request
+} {
+	var calls []struct {
+		Req *http.Request
+	}
+	lockGetPermissionsRequestBuilderMockNewPermissionsRequest.RLock()
+	calls = mock.calls.NewPermissionsRequest
+	lockGetPermissionsRequestBuilderMockNewPermissionsRequest.RUnlock()
 	return calls
 }

@@ -415,6 +415,117 @@ func TestDoGetPermissionsRequest(t *testing.T) {
 	})
 }
 
+func TestPermissionsClient_GetPermissions(t *testing.T) {
+	Convey("should return the expected error if getPermissionsRequest is nil", t, func() {
+		httpclient := &HTTPClienterMock{}
+		cli := NewPermissionsClient(host, httpclient)
+
+		actual, err := cli.GetPermissions(nil, nil)
+
+		So(err, ShouldResemble, getPermissionsRequestNilError)
+		So(actual, ShouldBeNil)
+
+		calls := httpclient.DoCalls()
+		So(calls, ShouldHaveLength, 0)
+	})
+
+	Convey("should return expected error if httpCli.Do returns error", t, func() {
+		cliErr := errors.New("caboooooom")
+		httpclient := newHttpCliMock(nil, cliErr)
+
+		getPermReq := httptest.NewRequest("GET", host, nil)
+
+		cli := NewPermissionsClient(host, httpclient)
+
+		actual, err := cli.GetPermissions(nil, getPermReq)
+
+		permErr, ok := err.(Error)
+		So(ok, ShouldBeTrue)
+		So(permErr.Status, ShouldEqual, 500)
+		So(permErr.Message, ShouldEqual, "get permissions request returned an error")
+		So(permErr.Cause, ShouldResemble, cliErr)
+		So(actual, ShouldBeNil)
+
+		calls := httpclient.DoCalls()
+		So(calls, ShouldHaveLength, 1)
+		So(calls[0].Req, ShouldResemble, getPermReq)
+	})
+
+	Convey("should return expected error is get permissions returns an error status response", t, func() {
+		body := newReadCloserMock(json.Marshal(&errorEntity{Message: "caboom"}))
+
+		response := &http.Response{Body: body, StatusCode: 500}
+
+		httpclient := newHttpCliMock(response, nil)
+
+		getPermReq := httptest.NewRequest("GET", host, nil)
+
+		cli := NewPermissionsClient(host, httpclient)
+
+		actual, err := cli.GetPermissions(nil, getPermReq)
+
+		So(err, ShouldResemble, getPermissionsUnauthorizedError)
+		So(actual, ShouldBeNil)
+
+		calls := httpclient.DoCalls()
+		So(calls, ShouldHaveLength, 1)
+		So(calls[0].Req, ShouldResemble, getPermReq)
+		So(body.IsClosed, ShouldBeTrue)
+	})
+
+	Convey("should return expected error if get permissions response body invalid", t, func() {
+		body := newReadCloserMock(json.Marshal("invalid json"))
+
+		response := &http.Response{Body: body, StatusCode: 200}
+
+		httpclient := newHttpCliMock(response, nil)
+
+		getPermReq := httptest.NewRequest("GET", host, nil)
+
+		cli := NewPermissionsClient(host, httpclient)
+
+		actual, err := cli.GetPermissions(nil, getPermReq)
+
+		permErr, ok := err.(Error)
+		So(ok, ShouldBeTrue)
+		So(permErr.Status, ShouldEqual, 500)
+		So(permErr.Message, ShouldEqual, "internal server error failed marshalling permissions response entity")
+		So(actual, ShouldBeNil)
+
+		calls := httpclient.DoCalls()
+		So(calls, ShouldHaveLength, 1)
+		So(calls[0].Req, ShouldResemble, getPermReq)
+
+		So(body.IsClosed, ShouldBeTrue)
+	})
+
+	Convey("should return expected permissions given a valid request and valid response", t, func() {
+		entity := &permissionsResponseEntity{List: []permissionType{Read}}
+
+		body := newReadCloserMock(json.Marshal(entity))
+
+		response := &http.Response{Body: body, StatusCode: 200}
+
+		httpclient := newHttpCliMock(response, nil)
+
+		getPermReq := httptest.NewRequest("GET", host, nil)
+
+		cli := NewPermissionsClient(host, httpclient)
+
+		actual, err := cli.GetPermissions(nil, getPermReq)
+
+		expected := &Permissions{Read:true}
+		So(err, ShouldBeNil)
+		So(actual, ShouldResemble, expected)
+
+		calls := httpclient.DoCalls()
+		So(calls, ShouldHaveLength, 1)
+		So(calls[0].Req, ShouldResemble, getPermReq)
+
+		So(body.IsClosed, ShouldBeTrue)
+	})
+}
+
 func TestPermissionsClient_GetCallerDatasetPermissionsSuccess(t *testing.T) {
 	host := "http://localhost:8080"
 
@@ -643,5 +754,21 @@ func newReaderFunc(b []byte, err error) func() io.Reader {
 				return b, err
 			},
 		}
+	}
+}
+
+func newReadCloserMock(b []byte, err error) *readCloserMock {
+	return &readCloserMock{
+		GetEntityFunc: func() (bytes []byte, e error) {
+			return b, err
+		},
+	}
+}
+
+func newHttpCliMock(resp *http.Response, err error) *HTTPClienterMock {
+	return &HTTPClienterMock{
+		DoFunc: func(ctx context.Context, req *http.Request) (response *http.Response, e error) {
+			return resp, err
+		},
 	}
 }

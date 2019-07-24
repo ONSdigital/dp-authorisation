@@ -21,8 +21,7 @@ type parameters struct {
 }
 
 // NewPermissionsRequest fulfilling the GetPermissionsRequestBuilder interface. Builds get user/service account
-// dataset permissions requests.
-//	req - is the inbound http.Request to generate the get permissions request from.
+// dataset permissions requests. The req parameter is the inbound http.Request to generate the get permissions request from.
 func (builder *DatasetPermissionsRequestBuilder) NewPermissionsRequest(req *http.Request) (*http.Request, error) {
 	if err := builder.checkConfiguration(); err != nil {
 		return nil, err
@@ -44,6 +43,7 @@ func (builder *DatasetPermissionsRequestBuilder) NewPermissionsRequest(req *http
 	return builder.createServiceDatasetPermissionsRequest(parameters)
 }
 
+// extractRequestParameters helper function get the required headers and parameters from the inbound request.
 func (builder *DatasetPermissionsRequestBuilder) extractRequestParameters(req *http.Request) parameters {
 	return parameters{
 		userAuthToken:    req.Header.Get(common.FlorenceHeaderKey),
@@ -53,6 +53,7 @@ func (builder *DatasetPermissionsRequestBuilder) extractRequestParameters(req *h
 	}
 }
 
+// createUserDatasetPermissionsRequest creates a new get user dataset permissions http.Request from the parameters provided.
 func (builder *DatasetPermissionsRequestBuilder) createUserDatasetPermissionsRequest(params parameters) (*http.Request, error) {
 	url := fmt.Sprintf(userDatasetPermissionsURL, builder.Host, params.datasetID, params.collectionID)
 	getPermissionsReq, err := createRequest(url)
@@ -64,6 +65,7 @@ func (builder *DatasetPermissionsRequestBuilder) createUserDatasetPermissionsReq
 	return getPermissionsReq, nil
 }
 
+// DatasetPermissionsRequestBuilder creates a new get service dataset permissions http.Request from the parameters provided.
 func (builder *DatasetPermissionsRequestBuilder) createServiceDatasetPermissionsRequest(params parameters) (*http.Request, error) {
 	url := fmt.Sprintf(serviceDatasetPermissionsURL, builder.Host, params.datasetID)
 	getPermissionsReq, err := createRequest(url)
@@ -74,6 +76,8 @@ func (builder *DatasetPermissionsRequestBuilder) createServiceDatasetPermissions
 	return getPermissionsReq, nil
 }
 
+// checkConfiguration is a verify function that checks the required build is configured correctly. Returns an appropriate
+// error if config is invalid or missing.
 func (builder *DatasetPermissionsRequestBuilder) checkConfiguration() error {
 	if builder.Host == "" {
 		return Error{
@@ -96,6 +100,7 @@ func (builder *DatasetPermissionsRequestBuilder) checkConfiguration() error {
 	return nil
 }
 
+// isValid checks that a user or service auth token has been provided.
 func (p parameters) isValid() error {
 	if p.userAuthToken == "" && p.serviceAuthToken == "" {
 		return noUserOrServiceAuthTokenProvidedError
