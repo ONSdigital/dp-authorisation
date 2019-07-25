@@ -432,7 +432,7 @@ func TestPermissionsClient_GetPermissions(t *testing.T) {
 		cliErr := errors.New("caboooooom")
 		httpclient := newHttpCliMock(nil, cliErr)
 
-		getPermReq := httptest.NewRequest("GET", host, nil)
+		getPermReq := httptest.NewRequest("GET", testHost, nil)
 
 		cli := NewPermissionsClient(httpclient)
 
@@ -457,7 +457,7 @@ func TestPermissionsClient_GetPermissions(t *testing.T) {
 
 		httpclient := newHttpCliMock(response, nil)
 
-		getPermReq := httptest.NewRequest("GET", host, nil)
+		getPermReq := httptest.NewRequest("GET", testHost, nil)
 
 		cli := NewPermissionsClient(httpclient)
 
@@ -479,7 +479,7 @@ func TestPermissionsClient_GetPermissions(t *testing.T) {
 
 		httpclient := newHttpCliMock(response, nil)
 
-		getPermReq := httptest.NewRequest("GET", host, nil)
+		getPermReq := httptest.NewRequest("GET", testHost, nil)
 
 		cli := NewPermissionsClient(httpclient)
 
@@ -507,7 +507,7 @@ func TestPermissionsClient_GetPermissions(t *testing.T) {
 
 		httpclient := newHttpCliMock(response, nil)
 
-		getPermReq := httptest.NewRequest("GET", host, nil)
+		getPermReq := httptest.NewRequest("GET", testHost, nil)
 
 		cli := NewPermissionsClient(httpclient)
 

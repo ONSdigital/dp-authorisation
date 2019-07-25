@@ -23,7 +23,7 @@ func TestPermissionsRequestBuilder_NewPermissionsRequest(t *testing.T) {
 	})
 
 	Convey("should return expected error if inbound request is nil", t, func() {
-		builder := &PermissionsRequestBuilder{Host: host}
+		builder := &PermissionsRequestBuilder{Host: testHost}
 
 		actual, err := builder.NewPermissionsRequest(nil)
 
@@ -34,8 +34,8 @@ func TestPermissionsRequestBuilder_NewPermissionsRequest(t *testing.T) {
 	})
 
 	Convey("should return expected error if inbound request does not contain a user or service auth header", t, func() {
-		builder := &PermissionsRequestBuilder{Host: host}
-		inboundReq := httptest.NewRequest("GET", host, nil)
+		builder := &PermissionsRequestBuilder{Host: testHost}
+		inboundReq := httptest.NewRequest("GET", testHost, nil)
 
 		actual, err := builder.NewPermissionsRequest(inboundReq)
 
@@ -47,7 +47,7 @@ func TestPermissionsRequestBuilder_NewPermissionsRequest(t *testing.T) {
 
 	Convey("should return expected error if error creating new http request", t, func() {
 		builder := &PermissionsRequestBuilder{Host: "$%^&*(()"}
-		inboundReq := httptest.NewRequest("GET", host, nil)
+		inboundReq := httptest.NewRequest("GET", testHost, nil)
 		inboundReq.Header.Set(common.FlorenceHeaderKey, "666")
 
 		actual, err := builder.NewPermissionsRequest(inboundReq)
@@ -60,39 +60,39 @@ func TestPermissionsRequestBuilder_NewPermissionsRequest(t *testing.T) {
 	})
 
 	Convey("should return get user permissions request if inbound request contains user auth header", t, func() {
-		builder := &PermissionsRequestBuilder{Host: host}
-		inboundReq := httptest.NewRequest("GET", host, nil)
+		builder := &PermissionsRequestBuilder{Host: testHost}
+		inboundReq := httptest.NewRequest("GET", testHost, nil)
 		inboundReq.Header.Set(common.FlorenceHeaderKey, "666")
 
 		actual, err := builder.NewPermissionsRequest(inboundReq)
 
 		So(err, ShouldBeNil)
-		So(actual.URL.String(), ShouldEqual, fmt.Sprintf(userInstancePermissionsURL, host))
+		So(actual.URL.String(), ShouldEqual, fmt.Sprintf(userInstancePermissionsURL, testHost))
 		So(actual.Header.Get(common.FlorenceHeaderKey), ShouldEqual, "666")
 	})
 
 	Convey("should return get service permissions request if inbound request contains service auth header", t, func() {
-		builder := &PermissionsRequestBuilder{Host: host}
-		inboundReq := httptest.NewRequest("GET", host, nil)
+		builder := &PermissionsRequestBuilder{Host: testHost}
+		inboundReq := httptest.NewRequest("GET", testHost, nil)
 		inboundReq.Header.Set(common.AuthHeaderKey, "666")
 
 		actual, err := builder.NewPermissionsRequest(inboundReq)
 
 		So(err, ShouldBeNil)
-		So(actual.URL.String(), ShouldEqual, fmt.Sprintf(serviceInstancePermissionsURL, host))
+		So(actual.URL.String(), ShouldEqual, fmt.Sprintf(serviceInstancePermissionsURL, testHost))
 		So(actual.Header.Get(common.AuthHeaderKey), ShouldEqual, "666")
 	})
 
 	Convey("should return get user permissions request if inbound request contains both user and service auth headers", t, func() {
-		builder := &PermissionsRequestBuilder{Host: host}
-		inboundReq := httptest.NewRequest("GET", host, nil)
+		builder := &PermissionsRequestBuilder{Host: testHost}
+		inboundReq := httptest.NewRequest("GET", testHost, nil)
 		inboundReq.Header.Set(common.AuthHeaderKey, "666")
 		inboundReq.Header.Set(common.FlorenceHeaderKey, "777")
 
 		actual, err := builder.NewPermissionsRequest(inboundReq)
 
 		So(err, ShouldBeNil)
-		So(actual.URL.String(), ShouldEqual, fmt.Sprintf(userInstancePermissionsURL, host))
+		So(actual.URL.String(), ShouldEqual, fmt.Sprintf(userInstancePermissionsURL, testHost))
 		So(actual.Header.Get(common.FlorenceHeaderKey), ShouldEqual, "777")
 		So(actual.Header.Get(common.AuthHeaderKey), ShouldBeEmpty)
 	})

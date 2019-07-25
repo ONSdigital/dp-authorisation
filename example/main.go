@@ -17,6 +17,7 @@ func main() {
 	// Set the auth package log namespace.
 	auth.LoggerNamespace("some-name-here")
 
+	// GetPermissionsRequestBuilder for authorising access to datasets.
 	datasetPermissionsRequestBuilder := auth.NewDatasetPermissionsRequestBuilder("http://localhost:8082", "dataset_id", mux.Vars)
 
 	datasetsPermissions := auth.NewHandler(
@@ -25,6 +26,7 @@ func main() {
 		auth.DefaultPermissionsVerifier(),
 	)
 
+	// GetPermissionsRequestBuilder for authorising general CMD access (cases where we don't have a collection ID & dataset ID).
 	permissionsRequestBuilder := auth.NewPermissionsRequestBuilder("http://localhost:8082")
 
 	permissions := auth.NewHandler(
