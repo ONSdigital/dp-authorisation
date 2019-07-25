@@ -20,6 +20,16 @@ type parameters struct {
 	datasetID        string
 }
 
+type GetRequestVarsFunc func(r *http.Request) map[string]string
+
+func NewDatasetPermissionsRequestBuilder(host string, datasetIDKey string, getRequestVarsFunc GetRequestVarsFunc) GetPermissionsRequestBuilder {
+	return &DatasetPermissionsRequestBuilder{
+		Host:               host,
+		DatasetIDKey:       datasetIDKey,
+		GetRequestVarsFunc: getRequestVarsFunc,
+	}
+}
+
 // NewPermissionsRequest fulfilling the GetPermissionsRequestBuilder interface. Builds get user/service account
 // dataset permissions requests. The req parameter is the inbound http.Request to generate the get permissions request from.
 func (builder *DatasetPermissionsRequestBuilder) NewPermissionsRequest(req *http.Request) (*http.Request, error) {

@@ -11,6 +11,10 @@ type PermissionsRequestBuilder struct {
 	Host string
 }
 
+func NewPermissionsRequestBuilder(host string) GetPermissionsRequestBuilder {
+	return &PermissionsRequestBuilder{Host: host}
+}
+
 func (builder *PermissionsRequestBuilder) NewPermissionsRequest(req *http.Request) (*http.Request, error) {
 	if err := builder.checkConfiguration(); err != nil {
 		return nil, err
