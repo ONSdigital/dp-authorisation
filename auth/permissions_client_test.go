@@ -10,7 +10,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ONSdigital/go-ns/common"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -415,224 +414,114 @@ func TestDoGetPermissionsRequest(t *testing.T) {
 	})
 }
 
-func TestPermissionsClient_GetCallerDatasetPermissionsSuccess(t *testing.T) {
-	host := "http://localhost:8080"
-
-	Convey("given valid parameters", t, func() {
-		params := &UserDatasetParameters{
-			UserToken:    userAuthToken,
-			CollectionID: collectionID,
-			DatasetID:    datasetID,
-		}
-
-		permissionsEntity := &permissionsResponseEntity{
-			List: []permissionType{Read},
-		}
-
-		resp := &http.Response{
-			Body: &readCloserMock{
-				GetEntityFunc: func() (i []byte, e error) {
-					return json.Marshal(permissionsEntity)
-				},
-			},
-			StatusCode: 200,
-		}
-
-		httpclient := &HTTPClienterMock{
-			DoFunc: func(ctx context.Context, req *http.Request) (*http.Response, error) {
-				return resp, nil
-			},
-		}
-
-		permissionsClient := &PermissionsClient{host: "http://localhost:8080", httpCli: httpclient}
-
-		Convey("when get caller permissions is invoked", func() {
-			actual, err := permissionsClient.GetCallerPermissions(nil, params)
-
-			Convey("then the expected permissions are returned", func() {
-				expected := &Permissions{Read: true}
-				So(actual, ShouldResemble, expected)
-			})
-
-			Convey("and error is nil", func() {
-				So(err, ShouldBeNil)
-			})
-
-			Convey("and httpclient.Do is called once with the expected parameters", func() {
-				calls := httpclient.DoCalls()
-				So(calls, ShouldHaveLength, 1)
-				So(calls[0].Req.URL.String(), ShouldResemble, fmt.Sprintf(userDatasetPermissionsURL, host, datasetID, collectionID))
-				So(calls[0].Req.Header.Get(common.FlorenceHeaderKey), ShouldResemble, userAuthToken)
-			})
-		})
-	})
-}
-
-func TestPermissionsClient_GetCallerDatasetPermissionsErrorCases(t *testing.T) {
-	host := "http://localhost:8080"
-
-	Convey("given params.CreateGetPermissionsRequest returns an error", t, func() {
+func TestPermissionsClient_GetPermissions(t *testing.T) {
+	Convey("should return the expected error if getPermissionsRequest is nil", t, func() {
 		httpclient := &HTTPClienterMock{}
+		cli := NewPermissionsClient(httpclient)
 
-		permissionsClient := &PermissionsClient{host: host, httpCli: httpclient}
+		actual, err := cli.GetPermissions(nil, nil)
 
-		params := &ParametersMock{
-			CreateGetPermissionsRequestFunc: func(host string) (*http.Request, error) {
-				return nil, errors.New("i am borked")
-			},
-		}
+		So(err, ShouldResemble, getPermissionsRequestNilError)
+		So(actual, ShouldBeNil)
 
-		Convey("when get caller permissions is invoked", func() {
-			actual, err := permissionsClient.GetCallerPermissions(nil, params)
-
-			Convey("then permissions is nil", func() {
-				So(actual, ShouldBeNil)
-			})
-
-			Convey("and the expected error is returned", func() {
-				So(err, ShouldResemble, errors.New("i am borked"))
-			})
-
-			Convey("and params.CreateGetPermissionsRequest is called 1 time with the expected parameters", func() {
-				calls := params.CreateGetPermissionsRequestCalls()
-				So(calls, ShouldHaveLength, 1)
-				So(calls[0].Host, ShouldEqual, host)
-			})
-
-			Convey("and httpclient.Do is never called", func() {
-				So(httpclient.DoCalls(), ShouldHaveLength, 0)
-			})
-		})
+		calls := httpclient.DoCalls()
+		So(calls, ShouldHaveLength, 0)
 	})
 
-	Convey("given httpclient.Do returns an error", t, func() {
-		httpclient := &HTTPClienterMock{
-			DoFunc: func(ctx context.Context, req *http.Request) (*http.Response, error) {
-				return nil, errors.New("broken")
-			},
-		}
+	Convey("should return expected error if httpCli.Do returns error", t, func() {
+		cliErr := errors.New("caboooooom")
+		httpclient := newHttpCliMock(nil, cliErr)
 
-		request := httptest.NewRequest("GET", host, nil)
+		getPermReq := httptest.NewRequest("GET", testHost, nil)
 
-		permissionsClient := &PermissionsClient{host: host, httpCli: httpclient}
+		cli := NewPermissionsClient(httpclient)
 
-		params := &ParametersMock{
-			CreateGetPermissionsRequestFunc: func(host string) (*http.Request, error) {
-				return request, nil
-			},
-		}
+		actual, err := cli.GetPermissions(nil, getPermReq)
 
-		Convey("when get caller permissions is invoked", func() {
-			actual, err := permissionsClient.GetCallerPermissions(nil, params)
+		permErr, ok := err.(Error)
+		So(ok, ShouldBeTrue)
+		So(permErr.Status, ShouldEqual, 500)
+		So(permErr.Message, ShouldEqual, "get permissions request returned an error")
+		So(permErr.Cause, ShouldResemble, cliErr)
+		So(actual, ShouldBeNil)
 
-			Convey("then permission is nil", func() {
-				So(actual, ShouldBeNil)
-			})
-
-			Convey("and the expected error is returned", func() {
-				permErr, ok := err.(Error)
-				So(ok, ShouldBeTrue)
-				So(permErr.Status, ShouldEqual, 500)
-				So(permErr.Message, ShouldEqual, "get permissions request returned an error")
-				So(permErr.Cause, ShouldResemble, errors.New("broken"))
-			})
-
-			Convey("and httpclient.Do is called 1 time with the expected parameters", func() {
-				So(httpclient.DoCalls(), ShouldHaveLength, 1)
-				So(httpclient.DoCalls()[0].Req, ShouldResemble, request)
-			})
-		})
+		calls := httpclient.DoCalls()
+		So(calls, ShouldHaveLength, 1)
+		So(calls[0].Req, ShouldResemble, getPermReq)
 	})
 
-	Convey("given httpclient.Do returns an error entity", t, func() {
-		response := &http.Response{
-			Body: &readCloserMock{
-				GetEntityFunc: func() ([]byte, error) {
-					return json.Marshal(&errorEntity{Message: "internal server error"})
-				},
-			},
-			StatusCode: 500,
-		}
+	Convey("should return expected error if get permissions returns an error status response", t, func() {
+		body := newReadCloserMock(json.Marshal(&errorEntity{Message: "caboom"}))
 
-		httpclient := &HTTPClienterMock{
-			DoFunc: func(ctx context.Context, req *http.Request) (*http.Response, error) {
-				return response, nil
-			},
-		}
+		response := &http.Response{Body: body, StatusCode: 500}
 
-		request := httptest.NewRequest("GET", host, nil)
+		httpclient := newHttpCliMock(response, nil)
 
-		permissionsClient := &PermissionsClient{host: host, httpCli: httpclient}
+		getPermReq := httptest.NewRequest("GET", testHost, nil)
 
-		params := &ParametersMock{
-			CreateGetPermissionsRequestFunc: func(host string) (*http.Request, error) {
-				return request, nil
-			},
-		}
+		cli := NewPermissionsClient(httpclient)
 
-		Convey("when get caller permissions is invoked", func() {
-			actual, err := permissionsClient.GetCallerPermissions(nil, params)
+		actual, err := cli.GetPermissions(nil, getPermReq)
 
-			Convey("then permission is nil", func() {
-				So(actual, ShouldBeNil)
-			})
+		So(err, ShouldResemble, getPermissionsUnauthorizedError)
+		So(actual, ShouldBeNil)
 
-			Convey("and the expected error is returned", func() {
-				So(err, ShouldResemble, getPermissionsUnauthorizedError)
-			})
-
-			Convey("and httpclient.Do is called 1 time with the expected parameters", func() {
-				So(httpclient.DoCalls(), ShouldHaveLength, 1)
-				So(httpclient.DoCalls()[0].Req, ShouldResemble, request)
-			})
-		})
+		calls := httpclient.DoCalls()
+		So(calls, ShouldHaveLength, 1)
+		So(calls[0].Req, ShouldResemble, getPermReq)
+		So(body.IsClosed, ShouldBeTrue)
 	})
 
-	Convey("given httpclient.Do returns an invalid entity", t, func() {
-		response := &http.Response{
-			Body: &readCloserMock{
-				GetEntityFunc: func() ([]byte, error) {
-					return json.Marshal("I am no valid")
-				},
-			},
-			StatusCode: 200,
-		}
+	Convey("should return expected error if get permissions response body invalid", t, func() {
+		body := newReadCloserMock(json.Marshal("invalid json"))
 
-		httpclient := &HTTPClienterMock{
-			DoFunc: func(ctx context.Context, req *http.Request) (*http.Response, error) {
-				return response, nil
-			},
-		}
+		response := &http.Response{Body: body, StatusCode: 200}
 
-		request := httptest.NewRequest("GET", host, nil)
+		httpclient := newHttpCliMock(response, nil)
 
-		permissionsClient := &PermissionsClient{host: host, httpCli: httpclient}
+		getPermReq := httptest.NewRequest("GET", testHost, nil)
 
-		params := &ParametersMock{
-			CreateGetPermissionsRequestFunc: func(host string) (*http.Request, error) {
-				return request, nil
-			},
-		}
+		cli := NewPermissionsClient(httpclient)
 
-		Convey("when get caller permissions is invoked", func() {
-			actual, err := permissionsClient.GetCallerPermissions(nil, params)
+		actual, err := cli.GetPermissions(nil, getPermReq)
 
-			Convey("then permission is nil", func() {
-				So(actual, ShouldBeNil)
-			})
+		permErr, ok := err.(Error)
+		So(ok, ShouldBeTrue)
+		So(permErr.Status, ShouldEqual, 500)
+		So(permErr.Message, ShouldEqual, "internal server error failed marshalling permissions response entity")
+		So(actual, ShouldBeNil)
 
-			Convey("and the expected error is returned", func() {
-				permErr, ok := err.(Error)
-				So(ok, ShouldBeTrue)
-				So(permErr.Status, ShouldEqual, 500)
-				So(permErr.Message, ShouldEqual, "internal server error failed marshalling permissions response entity")
-			})
+		calls := httpclient.DoCalls()
+		So(calls, ShouldHaveLength, 1)
+		So(calls[0].Req, ShouldResemble, getPermReq)
 
-			Convey("and httpclient.Do is called 1 time with the expected parameters", func() {
-				So(httpclient.DoCalls(), ShouldHaveLength, 1)
-				So(httpclient.DoCalls()[0].Req, ShouldResemble, request)
-			})
-		})
+		So(body.IsClosed, ShouldBeTrue)
+	})
+
+	Convey("should return expected permissions given a valid request and valid response", t, func() {
+		entity := &permissionsResponseEntity{List: []permissionType{Read}}
+
+		body := newReadCloserMock(json.Marshal(entity))
+
+		response := &http.Response{Body: body, StatusCode: 200}
+
+		httpclient := newHttpCliMock(response, nil)
+
+		getPermReq := httptest.NewRequest("GET", testHost, nil)
+
+		cli := NewPermissionsClient(httpclient)
+
+		actual, err := cli.GetPermissions(nil, getPermReq)
+
+		expected := &Permissions{Read:true}
+		So(err, ShouldBeNil)
+		So(actual, ShouldResemble, expected)
+
+		calls := httpclient.DoCalls()
+		So(calls, ShouldHaveLength, 1)
+		So(calls[0].Req, ShouldResemble, getPermReq)
+
+		So(body.IsClosed, ShouldBeTrue)
 	})
 }
 
@@ -643,5 +532,21 @@ func newReaderFunc(b []byte, err error) func() io.Reader {
 				return b, err
 			},
 		}
+	}
+}
+
+func newReadCloserMock(b []byte, err error) *readCloserMock {
+	return &readCloserMock{
+		GetEntityFunc: func() (bytes []byte, e error) {
+			return b, err
+		},
+	}
+}
+
+func newHttpCliMock(resp *http.Response, err error) *HTTPClienterMock {
+	return &HTTPClienterMock{
+		DoFunc: func(ctx context.Context, req *http.Request) (response *http.Response, e error) {
+			return resp, err
+		},
 	}
 }
