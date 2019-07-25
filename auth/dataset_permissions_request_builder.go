@@ -7,6 +7,11 @@ import (
 	"github.com/ONSdigital/go-ns/common"
 )
 
+// DatasetPermissionsRequestBuilder is an implementation of the GetPermissionsRequestBuilder interface that creates a
+// user datasets permissions request from an inbound http request.
+// Host - the host of Permisssions API.
+// DatasetIDKey - the placeholder name of the dataset ID URL variable.
+// GetRequestVarsFunc - a function for getting request variables.
 type DatasetPermissionsRequestBuilder struct {
 	Host               string
 	DatasetIDKey       string
@@ -22,6 +27,10 @@ type parameters struct {
 
 type GetRequestVarsFunc func(r *http.Request) map[string]string
 
+// NewDatasetPermissionsRequestBuilder is a constructor function for creating a new DatasetPermissionsRequestBuilder.
+// Host - the host of Permisssions API.
+// DatasetIDKey - the placeholder name of the dataset ID URL variable.
+// GetRequestVarsFunc - a function for getting request variables.
 func NewDatasetPermissionsRequestBuilder(host string, datasetIDKey string, getRequestVarsFunc GetRequestVarsFunc) GetPermissionsRequestBuilder {
 	return &DatasetPermissionsRequestBuilder{
 		Host:               host,
@@ -30,8 +39,9 @@ func NewDatasetPermissionsRequestBuilder(host string, datasetIDKey string, getRe
 	}
 }
 
-// NewPermissionsRequest fulfilling the GetPermissionsRequestBuilder interface. Builds get user/service account
-// dataset permissions requests. The req parameter is the inbound http.Request to generate the get permissions request from.
+// NewPermissionsRequest fulfilling the GetPermissionsRequestBuilder interface. Create a new  get user/service account
+// dataset permissions http requests. The req parameter is the inbound http.Request to generate the get permissions
+// request from.
 func (builder *DatasetPermissionsRequestBuilder) NewPermissionsRequest(req *http.Request) (*http.Request, error) {
 	if err := builder.checkConfiguration(); err != nil {
 		return nil, err

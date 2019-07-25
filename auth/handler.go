@@ -7,7 +7,7 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
-//go:generate moq -out generated_mocks.go -pkg auth . Clienter Verifier HTTPClienter Parameters GetPermissionsRequestBuilder
+//go:generate moq -out generated_mocks.go -pkg auth . Clienter Verifier HTTPClienter GetPermissionsRequestBuilder
 
 const (
 	// CollectionIDHeader is the collection ID request header key.
@@ -48,7 +48,7 @@ func LoggerNamespace(logNamespace string) {
 }
 
 // NewHandler construct a new Handler.
-//	- parameterFactory is a factory object which generates Parameters object from a HTTP request.
+//	- requestBuilder an implementation of GetPermissionsRequestBuilder that creates Permissions API requests from the inbound http request.
 //	- permissionsClient is a client for communicating with the permissions API.
 //	- permissionsVerifier is an object that checks a caller's permissions satisfy the permissions requirements.
 func NewHandler(requestBuilder GetPermissionsRequestBuilder, permissionsClient Clienter, permissionsVerifier Verifier) *Handler {
@@ -60,7 +60,7 @@ func NewHandler(requestBuilder GetPermissionsRequestBuilder, permissionsClient C
 }
 
 // Require is a http.HandlerFunc that wraps another http.HandlerFunc applying an authorisation check. The
-// provided ParameterFactory determines the context of the permissions being checking.
+// provided GetPermissionsRequestBuilder determines what Permissions API request to create from the inbound http request.
 //
 // When a request is received the caller's permissions are retrieved from the Permissions API and are compared against
 // the required permissions.

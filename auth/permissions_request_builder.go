@@ -7,14 +7,19 @@ import (
 	"github.com/ONSdigital/go-ns/common"
 )
 
+// PermissionsRequestBuilder is an implementation of the GetPermissionsRequestBuilder interface that creates a
+// user permissions http request from an inbound http request.
+// Host - the host of Permissions API.
 type PermissionsRequestBuilder struct {
 	Host string
 }
-
+// NewPermissionsRequestBuilder is a constructor method for creating a new PermissionsRequestBuilder
+// Host - the host of Permissions API.
 func NewPermissionsRequestBuilder(host string) GetPermissionsRequestBuilder {
 	return &PermissionsRequestBuilder{Host: host}
 }
 
+// NewPermissionsRequest create a new get permissions http request from the inbound request.
 func (builder *PermissionsRequestBuilder) NewPermissionsRequest(req *http.Request) (*http.Request, error) {
 	if err := builder.checkConfiguration(); err != nil {
 		return nil, err

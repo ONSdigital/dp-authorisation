@@ -16,11 +16,6 @@ var (
 		Message: "error creating get permissions request http.Request required but was nil",
 	}
 
-	hostRequiredButEmptyError = Error{
-		Status:  500,
-		Message: "error creating get permissions request host required but was empty",
-	}
-
 	noUserOrServiceAuthTokenProvidedError = Error{
 		Message: "invalid request require user or service auth token but none provide",
 		Status:  400,
