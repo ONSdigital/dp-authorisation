@@ -35,20 +35,6 @@ func (builder *PermissionsRequestBuilder) NewPermissionsRequest(req *http.Reques
 		return nil, err
 	}
 
-	/*	userAuthToken, userTokenErr := headers.GetUserAuthToken(req)
-		if userTokenErr != nil && !headers.IsNotFound(userTokenErr) {
-			return nil, userTokenErr
-		}
-
-		serviceAuthToken, serviceTokenErr := headers.GetServiceAuthToken(req)
-		if serviceTokenErr != nil && !headers.IsNotFound(serviceTokenErr) {
-			return nil, serviceTokenErr
-		}
-
-		if headers.IsNotFound(userTokenErr) && headers.IsNotFound(serviceTokenErr) {
-			return nil, noUserOrServiceAuthTokenProvidedError
-		}*/
-
 	if userAuthToken != "" {
 		return builder.createUserPermissionsRequest(userAuthToken)
 	}
