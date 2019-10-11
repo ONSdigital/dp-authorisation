@@ -81,6 +81,7 @@ func (builder *DatasetPermissionsRequestBuilder) extractRequestParameters(req *h
 // createUserDatasetPermissionsRequest creates a new get user dataset permissions http.Request from the parameters provided.
 func (builder *DatasetPermissionsRequestBuilder) createUserDatasetPermissionsRequest(params parameters) (*http.Request, error) {
 	url := fmt.Sprintf(userDatasetPermissionsURL, builder.Host, params.datasetID, params.collectionID)
+
 	getPermissionsReq, err := createRequest(url)
 	if err != nil {
 		return nil, err
@@ -96,13 +97,13 @@ func (builder *DatasetPermissionsRequestBuilder) createUserDatasetPermissionsReq
 // DatasetPermissionsRequestBuilder creates a new get service dataset permissions http.Request from the parameters provided.
 func (builder *DatasetPermissionsRequestBuilder) createServiceDatasetPermissionsRequest(params parameters) (*http.Request, error) {
 	url := fmt.Sprintf(serviceDatasetPermissionsURL, builder.Host, params.datasetID)
+
 	getPermissionsReq, err := createRequest(url)
 	if err != nil {
 		return nil, err
 	}
 
-	err = headers.SetServiceAuthToken(getPermissionsReq, params.serviceAuthToken)
-	if err != nil {
+	if err = headers.SetServiceAuthToken(getPermissionsReq, params.serviceAuthToken); err != nil {
 		return nil, err
 	}
 
