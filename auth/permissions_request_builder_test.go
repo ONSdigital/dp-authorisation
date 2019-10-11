@@ -105,7 +105,7 @@ func TestPermissionsRequestBuilder_NewPermissionsRequest(t *testing.T) {
 		So(userAuthToken, ShouldEqual, "777")
 
 		serviceAuthToken, err := headers.GetServiceAuthToken(actual)
-		So(headers.IsNotFound(err), ShouldBeTrue)
+		So(headers.IsErrNotFound(err), ShouldBeTrue)
 		So(serviceAuthToken, ShouldBeEmpty)
 	})
 }
