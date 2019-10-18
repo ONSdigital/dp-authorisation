@@ -6,12 +6,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ONSdigital/go-ns/common"
+	"github.com/ONSdigital/dp-api-clients-go/headers"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 var (
-	testHost = "http://localhost:8080"
+	testHost     = "http://localhost:8080"
 	datasetIDKey = "dataset_id"
 )
 
@@ -106,14 +106,17 @@ func TestDatasetPermissionsRequestBuilder_NewPermissionsRequest(t *testing.T) {
 		}
 
 		req := httptest.NewRequest("GET", testHost, nil)
-		req.Header.Set(common.FlorenceHeaderKey, "111")
-		req.Header.Set(common.CollectionIDHeaderKey, "222")
+		headers.SetUserAuthToken(req, "111")
+		headers.SetCollectionID(req, "222")
 
 		actual, err := builder.NewPermissionsRequest(req)
 
 		So(err, ShouldBeNil)
 		So(actual.URL.String(), ShouldEqual, fmt.Sprintf(userDatasetPermissionsURL, testHost, "333", "222"))
-		So(actual.Header.Get(common.FlorenceHeaderKey), ShouldEqual, "111")
+
+		token, err := headers.GetUserAuthToken(actual)
+		So(err, ShouldBeNil)
+		So(token, ShouldEqual, "111")
 	})
 
 	Convey("should return expected get service dataset permissions request", t, func() {
@@ -126,13 +129,16 @@ func TestDatasetPermissionsRequestBuilder_NewPermissionsRequest(t *testing.T) {
 		}
 
 		req := httptest.NewRequest("GET", testHost, nil)
-		req.Header.Set(common.AuthHeaderKey, "111")
+		headers.SetServiceAuthToken(req, "111")
 
 		actual, err := builder.NewPermissionsRequest(req)
 
 		So(err, ShouldBeNil)
 		So(actual.URL.String(), ShouldEqual, fmt.Sprintf(serviceDatasetPermissionsURL, testHost, "333"))
-		So(actual.Header.Get(common.AuthHeaderKey), ShouldEqual, "111")
+
+		token, err := headers.GetServiceAuthToken(actual)
+		So(err, ShouldBeNil)
+		So(token, ShouldEqual, "111")
 	})
 
 	Convey("should return get user dataset permissions request if request contains both user and service auth headers", t, func() {
@@ -145,15 +151,19 @@ func TestDatasetPermissionsRequestBuilder_NewPermissionsRequest(t *testing.T) {
 		}
 
 		req := httptest.NewRequest("GET", testHost, nil)
-		req.Header.Set(common.AuthHeaderKey, "222")
-		req.Header.Set(common.FlorenceHeaderKey, "333")
-		req.Header.Set(common.CollectionIDHeaderKey, "444")
+
+		headers.SetServiceAuthToken(req, "222")
+		headers.SetUserAuthToken(req, "333")
+		headers.SetCollectionID(req, "444")
 
 		actual, err := builder.NewPermissionsRequest(req)
 
 		So(err, ShouldBeNil)
 		So(actual.URL.String(), ShouldEqual, fmt.Sprintf(userDatasetPermissionsURL, testHost, "111", "444"))
-		So(actual.Header.Get(common.FlorenceHeaderKey), ShouldEqual, "333")
+
+		token, err := headers.GetUserAuthToken(actual)
+		So(err, ShouldBeNil)
+		So(token, ShouldEqual, "333")
 	})
 }
 
@@ -162,7 +172,7 @@ func TestCreateRequest(t *testing.T) {
 		actual, err := createRequest("£$%^&*()")
 
 		permErr, ok := err.(Error)
-		So(ok,ShouldBeTrue)
+		So(ok, ShouldBeTrue)
 		So(permErr.Status, ShouldEqual, 500)
 		So(permErr.Message, ShouldEqual, "error creating get dataset permissions http request")
 		So(actual, ShouldBeNil)
