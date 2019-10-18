@@ -82,22 +82,21 @@ func (builder *PermissionsRequestBuilder) checkConfiguration() error {
 
 // getAuthTokens get the user and or service auth tokens from the request. 
 func getAuthTokens(req *http.Request) (string, string, error) {
-	userAuthToken, userTokenErr := headers.GetUserAuthToken(req)
-	if userTokenErr != nil && headers.IsNotErrNotFound(userTokenErr) {
+	userAuthToken, errUserToken := headers.GetUserAuthToken(req)
+	if errUserToken != nil && headers.IsNotErrNotFound(errUserToken) {
 		// something has gone wrong - bail
-		return "", "", userTokenErr
+		return "", "", errUserToken
 	}
 
-	serviceAuthToken, serviceTokenErr := headers.GetServiceAuthToken(req)
-	if serviceTokenErr != nil && headers.IsNotErrNotFound(serviceTokenErr) {
+	serviceAuthToken, errServiceToken := headers.GetServiceAuthToken(req)
+	if errServiceToken != nil && headers.IsNotErrNotFound(errServiceToken) {
 		// something has gone wrong - bail
-		return "", "", serviceTokenErr
+		return "", "", errServiceToken
 	}
 
-	if headers.IsErrNotFound(userTokenErr) && headers.IsErrNotFound(serviceTokenErr) {
+	if headers.IsErrNotFound(errUserToken) && headers.IsErrNotFound(errServiceToken) {
 		// neither token found - bail with error.
 		return "", "", noUserOrServiceAuthTokenProvidedError
 	}
-
 	return userAuthToken, serviceAuthToken, nil
 }
