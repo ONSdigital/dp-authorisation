@@ -1,2 +1,13 @@
-# Created by .ignore support plugin (hsz.mobi)
-.idea*
+# Mac OSX
+*.DS_Store
+
+# ides
+.idea/
+.vagrant
+.vscode
+*.iml
+
+*.swp
+
+# Builds
+example/example
