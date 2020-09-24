@@ -1,10 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"net/http"
 
 	"github.com/ONSdigital/dp-authorisation/auth"
+	"github.com/ONSdigital/log.go/log"
 	"github.com/gorilla/mux"
 )
 
@@ -13,8 +14,8 @@ var (
 )
 
 func main() {
-	// Set the auth package log namespace.
-	auth.LoggerNamespace("<application-name>-auth")
+	// Set the log namespace.
+	log.Namespace = "example-api"
 
 	// GetPermissionsRequestBuilder for authorising access to datasets.
 	datasetPermissionsRequestBuilder := auth.NewDatasetPermissionsRequestBuilder("http://localhost:8082", "dataset_id", mux.Vars)
@@ -38,7 +39,7 @@ func main() {
 	router.HandleFunc("/datasets", permissions.Require(read, getDatasetsHandlerFunc)).Methods("GET")
 	router.HandleFunc("/datasets/{dataset_id}", datasetsPermissions.Require(read, getDatasetHandlerFunc)).Methods("GET")
 
-	fmt.Println("starting server")
+	log.Event(context.Background(), "starting dp-authorisation example API", log.INFO)
 	err := http.ListenAndServe(":22000", router)
 	if err != nil {
 		panic(err)
@@ -47,12 +48,13 @@ func main() {
 
 // an example http.HandlerFunc for getting a dataset
 func getDatasetsHandlerFunc(w http.ResponseWriter, r *http.Request) {
+	log.Event(r.Context(), "get datasets stub invoked", log.INFO)
 	w.Write([]byte("datasets info here"))
 }
 
 // an example http.HandlerFunc for getting a dataset
 func getDatasetHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	datasetID := mux.Vars(r)["dataset_id"]
-	fmt.Printf("dataset %s: info here", datasetID)
+	log.Event(r.Context(), "get dataset stub invoked", log.INFO, log.Data{"dataset_id": datasetID})
 	w.Write([]byte("dataset info here"))
 }

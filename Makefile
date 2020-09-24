@@ -1,7 +1,5 @@
-build-example:
+example:
 	go build -o ./example/example example/main.go
-
-debug-example:
 	go run -race example/main.go
 
 test:
@@ -10,4 +8,4 @@ test:
 clean:
 	rm example/example
 
-.PHONY: build test clean
+.PHONY: example test clean

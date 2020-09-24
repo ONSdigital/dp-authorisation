@@ -42,9 +42,10 @@ type Handler struct {
 	permissionsVerifier Verifier
 }
 
-// LoggerNamespace set the log namespace for auth package logging.
+// LoggerNamespace Deprecated. Do not set a separate namespace for the library by default it will use the namespace configured by the app.
 func LoggerNamespace(logNamespace string) {
-	log.Namespace = logNamespace
+	// Deprecated - log package is single threaded and cannot support multiple namespaces concurrently.
+	// Don't use this function anymore - the app namespace will be used for all auth log events.
 }
 
 // NewHandler construct a new Handler.
