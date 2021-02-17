@@ -7,5 +7,12 @@ test:
 
 clean:
 	rm example/example
-
 .PHONY: example test clean
+
+audit:
+	go list -m all | nancy sleuth
+.PHONY: audit
+
+build:
+	go build ./...
+.PHONY: build
