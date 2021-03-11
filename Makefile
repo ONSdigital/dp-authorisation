@@ -10,7 +10,7 @@ clean:
 .PHONY: example test clean
 
 audit:
-	go list -m all | nancy sleuth
+	go list -json -m all | nancy sleuth
 .PHONY: audit
 
 build:
