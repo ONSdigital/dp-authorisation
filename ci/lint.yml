@@ -1,0 +1,15 @@
+---
+
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: golang
+    tag: 1.16.4
+
+inputs:
+  - name: dp-authorisation
+
+run:
+  path: dp-authorisation/ci/scripts/lint.sh

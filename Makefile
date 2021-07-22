@@ -1,11 +1,24 @@
 example:
 	go build -o ./example/example example/main.go
 	go run -race example/main.go
+.PHONY: example
 
 test:
 	go test -race -cover ./...
+.PHONY: test
 
 clean:
 	rm example/example
+.PHONY: test
 
-.PHONY: example test clean
+audit:
+	go list -json -m all | nancy sleuth
+.PHONY: audit
+
+build:
+	go build ./...
+.PHONY: build
+
+lint:
+	go fmt ./...
+.PHONY: lint
