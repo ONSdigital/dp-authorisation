@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ONSdigital/dp-authorisation/auth"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 )
 
@@ -39,7 +39,7 @@ func main() {
 	router.HandleFunc("/datasets", permissions.Require(read, getDatasetsHandlerFunc)).Methods("GET")
 	router.HandleFunc("/datasets/{dataset_id}", datasetsPermissions.Require(read, getDatasetHandlerFunc)).Methods("GET")
 
-	log.Event(context.Background(), "starting dp-authorisation example API", log.INFO)
+	log.Info(context.Background(), "starting dp-authorisation example API")
 	err := http.ListenAndServe(":22000", router)
 	if err != nil {
 		panic(err)
@@ -48,13 +48,13 @@ func main() {
 
 // an example http.HandlerFunc for getting a dataset
 func getDatasetsHandlerFunc(w http.ResponseWriter, r *http.Request) {
-	log.Event(r.Context(), "get datasets stub invoked", log.INFO)
+	log.Info(r.Context(), "get datasets stub invoked")
 	w.Write([]byte("datasets info here"))
 }
 
 // an example http.HandlerFunc for getting a dataset
 func getDatasetHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	datasetID := mux.Vars(r)["dataset_id"]
-	log.Event(r.Context(), "get dataset stub invoked", log.INFO, log.Data{"dataset_id": datasetID})
+	log.Info(r.Context(), "get dataset stub invoked", log.Data{"dataset_id": datasetID})
 	w.Write([]byte("dataset info here"))
 }

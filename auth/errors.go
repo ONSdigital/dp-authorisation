@@ -7,7 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 var (
@@ -60,14 +60,14 @@ func (e Error) Error() string {
 func handleGetPermissionsErrorResponse(ctx context.Context, body io.Reader, status int) error {
 	errorEntity, err := getErrorEntityFromResponse(body)
 	if err != nil {
-		log.Event(
-			ctx, "error unmarshalling get permissions error response. Returning 401 status as unable to verify caller permissions", log.Error(err), log.Data{
+		log.Error(
+			ctx, "error unmarshalling get permissions error response. Returning 401 status as unable to verify caller permissions", err, log.Data{
 				"get_permissions_status_code": status,
 			})
 		return getPermissionsUnauthorizedError
 	}
 
-	log.Event(ctx, "get permissions request returned error status. Returning 401 status as unable to verify caller permissions",
+	log.Info(ctx, "get permissions request returned error status. Returning 401 status as unable to verify caller permissions",
 		log.Data{
 			"get_permissions_status_code": status,
 			"get_permissions_body":        errorEntity,

@@ -513,7 +513,7 @@ func TestPermissionsClient_GetPermissions(t *testing.T) {
 
 		actual, err := cli.GetPermissions(nil, getPermReq)
 
-		expected := &Permissions{Read:true}
+		expected := &Permissions{Read: true}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
 

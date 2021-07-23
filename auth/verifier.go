@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 type PermissionsVerifier struct {
@@ -35,7 +35,7 @@ func (verifier *PermissionsVerifier) CheckAuthorisation(ctx context.Context, act
 	}
 
 	if len(missingPermissions) > 0 {
-		log.Event(ctx, "action forbidden caller does not process the required permissions", log.Data{
+		log.Warn(ctx, "action forbidden caller does not process the required permissions", log.Data{
 			"required_permissions": required,
 			"caller_permissions":   actual,
 			"missing_permissions":  missingPermissions,
@@ -43,7 +43,7 @@ func (verifier *PermissionsVerifier) CheckAuthorisation(ctx context.Context, act
 		return checkAuthorisationForbiddenError
 	}
 
-	log.Event(ctx, "caller authorised to perform the requested action")
+	log.Info(ctx, "caller authorised to perform the requested action")
 	return nil
 }
 

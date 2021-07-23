@@ -80,7 +80,7 @@ func (builder *PermissionsRequestBuilder) checkConfiguration() error {
 	return nil
 }
 
-// getAuthTokens get the user and or service auth tokens from the request. 
+// getAuthTokens get the user and or service auth tokens from the request.
 func getAuthTokens(req *http.Request) (string, string, error) {
 	userAuthToken, errUserToken := headers.GetUserAuthToken(req)
 	if errUserToken != nil && headers.IsNotErrNotFound(errUserToken) {

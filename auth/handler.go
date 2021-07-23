@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 //go:generate moq -out generated_mocks.go -pkg auth . Clienter Verifier HTTPClienter GetPermissionsRequestBuilder
@@ -94,7 +94,7 @@ func (h *Handler) Require(required Permissions, handler http.HandlerFunc) http.H
 			return
 		}
 
-		log.Event(req.Context(), "caller authorised to perform requested action", logD)
+		log.Info(req.Context(), "caller authorised to perform requested action", logD)
 		handler(w, req)
 	})
 }
@@ -117,7 +117,7 @@ func writeErr(ctx context.Context, w http.ResponseWriter, status int, body strin
 		logD["original_err_body"] = body
 		logD["original_err_status"] = status
 
-		log.Event(ctx, "internal server error failed writing permissions error to response", log.Error(wErr), logD)
+		log.Error(ctx, "internal server error failed writing permissions error to response", wErr, logD)
 		return
 	}
 }
