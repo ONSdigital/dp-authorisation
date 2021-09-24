@@ -45,6 +45,10 @@ Check if a user has a permission
   }
 ```
 
+- entityData: data for the user / service requesting the permission. For a user, the user ID and group list will come from the JWT token.
+- permission: the permission that is being checked.
+- attributes: other key/value attributes for use in access control decision, e.g. `collectionID`. These values are used when evaluating any conditions of a policy.
+
 ### Low level detail
 
 - permissions.Checker: retrieves permission data from the store, and determines if a user has a permission.
