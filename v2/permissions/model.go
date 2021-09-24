@@ -23,3 +23,10 @@ type Condition struct {
 	Operator   string   `json:"operator"`
 	Values     []string `json:"values"`
 }
+
+// EntityData groups the different entity types into a single parameter
+type EntityData struct {
+	UserID    string
+	ServiceID string
+	Groups    []string
+}

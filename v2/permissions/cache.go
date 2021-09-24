@@ -21,7 +21,7 @@ type CachingStore struct {
 	mutex               sync.Mutex
 }
 
-// NewCachingStore contructs a new instance of CachingStore
+// NewCachingStore constructs a new instance of CachingStore
 func NewCachingStore(underlyingStore Store) *CachingStore {
 	return &CachingStore{
 		underlyingStore:     underlyingStore,
@@ -71,7 +71,7 @@ func (c *CachingStore) StartExpiryChecker(ctx context.Context, checkInterval, ma
 				ticker.Stop()
 				return
 			case <-ctx.Done():
-				c.Close()
+				c.Close(ctx)
 			}
 		}
 	}()
@@ -104,17 +104,18 @@ func (c *CachingStore) StartCacheUpdater(ctx context.Context, updateInterval tim
 				ticker.Stop()
 				return
 			case <-ctx.Done():
-				c.Close()
+				c.Close(ctx)
 			}
 		}
 	}()
 }
 
 // Close stops go routines and blocks until closed.
-func (c *CachingStore) Close() {
+func (c *CachingStore) Close(ctx context.Context) error {
 	close(c.closing)
 	<-c.cacheUpdaterClosed
 	<-c.expiryCheckerClosed
+	return nil
 }
 
 func (c *CachingStore) updateWithErrLog(ctx context.Context) {

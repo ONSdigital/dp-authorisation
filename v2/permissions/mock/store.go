@@ -19,6 +19,9 @@ var _ permissions.Store = &StoreMock{}
 //
 //         // make and configure a mocked permissions.Store
 //         mockedStore := &StoreMock{
+//             CloseFunc: func(ctx context.Context) error {
+// 	               panic("mock out the Close method")
+//             },
 //             GetPermissionsBundleFunc: func(ctx context.Context) (*permissions.Bundle, error) {
 // 	               panic("mock out the GetPermissionsBundle method")
 //             },
@@ -29,18 +32,58 @@ var _ permissions.Store = &StoreMock{}
 //
 //     }
 type StoreMock struct {
+	// CloseFunc mocks the Close method.
+	CloseFunc func(ctx context.Context) error
+
 	// GetPermissionsBundleFunc mocks the GetPermissionsBundle method.
 	GetPermissionsBundleFunc func(ctx context.Context) (*permissions.Bundle, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// Close holds details about calls to the Close method.
+		Close []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+		}
 		// GetPermissionsBundle holds details about calls to the GetPermissionsBundle method.
 		GetPermissionsBundle []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 		}
 	}
+	lockClose                sync.RWMutex
 	lockGetPermissionsBundle sync.RWMutex
+}
+
+// Close calls CloseFunc.
+func (mock *StoreMock) Close(ctx context.Context) error {
+	if mock.CloseFunc == nil {
+		panic("StoreMock.CloseFunc: method is nil but Store.Close was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+	}{
+		Ctx: ctx,
+	}
+	mock.lockClose.Lock()
+	mock.calls.Close = append(mock.calls.Close, callInfo)
+	mock.lockClose.Unlock()
+	return mock.CloseFunc(ctx)
+}
+
+// CloseCalls gets all the calls that were made to Close.
+// Check the length with:
+//     len(mockedStore.CloseCalls())
+func (mock *StoreMock) CloseCalls() []struct {
+	Ctx context.Context
+} {
+	var calls []struct {
+		Ctx context.Context
+	}
+	mock.lockClose.RLock()
+	calls = mock.calls.Close
+	mock.lockClose.RUnlock()
+	return calls
 }
 
 // GetPermissionsBundle calls GetPermissionsBundleFunc.
