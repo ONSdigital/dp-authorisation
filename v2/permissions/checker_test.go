@@ -63,7 +63,7 @@ var permissionsBundle = &permissions.Bundle{
 
 func TestChecker_HasPermission(t *testing.T) {
 	ctx := context.Background()
-	store := newMockStore()
+	store := newMockCache()
 	checker := permissions.NewCheckerForStore(store)
 
 	Convey("Given an admin user", t, func() {
@@ -87,7 +87,7 @@ func TestChecker_HasPermission(t *testing.T) {
 
 func TestChecker_HasPermission_False(t *testing.T) {
 	ctx := context.Background()
-	store := newMockStore()
+	store := newMockCache()
 	checker := permissions.NewCheckerForStore(store)
 
 	Convey("Given a publisher user", t, func() {
@@ -111,7 +111,7 @@ func TestChecker_HasPermission_False(t *testing.T) {
 
 func TestChecker_HasPermission_NoGroupMatch(t *testing.T) {
 	ctx := context.Background()
-	store := newMockStore()
+	store := newMockCache()
 	checker := permissions.NewCheckerForStore(store)
 
 	Convey("Given a user that belongs to a group with no permissions", t, func() {
@@ -135,7 +135,7 @@ func TestChecker_HasPermission_NoGroupMatch(t *testing.T) {
 
 func TestChecker_HasPermission_WithConditionTrue(t *testing.T) {
 	ctx := context.Background()
-	store := newMockStore()
+	store := newMockCache()
 	checker := permissions.NewCheckerForStore(store)
 
 	Convey("Given a viewer user", t, func() {
@@ -160,7 +160,7 @@ func TestChecker_HasPermission_WithConditionTrue(t *testing.T) {
 
 func TestChecker_HasPermission_WithConditionFalse(t *testing.T) {
 	ctx := context.Background()
-	store := newMockStore()
+	store := newMockCache()
 	checker := permissions.NewCheckerForStore(store)
 
 	Convey("Given a viewer user", t, func() {
@@ -187,7 +187,7 @@ func TestChecker_Close(t *testing.T) {
 	ctx := context.Background()
 
 	Convey("Given a checker with a mock store", t, func() {
-		store := newMockStore()
+		store := newMockCache()
 		checker := permissions.NewCheckerForStore(store)
 
 		Convey("When Close is called", func() {
@@ -204,8 +204,8 @@ func TestChecker_Close(t *testing.T) {
 	})
 }
 
-func newMockStore() *mock.StoreMock {
-	return &mock.StoreMock{
+func newMockCache() *mock.CacheMock {
+	return &mock.CacheMock{
 		GetPermissionsBundleFunc: func(ctx context.Context) (*permissions.Bundle, error) {
 			return permissionsBundle, nil
 		},

@@ -63,12 +63,6 @@ func (c *APIClient) GetPermissionsBundle(ctx context.Context) (*Bundle, error) {
 	return permissions, nil
 }
 
-// Close closes any resources being used by the API client.
-func (c *APIClient) Close(ctx context.Context) error {
-	// nothing to close
-	return nil
-}
-
 func getPermissionsBundleFromResponse(reader io.Reader) (*Bundle, error) {
 	b, err := getResponseBytes(reader)
 	if err != nil {

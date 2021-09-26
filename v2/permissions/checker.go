@@ -9,13 +9,13 @@ import (
 
 // Checker reads permission data and verifies that a user has a permission
 type Checker struct {
-	store Store
+	cache Cache
 }
 
 // NewCheckerForStore creates a new Checker instance.
-func NewCheckerForStore(store Store) *Checker {
+func NewCheckerForStore(cache Cache) *Checker {
 	return &Checker{
-		store: store,
+		cache: cache,
 	}
 }
 
@@ -49,7 +49,7 @@ func (c Checker) HasPermission(
 
 // Close resources used by the checker.
 func (c Checker) Close(ctx context.Context) error {
-	return c.store.Close(ctx)
+	return c.cache.Close(ctx)
 }
 
 func mapEntityDataToEntities(entityData EntityData) []string {
@@ -77,7 +77,7 @@ func (c Checker) hasPermission(
 	attributes map[string]string) (bool, error) {
 
 	logData := &log.Data{"permission": permission}
-	permissionsBundle, err := c.store.GetPermissionsBundle(ctx)
+	permissionsBundle, err := c.cache.GetPermissionsBundle(ctx)
 	if err != nil {
 		return false, err
 	}
