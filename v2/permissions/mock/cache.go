@@ -6,6 +6,7 @@ package mock
 import (
 	"context"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
+	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"sync"
 )
 
@@ -25,6 +26,9 @@ var _ permissions.Cache = &CacheMock{}
 //             GetPermissionsBundleFunc: func(ctx context.Context) (*permissions.Bundle, error) {
 // 	               panic("mock out the GetPermissionsBundle method")
 //             },
+//             HealthCheckFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
+// 	               panic("mock out the HealthCheck method")
+//             },
 //         }
 //
 //         // use mockedCache in code that requires permissions.Cache
@@ -38,6 +42,9 @@ type CacheMock struct {
 	// GetPermissionsBundleFunc mocks the GetPermissionsBundle method.
 	GetPermissionsBundleFunc func(ctx context.Context) (*permissions.Bundle, error)
 
+	// HealthCheckFunc mocks the HealthCheck method.
+	HealthCheckFunc func(ctx context.Context, state *healthcheck.CheckState) error
+
 	// calls tracks calls to the methods.
 	calls struct {
 		// Close holds details about calls to the Close method.
@@ -50,9 +57,17 @@ type CacheMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 		}
+		// HealthCheck holds details about calls to the HealthCheck method.
+		HealthCheck []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// State is the state argument value.
+			State *healthcheck.CheckState
+		}
 	}
 	lockClose                sync.RWMutex
 	lockGetPermissionsBundle sync.RWMutex
+	lockHealthCheck          sync.RWMutex
 }
 
 // Close calls CloseFunc.
@@ -114,5 +129,40 @@ func (mock *CacheMock) GetPermissionsBundleCalls() []struct {
 	mock.lockGetPermissionsBundle.RLock()
 	calls = mock.calls.GetPermissionsBundle
 	mock.lockGetPermissionsBundle.RUnlock()
+	return calls
+}
+
+// HealthCheck calls HealthCheckFunc.
+func (mock *CacheMock) HealthCheck(ctx context.Context, state *healthcheck.CheckState) error {
+	if mock.HealthCheckFunc == nil {
+		panic("CacheMock.HealthCheckFunc: method is nil but Cache.HealthCheck was just called")
+	}
+	callInfo := struct {
+		Ctx   context.Context
+		State *healthcheck.CheckState
+	}{
+		Ctx:   ctx,
+		State: state,
+	}
+	mock.lockHealthCheck.Lock()
+	mock.calls.HealthCheck = append(mock.calls.HealthCheck, callInfo)
+	mock.lockHealthCheck.Unlock()
+	return mock.HealthCheckFunc(ctx, state)
+}
+
+// HealthCheckCalls gets all the calls that were made to HealthCheck.
+// Check the length with:
+//     len(mockedCache.HealthCheckCalls())
+func (mock *CacheMock) HealthCheckCalls() []struct {
+	Ctx   context.Context
+	State *healthcheck.CheckState
+} {
+	var calls []struct {
+		Ctx   context.Context
+		State *healthcheck.CheckState
+	}
+	mock.lockHealthCheck.RLock()
+	calls = mock.calls.HealthCheck
+	mock.lockHealthCheck.RUnlock()
 	return calls
 }

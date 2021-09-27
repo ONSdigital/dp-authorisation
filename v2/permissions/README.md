@@ -5,9 +5,9 @@ The permissions library determines whether a user has a particular permission. I
 
 The library polls the permissions API in the background for permissions updates and keeps an in memory cache of the data for a set period of time.
 
-### Example Usage
+### Usage
 
-Create a new instance of permissions.Checker:
+#### Create a new instance of permissions.Checker
 
 ```go
   import (
@@ -29,7 +29,23 @@ Parameter values should come from configuration. The example values have been le
 - expiryCheckInterval: how long between checks for expired cache data 
 - maxCacheTime: how long before the permissions cache data should be expired
 
-Check if a user has a permission
+#### Register the health checker function
+
+```go
+err := healthCheck.AddCheck("permissions checker", permissionChecker.HealthCheck)
+	
+```
+Any service that uses the permission library should register the health checker function with the [service's health checks](https://github.com/ONSdigital/dp-healthcheck#adding-a-health-check-to-an-app)
+
+#### Close the library when finished
+
+```go
+err := permissionChecker.Close(ctx)
+```
+
+The Close function should be called on the library when it is no longer required. (usually when the service is shutdown)
+
+#### Check if a user has a permission
 
 ```go
   entityData := permissions.EntityData{

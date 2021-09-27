@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"context"
+	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 )
 
 //go:generate moq -out mock/store.go -pkg mock . Store
@@ -17,4 +18,5 @@ type Store interface {
 type Cache interface {
 	Store
 	Close(ctx context.Context) error
+	HealthCheck(ctx context.Context, state *health.CheckState) error
 }

@@ -10,6 +10,7 @@ package permissions
 
 import (
 	"context"
+	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-rchttp"
 	"github.com/ONSdigital/log.go/v2/log"
 	"time"
@@ -58,6 +59,10 @@ func (c Checker) HasPermission(
 // Close resources used by the checker.
 func (c Checker) Close(ctx context.Context) error {
 	return c.cache.Close(ctx)
+}
+
+func (c Checker) HealthCheck(ctx context.Context, state *health.CheckState) error {
+	return c.cache.HealthCheck(ctx, state)
 }
 
 func mapEntityDataToEntities(entityData EntityData) []string {

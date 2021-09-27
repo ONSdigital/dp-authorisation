@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions/mock"
+	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -239,12 +240,38 @@ func TestChecker_Close(t *testing.T) {
 	})
 }
 
+func TestChecker_HealthCheck(t *testing.T) {
+	ctx := context.Background()
+
+	Convey("Given a checker with a mock store", t, func() {
+		store := newMockCache()
+		checker := permissions.NewCheckerForStore(store)
+
+		Convey("When Close is called", func() {
+			expectedCheckState := &healthcheck.CheckState{}
+			err := checker.HealthCheck(ctx, expectedCheckState)
+
+			Convey("Then no error is returned", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("Then close is called on the permissions store", func() {
+				So(store.HealthCheckCalls(), ShouldHaveLength, 1)
+				So(store.HealthCheckCalls()[0].State, ShouldEqual, expectedCheckState)
+			})
+		})
+	})
+}
+
 func newMockCache() *mock.CacheMock {
 	return &mock.CacheMock{
 		GetPermissionsBundleFunc: func(ctx context.Context) (*permissions.Bundle, error) {
 			return permissionsBundle, nil
 		},
 		CloseFunc: func(ctx context.Context) error {
+			return nil
+		},
+		HealthCheckFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
 			return nil
 		},
 	}

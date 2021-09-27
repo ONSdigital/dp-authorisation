@@ -2,6 +2,7 @@ package permissions
 
 import (
 	"context"
+	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/log.go/v2/log"
 	"sync"
 	"time"
@@ -12,13 +13,14 @@ var _ Store = (*CachingStore)(nil)
 
 // CachingStore is a permissions store implementation that caches permission data in memory.
 type CachingStore struct {
-	underlyingStore     Store
-	cachedBundle        *Bundle
-	closing             chan struct{}
-	expiryCheckerClosed chan struct{}
-	cacheUpdaterClosed  chan struct{}
-	lastUpdated         time.Time
-	mutex               sync.Mutex
+	underlyingStore      Store
+	cachedBundle         *Bundle
+	closing              chan struct{}
+	expiryCheckerClosed  chan struct{}
+	cacheUpdaterClosed   chan struct{}
+	lastUpdated          time.Time
+	lastUpdateSuccessful bool
+	mutex                sync.Mutex
 }
 
 // NewCachingStore constructs a new instance of CachingStore
@@ -43,16 +45,19 @@ func (c *CachingStore) GetPermissionsBundle(ctx context.Context) (*Bundle, error
 // Update the permissions cache data, by calling the underlying permissions store
 func (c *CachingStore) Update(ctx context.Context) (*Bundle, error) {
 	bundle, err := c.underlyingStore.GetPermissionsBundle(ctx)
-	if err != nil {
-		return nil, err
-	}
 
 	c.mutex.Lock()
-	c.cachedBundle = bundle
-	c.lastUpdated = time.Now()
-	c.mutex.Unlock()
+	defer c.mutex.Unlock()
 
-	return bundle, nil
+	if err != nil {
+		c.lastUpdateSuccessful = false
+	} else {
+		c.lastUpdateSuccessful = true
+		c.cachedBundle = bundle
+	}
+	c.lastUpdated = time.Now()
+
+	return bundle, err
 }
 
 // StartExpiryChecker starts a goroutine to continually check for expired cache data.
@@ -80,12 +85,13 @@ func (c *CachingStore) StartExpiryChecker(ctx context.Context, checkInterval, ma
 // CheckCacheExpiry clears the cache data it it's gone beyond it's expiry time.
 func (c *CachingStore) CheckCacheExpiry(ctx context.Context, maxCacheTime time.Duration) {
 	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	if time.Since(c.lastUpdated) > maxCacheTime {
 		log.Info(ctx, "clearing permissions cache data as it has gone beyond the max cache time")
 		c.cachedBundle = nil
 		c.lastUpdated = time.Now()
 	}
-	c.mutex.Unlock()
 }
 
 // StartCacheUpdater starts a go routine to continually update cache data at time intervals.
@@ -116,6 +122,21 @@ func (c *CachingStore) Close(ctx context.Context) error {
 	<-c.cacheUpdaterClosed
 	<-c.expiryCheckerClosed
 	return nil
+}
+
+func (c *CachingStore) HealthCheck(ctx context.Context, state *health.CheckState) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	if c.cachedBundle == nil {
+		return state.Update(health.StatusCritical, "permissions cache is empty", 0)
+	}
+
+	if !c.lastUpdateSuccessful {
+		return state.Update(health.StatusWarning, "the last permissions cache update failed", 0)
+	}
+
+	return state.Update(health.StatusOK, "permissions cache is ok", 0)
 }
 
 func (c *CachingStore) updateWithErrLog(ctx context.Context) {
