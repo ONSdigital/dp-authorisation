@@ -1,3 +1,11 @@
+// Package permissions provides library functions to determine if a user/service has a particular permission.
+//
+// A user can be identified by the user ID, or the groups that it belongs to. A service 'user' is identified by a service ID.
+// Users, groups and services are treated the same for permissions purposes, so have the common name Entities.
+//
+// Entities are associated with permissions/roles via policies. For an entity to have a permission, there must be at
+// least one policy that applies to that entity and permission. Policies can also have conditions that need to be met
+// for the policy to apply. A policy with no conditions is equivalent to a policy where all conditions are met.
 package permissions
 
 import (
