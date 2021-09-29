@@ -40,6 +40,16 @@ var permissionsBundle = &permissions.Bundle{
 							Operator:   "=",
 							Values:     []string{"collection765"},
 						},
+						{
+							Attributes: []string{"collection_id"},
+							Operator:   "=",
+							Values:     []string{"collection766"},
+						},
+						{
+							Attributes: []string{"collection_id"},
+							Operator:   "=",
+							Values:     []string{"collection767"},
+						},
 					},
 				},
 			},
@@ -145,6 +155,31 @@ func TestChecker_HasPermission_WithConditionTrue(t *testing.T) {
 
 		Convey("When HasPermission is called with a collection ID that satisfies the policy condition", func() {
 			attributes := map[string]string{"collection_id": "collection765"}
+			hasPermission, err := checker.HasPermission(ctx, entityData, "legacy.read", attributes)
+
+			Convey("Then there is no error returned", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("Then the result is true", func() {
+				So(hasPermission, ShouldBeTrue)
+			})
+		})
+	})
+}
+
+func TestChecker_HasPermission_MultipleConditionsChecked(t *testing.T) {
+	ctx := context.Background()
+	store := newMockCache()
+	checker := permissions.NewCheckerForStore(store)
+
+	Convey("Given a viewer user", t, func() {
+		entityData := permissions.EntityData{
+			Groups: []string{"viewer"},
+		}
+
+		Convey("When HasPermission is called with a collection ID that satisfies the last policy condition", func() {
+			attributes := map[string]string{"collection_id": "collection767"}
 			hasPermission, err := checker.HasPermission(ctx, entityData, "legacy.read", attributes)
 
 			Convey("Then there is no error returned", func() {
