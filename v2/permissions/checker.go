@@ -95,7 +95,7 @@ func (c Checker) hasPermission(
 		return false, err
 	}
 
-	entityLookup, ok := permissionsBundle.PermissionToEntityLookup[permission]
+	entityLookup, ok := permissionsBundle[permission]
 	if !ok {
 		log.Warn(ctx, "permission not found in permissions bundle", logData)
 		return false, nil

@@ -19,7 +19,7 @@ var _ permissions.Store = &StoreMock{}
 //
 //         // make and configure a mocked permissions.Store
 //         mockedStore := &StoreMock{
-//             GetPermissionsBundleFunc: func(ctx context.Context) (*permissions.Bundle, error) {
+//             GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
 // 	               panic("mock out the GetPermissionsBundle method")
 //             },
 //         }
@@ -30,7 +30,7 @@ var _ permissions.Store = &StoreMock{}
 //     }
 type StoreMock struct {
 	// GetPermissionsBundleFunc mocks the GetPermissionsBundle method.
-	GetPermissionsBundleFunc func(ctx context.Context) (*permissions.Bundle, error)
+	GetPermissionsBundleFunc func(ctx context.Context) (permissions.Bundle, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -44,7 +44,7 @@ type StoreMock struct {
 }
 
 // GetPermissionsBundle calls GetPermissionsBundleFunc.
-func (mock *StoreMock) GetPermissionsBundle(ctx context.Context) (*permissions.Bundle, error) {
+func (mock *StoreMock) GetPermissionsBundle(ctx context.Context) (permissions.Bundle, error) {
 	if mock.GetPermissionsBundleFunc == nil {
 		panic("StoreMock.GetPermissionsBundleFunc: method is nil but Store.GetPermissionsBundle was just called")
 	}

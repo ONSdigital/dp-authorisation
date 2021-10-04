@@ -9,64 +9,62 @@ import (
 	"testing"
 )
 
-var permissionsBundle = &permissions.Bundle{
-	PermissionToEntityLookup: map[string]permissions.EntityIDToPolicies{
-		"users.add": map[string][]permissions.Policy{
-			"group/admin": {
-				permissions.Policy{
-					PolicyID:   "policy1",
-					Conditions: nil,
-				},
+var permissionsBundle = permissions.Bundle{
+	"users.add": map[string][]permissions.Policy{
+		"group/admin": {
+			permissions.Policy{
+				ID:         "policy1",
+				Conditions: nil,
 			},
 		},
-		"legacy.read": map[string][]permissions.Policy{
-			"group/admin": {
-				permissions.Policy{
-					PolicyID:   "policy3",
-					Conditions: []permissions.Condition{},
-				},
+	},
+	"legacy.read": map[string][]permissions.Policy{
+		"group/admin": {
+			permissions.Policy{
+				ID:         "policy3",
+				Conditions: []permissions.Condition{},
 			},
-			"group/publisher": {
-				permissions.Policy{
-					PolicyID:   "policy4",
-					Conditions: []permissions.Condition{},
-				},
+		},
+		"group/publisher": {
+			permissions.Policy{
+				ID:         "policy4",
+				Conditions: []permissions.Condition{},
 			},
-			"group/viewer": {
-				permissions.Policy{
-					PolicyID: "policy2",
-					Conditions: []permissions.Condition{
-						{
-							Attributes: []string{"collection_id"},
-							Operator:   "=",
-							Values:     []string{"collection765"},
-						},
-						{
-							Attributes: []string{"collection_id"},
-							Operator:   "=",
-							Values:     []string{"collection766"},
-						},
-						{
-							Attributes: []string{"collection_id"},
-							Operator:   "=",
-							Values:     []string{"collection767"},
-						},
+		},
+		"group/viewer": {
+			permissions.Policy{
+				ID: "policy2",
+				Conditions: []permissions.Condition{
+					{
+						Attributes: []string{"collection_id"},
+						Operator:   "=",
+						Values:     []string{"collection765"},
+					},
+					{
+						Attributes: []string{"collection_id"},
+						Operator:   "=",
+						Values:     []string{"collection766"},
+					},
+					{
+						Attributes: []string{"collection_id"},
+						Operator:   "=",
+						Values:     []string{"collection767"},
 					},
 				},
 			},
 		},
-		"legacy.write": map[string][]permissions.Policy{
-			"group/admin": {
-				permissions.Policy{
-					PolicyID:   "policy5",
-					Conditions: []permissions.Condition{},
-				},
+	},
+	"legacy.write": map[string][]permissions.Policy{
+		"group/admin": {
+			permissions.Policy{
+				ID:         "policy5",
+				Conditions: []permissions.Condition{},
 			},
-			"group/publisher": {
-				permissions.Policy{
-					PolicyID:   "policy6",
-					Conditions: []permissions.Condition{},
-				},
+		},
+		"group/publisher": {
+			permissions.Policy{
+				ID:         "policy6",
+				Conditions: []permissions.Condition{},
 			},
 		},
 	},
@@ -265,7 +263,7 @@ func TestChecker_HealthCheck(t *testing.T) {
 
 func newMockCache() *mock.CacheMock {
 	return &mock.CacheMock{
-		GetPermissionsBundleFunc: func(ctx context.Context) (*permissions.Bundle, error) {
+		GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
 			return permissionsBundle, nil
 		},
 		CloseFunc: func(ctx context.Context) error {

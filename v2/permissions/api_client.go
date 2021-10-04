@@ -32,7 +32,7 @@ func NewAPIClient(host string, httpClient HTTPClient) *APIClient {
 }
 
 // GetPermissionsBundle gets the permissions bundle data from the permissions API.
-func (c *APIClient) GetPermissionsBundle(ctx context.Context) (*Bundle, error) {
+func (c *APIClient) GetPermissionsBundle(ctx context.Context) (Bundle, error) {
 
 	uri := fmt.Sprintf("%s/v1/permissions-bundle", c.host)
 
@@ -63,13 +63,13 @@ func (c *APIClient) GetPermissionsBundle(ctx context.Context) (*Bundle, error) {
 	return permissions, nil
 }
 
-func getPermissionsBundleFromResponse(reader io.Reader) (*Bundle, error) {
+func getPermissionsBundleFromResponse(reader io.Reader) (Bundle, error) {
 	b, err := getResponseBytes(reader)
 	if err != nil {
 		return nil, err
 	}
 
-	var bundle *Bundle
+	var bundle Bundle
 
 	if err := json.Unmarshal(b, &bundle); err != nil {
 		return nil, ErrFailedToParsePermissionsResponse

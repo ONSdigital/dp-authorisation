@@ -42,11 +42,11 @@ func TestAPIClient_GetPermissionsBundle(t *testing.T) {
 			Convey("Then the expected permissions bundle is returned", func() {
 				So(bundle, ShouldNotBeNil)
 
-				policies := bundle.PermissionToEntityLookup["permission/admin"]["group/admin"]
+				policies := bundle["permission/admin"]["group/admin"]
 				So(policies, ShouldHaveLength, 1)
 
 				policy := policies[0]
-				So(policy.PolicyID, ShouldEqual, "policy/123")
+				So(policy.ID, ShouldEqual, "policy/123")
 				So(policy.Conditions[0].Attributes, ShouldHaveLength, 1)
 				So(policy.Conditions[0].Attributes[0], ShouldEqual, "collection_id")
 				So(policy.Conditions[0].Operator, ShouldEqual, "equals")
@@ -180,17 +180,15 @@ func getExampleBundleJson() []byte {
 func getExampleBundle() permissions.Bundle {
 
 	bundle := permissions.Bundle{
-		PermissionToEntityLookup: permissions.PermissionToEntityLookup{
-			"permission/admin": map[string][]permissions.Policy{
-				"group/admin": {
-					{
-						PolicyID: "policy/123",
-						Conditions: []permissions.Condition{
-							{
-								Attributes: []string{"collection_id"},
-								Operator:   "equals",
-								Values:     []string{"col123"}},
-						},
+		"permission/admin": map[string][]permissions.Policy{
+			"group/admin": {
+				{
+					ID: "policy/123",
+					Conditions: []permissions.Condition{
+						{
+							Attributes: []string{"collection_id"},
+							Operator:   "equals",
+							Values:     []string{"col123"}},
 					},
 				},
 			},

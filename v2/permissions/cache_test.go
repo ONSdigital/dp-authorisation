@@ -12,10 +12,10 @@ import (
 )
 
 func TestCachingStore_Update(t *testing.T) {
-	expectedBundle := &permissions.Bundle{}
+	expectedBundle := permissions.Bundle{}
 	ctx := context.Background()
 	underlyingStore := &mock.StoreMock{
-		GetPermissionsBundleFunc: func(ctx context.Context) (*permissions.Bundle, error) {
+		GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
 			return expectedBundle, nil
 		},
 	}
@@ -41,7 +41,7 @@ func TestCachingStore_Update_UnderlyingStoreErr(t *testing.T) {
 	expectedErr := errors.New("API broke")
 	ctx := context.Background()
 	underlyingStore := &mock.StoreMock{
-		GetPermissionsBundleFunc: func(ctx context.Context) (*permissions.Bundle, error) {
+		GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
 			return nil, expectedErr
 		},
 	}
@@ -64,10 +64,10 @@ func TestCachingStore_Update_UnderlyingStoreErr(t *testing.T) {
 }
 
 func TestCachingStore_GetPermissionsBundle(t *testing.T) {
-	expectedBundle := &permissions.Bundle{}
+	expectedBundle := permissions.Bundle{}
 	ctx := context.Background()
 	underlyingStore := &mock.StoreMock{
-		GetPermissionsBundleFunc: func(ctx context.Context) (*permissions.Bundle, error) {
+		GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
 			return expectedBundle, nil
 		},
 	}
@@ -113,9 +113,9 @@ func TestCachingStore_GetPermissionsBundle_NotCached(t *testing.T) {
 
 func TestCachingStore_CheckCacheExpiry(t *testing.T) {
 	ctx := context.Background()
-	expectedBundle := &permissions.Bundle{}
+	expectedBundle := permissions.Bundle{}
 	underlyingStore := &mock.StoreMock{
-		GetPermissionsBundleFunc: func(ctx context.Context) (*permissions.Bundle, error) {
+		GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
 			return expectedBundle, nil
 		},
 	}
@@ -138,9 +138,9 @@ func TestCachingStore_CheckCacheExpiry(t *testing.T) {
 
 func TestCachingStore_CheckCacheExpiry_Expired(t *testing.T) {
 	ctx := context.Background()
-	expectedBundle := &permissions.Bundle{}
+	expectedBundle := permissions.Bundle{}
 	underlyingStore := &mock.StoreMock{
-		GetPermissionsBundleFunc: func(ctx context.Context) (*permissions.Bundle, error) {
+		GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
 			return expectedBundle, nil
 		},
 	}
@@ -206,11 +206,11 @@ func TestCachingStore_HealthCheck_Critical(t *testing.T) {
 
 func TestCachingStore_HealthCheck_OK(t *testing.T) {
 	ctx := context.Background()
-	expectedBundle := &permissions.Bundle{}
+	expectedBundle := permissions.Bundle{}
 
 	Convey("Given a CachingStore with cached data", t, func() {
 		underlyingStore := &mock.StoreMock{
-			GetPermissionsBundleFunc: func(ctx context.Context) (*permissions.Bundle, error) {
+			GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
 				return expectedBundle, nil
 			},
 		}
@@ -235,13 +235,13 @@ func TestCachingStore_HealthCheck_OK(t *testing.T) {
 
 func TestCachingStore_HealthCheck_Warning(t *testing.T) {
 	ctx := context.Background()
-	expectedBundle := &permissions.Bundle{}
+	expectedBundle := permissions.Bundle{}
 
 	Convey("Given a CachingStore with cached data and a failed cache update", t, func() {
 		hasBeenCalled := false
 		expectedError := errors.New("permissions API call failed")
 		underlyingStore := &mock.StoreMock{
-			GetPermissionsBundleFunc: func(ctx context.Context) (*permissions.Bundle, error) {
+			GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
 				if hasBeenCalled {
 					return nil, expectedError
 				}

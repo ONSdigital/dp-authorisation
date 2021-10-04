@@ -23,7 +23,7 @@ var _ permissions.Cache = &CacheMock{}
 //             CloseFunc: func(ctx context.Context) error {
 // 	               panic("mock out the Close method")
 //             },
-//             GetPermissionsBundleFunc: func(ctx context.Context) (*permissions.Bundle, error) {
+//             GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
 // 	               panic("mock out the GetPermissionsBundle method")
 //             },
 //             HealthCheckFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
@@ -40,7 +40,7 @@ type CacheMock struct {
 	CloseFunc func(ctx context.Context) error
 
 	// GetPermissionsBundleFunc mocks the GetPermissionsBundle method.
-	GetPermissionsBundleFunc func(ctx context.Context) (*permissions.Bundle, error)
+	GetPermissionsBundleFunc func(ctx context.Context) (permissions.Bundle, error)
 
 	// HealthCheckFunc mocks the HealthCheck method.
 	HealthCheckFunc func(ctx context.Context, state *healthcheck.CheckState) error
@@ -102,7 +102,7 @@ func (mock *CacheMock) CloseCalls() []struct {
 }
 
 // GetPermissionsBundle calls GetPermissionsBundleFunc.
-func (mock *CacheMock) GetPermissionsBundle(ctx context.Context) (*permissions.Bundle, error) {
+func (mock *CacheMock) GetPermissionsBundle(ctx context.Context) (permissions.Bundle, error) {
 	if mock.GetPermissionsBundleFunc == nil {
 		panic("CacheMock.GetPermissionsBundleFunc: method is nil but Cache.GetPermissionsBundle was just called")
 	}

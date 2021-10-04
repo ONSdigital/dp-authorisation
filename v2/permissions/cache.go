@@ -14,7 +14,7 @@ var _ Store = (*CachingStore)(nil)
 // CachingStore is a permissions store implementation that caches permission data in memory.
 type CachingStore struct {
 	underlyingStore      Store
-	cachedBundle         *Bundle
+	cachedBundle         Bundle
 	closing              chan struct{}
 	expiryCheckerClosed  chan struct{}
 	cacheUpdaterClosed   chan struct{}
@@ -34,7 +34,7 @@ func NewCachingStore(underlyingStore Store) *CachingStore {
 }
 
 // GetPermissionsBundle returns the cached permission data, or an error if it's not cached.
-func (c *CachingStore) GetPermissionsBundle(ctx context.Context) (*Bundle, error) {
+func (c *CachingStore) GetPermissionsBundle(ctx context.Context) (Bundle, error) {
 	if c.cachedBundle == nil {
 		return nil, ErrNotCached
 	}
@@ -43,7 +43,7 @@ func (c *CachingStore) GetPermissionsBundle(ctx context.Context) (*Bundle, error
 }
 
 // Update the permissions cache data, by calling the underlying permissions store
-func (c *CachingStore) Update(ctx context.Context) (*Bundle, error) {
+func (c *CachingStore) Update(ctx context.Context) (Bundle, error) {
 	bundle, err := c.underlyingStore.GetPermissionsBundle(ctx)
 
 	c.mutex.Lock()
