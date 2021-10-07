@@ -7,5 +7,7 @@ require (
 	github.com/ONSdigital/dp-net v1.2.0
 	github.com/ONSdigital/dp-rchttp v1.0.0
 	github.com/ONSdigital/log.go/v2 v2.0.9
+	github.com/golang-jwt/jwt/v4 v4.0.0
+	github.com/pkg/errors v0.9.1
 	github.com/smartystreets/goconvey v1.6.4
 )
