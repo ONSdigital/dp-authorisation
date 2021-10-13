@@ -11,7 +11,7 @@ import (
 
 var permissionsBundle = permissions.Bundle{
 	"users.add": map[string][]permissions.Policy{
-		"group/admin": {
+		"groups/admin": {
 			permissions.Policy{
 				ID:         "policy1",
 				Conditions: nil,
@@ -19,19 +19,19 @@ var permissionsBundle = permissions.Bundle{
 		},
 	},
 	"legacy.read": map[string][]permissions.Policy{
-		"group/admin": {
+		"groups/admin": {
 			permissions.Policy{
 				ID:         "policy3",
 				Conditions: []permissions.Condition{},
 			},
 		},
-		"group/publisher": {
+		"groups/publisher": {
 			permissions.Policy{
 				ID:         "policy4",
 				Conditions: []permissions.Condition{},
 			},
 		},
-		"group/viewer": {
+		"groups/viewer": {
 			permissions.Policy{
 				ID: "policy2",
 				Conditions: []permissions.Condition{
@@ -55,13 +55,13 @@ var permissionsBundle = permissions.Bundle{
 		},
 	},
 	"legacy.write": map[string][]permissions.Policy{
-		"group/admin": {
+		"groups/admin": {
 			permissions.Policy{
 				ID:         "policy5",
 				Conditions: []permissions.Condition{},
 			},
 		},
-		"group/publisher": {
+		"groups/publisher": {
 			permissions.Policy{
 				ID:         "policy6",
 				Conditions: []permissions.Condition{},
