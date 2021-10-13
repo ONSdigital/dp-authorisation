@@ -4,38 +4,49 @@ import (
 	"context"
 	"github.com/ONSdigital/dp-authorisation/v2/jwt"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
+	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/log.go/v2/log"
 	"net/http"
 	"strings"
 )
 
-// Middleware is used to wrap HTTP handlers with authorisation using JWT tokens
-type Middleware struct {
+// PermissionCheckMiddleware is used to wrap HTTP handlers with JWT token based authorisation
+type PermissionCheckMiddleware struct {
 	jwtParser          JWTParser
 	permissionsChecker PermissionsChecker
 }
 
-// NewMiddlewareFromDependencies creates a new instance of Middleware, using injected dependencies.
-func NewMiddlewareFromDependencies(jwtParser JWTParser, permissionsChecker PermissionsChecker) *Middleware {
-	return &Middleware{
+// NewFeatureFlaggedMiddleware returns a different Middleware implementation depending on the configured feature flag value
+// Use this constructor when first adding authorisation as middleware so that it can be toggled off if required.
+func NewFeatureFlaggedMiddleware(ctx context.Context, config *Config) (Middleware, error) {
+	if config.Enabled {
+		return NewMiddlewareFromConfig(ctx, config)
+	}
+
+	return NewNoopMiddleware(), nil
+}
+
+// NewMiddlewareFromDependencies creates a new instance of PermissionCheckMiddleware, using injected dependencies.
+func NewMiddlewareFromDependencies(jwtParser JWTParser, permissionsChecker PermissionsChecker) *PermissionCheckMiddleware {
+	return &PermissionCheckMiddleware{
 		jwtParser:          jwtParser,
 		permissionsChecker: permissionsChecker,
 	}
 }
 
-// NewMiddlewareFromConfig creates a new instance of Middleware, instantiating the required dependencies from
+// NewMiddlewareFromConfig creates a new instance of PermissionCheckMiddleware, instantiating the required dependencies from
 // the given configuration values.
 //
 // This constructor uses default dependencies - the Cognito specific JWT parser, and caching permissions checker.
 // If different dependencies are required, use the NewMiddlewareFromDependencies constructor.
-func NewMiddlewareFromConfig(context context.Context, config *Config) (*Middleware, error) {
+func NewMiddlewareFromConfig(ctx context.Context, config *Config) (*PermissionCheckMiddleware, error) {
 	jwtParser, err := jwt.NewCognitoRSAParser(config.JWTVerificationPublicKey)
 	if err != nil {
 		return nil, err
 	}
 
 	permissionsChecker := permissions.NewChecker(
-		context,
+		ctx,
 		config.PermissionsAPIURL,
 		config.PermissionsCacheUpdateInterval,
 		config.PermissionsCacheExpiryCheckInterval,
@@ -46,7 +57,7 @@ func NewMiddlewareFromConfig(context context.Context, config *Config) (*Middlewa
 
 // Require wraps an existing handler, only allowing it to be called if the request is
 // authorised against the given permission.
-func (m Middleware) Require(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
+func (m PermissionCheckMiddleware) Require(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 		logData := log.Data{
@@ -86,4 +97,14 @@ func (m Middleware) Require(permission string, handlerFunc http.HandlerFunc) htt
 
 		handlerFunc(w, req)
 	}
+}
+
+// Close resources used by the middleware.
+func (m PermissionCheckMiddleware) Close(ctx context.Context) error {
+	return m.permissionsChecker.Close(ctx)
+}
+
+// HealthCheck updates the health status of the permissions checker
+func (m PermissionCheckMiddleware) HealthCheck(ctx context.Context, state *health.CheckState) error {
+	return m.permissionsChecker.HealthCheck(ctx, state)
 }

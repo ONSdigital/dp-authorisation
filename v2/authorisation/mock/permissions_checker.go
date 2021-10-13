@@ -7,6 +7,7 @@ import (
 	"context"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
+	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"sync"
 )
 
@@ -20,8 +21,14 @@ var _ authorisation.PermissionsChecker = &PermissionsCheckerMock{}
 //
 //         // make and configure a mocked authorisation.PermissionsChecker
 //         mockedPermissionsChecker := &PermissionsCheckerMock{
+//             CloseFunc: func(ctx context.Context) error {
+// 	               panic("mock out the Close method")
+//             },
 //             HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
 // 	               panic("mock out the HasPermission method")
+//             },
+//             HealthCheckFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
+// 	               panic("mock out the HealthCheck method")
 //             },
 //         }
 //
@@ -30,11 +37,22 @@ var _ authorisation.PermissionsChecker = &PermissionsCheckerMock{}
 //
 //     }
 type PermissionsCheckerMock struct {
+	// CloseFunc mocks the Close method.
+	CloseFunc func(ctx context.Context) error
+
 	// HasPermissionFunc mocks the HasPermission method.
 	HasPermissionFunc func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error)
 
+	// HealthCheckFunc mocks the HealthCheck method.
+	HealthCheckFunc func(ctx context.Context, state *healthcheck.CheckState) error
+
 	// calls tracks calls to the methods.
 	calls struct {
+		// Close holds details about calls to the Close method.
+		Close []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+		}
 		// HasPermission holds details about calls to the HasPermission method.
 		HasPermission []struct {
 			// Ctx is the ctx argument value.
@@ -46,8 +64,48 @@ type PermissionsCheckerMock struct {
 			// Attributes is the attributes argument value.
 			Attributes map[string]string
 		}
+		// HealthCheck holds details about calls to the HealthCheck method.
+		HealthCheck []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// State is the state argument value.
+			State *healthcheck.CheckState
+		}
 	}
+	lockClose         sync.RWMutex
 	lockHasPermission sync.RWMutex
+	lockHealthCheck   sync.RWMutex
+}
+
+// Close calls CloseFunc.
+func (mock *PermissionsCheckerMock) Close(ctx context.Context) error {
+	if mock.CloseFunc == nil {
+		panic("PermissionsCheckerMock.CloseFunc: method is nil but PermissionsChecker.Close was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+	}{
+		Ctx: ctx,
+	}
+	mock.lockClose.Lock()
+	mock.calls.Close = append(mock.calls.Close, callInfo)
+	mock.lockClose.Unlock()
+	return mock.CloseFunc(ctx)
+}
+
+// CloseCalls gets all the calls that were made to Close.
+// Check the length with:
+//     len(mockedPermissionsChecker.CloseCalls())
+func (mock *PermissionsCheckerMock) CloseCalls() []struct {
+	Ctx context.Context
+} {
+	var calls []struct {
+		Ctx context.Context
+	}
+	mock.lockClose.RLock()
+	calls = mock.calls.Close
+	mock.lockClose.RUnlock()
+	return calls
 }
 
 // HasPermission calls HasPermissionFunc.
@@ -90,5 +148,40 @@ func (mock *PermissionsCheckerMock) HasPermissionCalls() []struct {
 	mock.lockHasPermission.RLock()
 	calls = mock.calls.HasPermission
 	mock.lockHasPermission.RUnlock()
+	return calls
+}
+
+// HealthCheck calls HealthCheckFunc.
+func (mock *PermissionsCheckerMock) HealthCheck(ctx context.Context, state *healthcheck.CheckState) error {
+	if mock.HealthCheckFunc == nil {
+		panic("PermissionsCheckerMock.HealthCheckFunc: method is nil but PermissionsChecker.HealthCheck was just called")
+	}
+	callInfo := struct {
+		Ctx   context.Context
+		State *healthcheck.CheckState
+	}{
+		Ctx:   ctx,
+		State: state,
+	}
+	mock.lockHealthCheck.Lock()
+	mock.calls.HealthCheck = append(mock.calls.HealthCheck, callInfo)
+	mock.lockHealthCheck.Unlock()
+	return mock.HealthCheckFunc(ctx, state)
+}
+
+// HealthCheckCalls gets all the calls that were made to HealthCheck.
+// Check the length with:
+//     len(mockedPermissionsChecker.HealthCheckCalls())
+func (mock *PermissionsCheckerMock) HealthCheckCalls() []struct {
+	Ctx   context.Context
+	State *healthcheck.CheckState
+} {
+	var calls []struct {
+		Ctx   context.Context
+		State *healthcheck.CheckState
+	}
+	mock.lockHealthCheck.RLock()
+	calls = mock.calls.HealthCheck
+	mock.lockHealthCheck.RUnlock()
 	return calls
 }
