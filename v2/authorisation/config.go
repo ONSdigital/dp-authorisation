@@ -15,7 +15,7 @@ type Config struct {
 // NewDefaultConfig populates the config struct with default values suitable for local development.
 func NewDefaultConfig() *Config {
 	return &Config{
-		Enabled:                             false,
+		Enabled:                             true,
 		JWTVerificationPublicKey:            "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyehkd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdgcKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbcmwIDAQAB",
 		PermissionsAPIURL:                   "http://localhost:25400",
 		PermissionsCacheUpdateInterval:      time.Minute * 5,
