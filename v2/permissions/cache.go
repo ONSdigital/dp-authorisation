@@ -35,6 +35,9 @@ func NewCachingStore(underlyingStore Store) *CachingStore {
 
 // GetPermissionsBundle returns the cached permission data, or an error if it's not cached.
 func (c *CachingStore) GetPermissionsBundle(ctx context.Context) (Bundle, error) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	if c.cachedBundle == nil {
 		return nil, ErrNotCached
 	}

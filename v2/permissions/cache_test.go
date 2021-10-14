@@ -269,3 +269,35 @@ func TestCachingStore_HealthCheck_Warning(t *testing.T) {
 		})
 	})
 }
+
+func TestCachingStore_BackgroundGoRoutines(t *testing.T) {
+	expectedBundle := permissions.Bundle{}
+	ctx := context.Background()
+	underlyingStore := &mock.StoreMock{
+		GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
+			return expectedBundle, nil
+		},
+	}
+
+	Convey("Given a CachingStore the background go routines started", t, func() {
+		store := permissions.NewCachingStore(underlyingStore)
+		store.StartCacheUpdater(ctx, time.Second)
+		store.StartExpiryChecker(ctx, time.Second, time.Minute)
+
+		Convey("When Close is called", func() {
+			err := store.Close(ctx)
+
+			Convey("Then no error is returned", func() {
+				So(err, ShouldBeNil)
+			})
+		})
+
+		Convey("When the permissions bundle is ", func() {
+			_, err := store.GetPermissionsBundle(ctx)
+
+			Convey("Then no error is returned", func() {
+				So(err, ShouldBeNil)
+			})
+		})
+	})
+}
