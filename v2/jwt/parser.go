@@ -4,9 +4,15 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
+	"strings"
+)
+
+const (
+	Kid = "kid"
 )
 
 var (
@@ -25,15 +31,19 @@ var (
 
 // CognitoRSAParser parses JWT tokens that have an RSA encrypted signature, and contain AWS cognito specific claims.
 type CognitoRSAParser struct {
-	publicKey *rsa.PublicKey
-	jwtParser *jwt.Parser
+	publicKeys map[string]*rsa.PublicKey
+	jwtParser  *jwt.Parser
 }
 
 // NewCognitoRSAParser creates a new instance of CognitoRSAParser using the given public key value.
-func NewCognitoRSAParser(base64EncodedPublicKey string) (*CognitoRSAParser, error) {
-	publicKey, err := parsePublicKey(base64EncodedPublicKey)
-	if err != nil {
-		return nil, ErrFailedToParsePublicKey
+func NewCognitoRSAParser(base64EncodedPublicKey map[string]string) (*CognitoRSAParser, error) {
+	publicKeys := map[string]*rsa.PublicKey{}
+	for kid, encodedPublicKey := range base64EncodedPublicKey {
+		publicKey, err := parsePublicKey(encodedPublicKey)
+		if err != nil {
+			return nil, ErrFailedToParsePublicKey
+		}
+		publicKeys[kid] = publicKey
 	}
 
 	jwtParser := &jwt.Parser{
@@ -41,8 +51,8 @@ func NewCognitoRSAParser(base64EncodedPublicKey string) (*CognitoRSAParser, erro
 	}
 
 	return &CognitoRSAParser{
-		publicKey: publicKey,
-		jwtParser: jwtParser,
+		publicKeys: publicKeys,
+		jwtParser:  jwtParser,
 	}, nil
 }
 
@@ -147,5 +157,20 @@ func (p CognitoRSAParser) getKey(token *jwt.Token) (interface{}, error) {
 		return nil, ErrTokenUnsupportedEncryption
 	}
 
-	return p.publicKey, nil
+	return p.getPublicSigningKey(token.Raw)
+}
+
+func (p CognitoRSAParser) getPublicSigningKey(token string) (*rsa.PublicKey, error) {
+	tokenHeader := strings.Split(token, ".")[0]
+	pubKeyBytes, err := base64.StdEncoding.DecodeString(tokenHeader)
+	if err != nil {
+		return nil, err
+	}
+
+	var decodedHeaders map[string]string
+	if json.Unmarshal(pubKeyBytes, &decodedHeaders) != nil {
+		return nil, err
+	}
+
+	return p.publicKeys[decodedHeaders[Kid]], nil
 }

@@ -40,7 +40,7 @@ func NewMiddlewareFromDependencies(jwtParser JWTParser, permissionsChecker Permi
 // This constructor uses default dependencies - the Cognito specific JWT parser, and caching permissions checker.
 // If different dependencies are required, use the NewMiddlewareFromDependencies constructor.
 func NewMiddlewareFromConfig(ctx context.Context, config *Config) (*PermissionCheckMiddleware, error) {
-	jwtParser, err := jwt.NewCognitoRSAParser(config.JWTVerificationPublicKey)
+	jwtParser, err := jwt.NewCognitoRSAParser(config.JWTVerificationPublicKeys)
 	if err != nil {
 		return nil, err
 	}
