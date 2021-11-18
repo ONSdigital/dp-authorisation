@@ -5,16 +5,24 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/ONSdigital/dp-authorisation/v2/permissions"
-	dphttp "github.com/ONSdigital/dp-net/http"
-	. "github.com/smartystreets/goconvey/convey"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/ONSdigital/dp-authorisation/v2/permissions"
+	dphttp "github.com/ONSdigital/dp-net/http"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 var host = "localhost:1234"
+
+var backoffSchedule = []time.Duration{
+	1 * time.Second,
+	3 * time.Second,
+	6 * time.Second,
+}
 
 func TestAPIClient_GetPermissionsBundle(t *testing.T) {
 	ctx := context.Background()
@@ -29,7 +37,7 @@ func TestAPIClient_GetPermissionsBundle(t *testing.T) {
 				}, nil
 			},
 		}
-		apiClient := permissions.NewAPIClient(host, httpClient)
+		apiClient := permissions.NewAPIClient(host, httpClient, backoffSchedule)
 
 		Convey("When GetPermissionsBundle is called", func() {
 
@@ -67,7 +75,7 @@ func TestAPIClient_GetPermissionsBundle_HTTPError(t *testing.T) {
 				return nil, expectedErr
 			},
 		}
-		apiClient := permissions.NewAPIClient(host, httpClient)
+		apiClient := permissions.NewAPIClient(host, httpClient, backoffSchedule)
 
 		Convey("When GetPermissionsBundle is called", func() {
 
@@ -96,14 +104,14 @@ func TestAPIClient_GetPermissionsBundle_Non200ResponseCodeReturned(t *testing.T)
 				}, nil
 			},
 		}
-		apiClient := permissions.NewAPIClient(host, httpClient)
+		apiClient := permissions.NewAPIClient(host, httpClient, backoffSchedule)
 
 		Convey("When GetPermissionsBundle is called", func() {
 
 			bundle, err := apiClient.GetPermissionsBundle(ctx)
 
 			Convey("Then the expected error is returned", func() {
-				So(err.Error(), ShouldEqual, "unexpected status returned from the permissions api permissions-bundle endpoint: 500 internal server error")
+				So(err.Error(), ShouldEqual, "bundler data not successfully retrieved from service - max retries reached [2] - final response: 500")
 			})
 
 			Convey("Then the permissions bundle is nil", func() {
@@ -124,7 +132,7 @@ func TestAPIClient_GetPermissionsBundle_NilResponseBody(t *testing.T) {
 				}, nil
 			},
 		}
-		apiClient := permissions.NewAPIClient(host, httpClient)
+		apiClient := permissions.NewAPIClient(host, httpClient, backoffSchedule)
 
 		Convey("When GetPermissionsBundle is called", func() {
 
@@ -153,7 +161,7 @@ func TestAPIClient_GetPermissionsBundle_UnexpectedResponseBody(t *testing.T) {
 				}, nil
 			},
 		}
-		apiClient := permissions.NewAPIClient(host, httpClient)
+		apiClient := permissions.NewAPIClient(host, httpClient, backoffSchedule)
 
 		Convey("When GetPermissionsBundle is called", func() {
 

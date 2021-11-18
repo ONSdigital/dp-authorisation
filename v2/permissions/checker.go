@@ -10,10 +10,11 @@ package permissions
 
 import (
 	"context"
-	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
-	"github.com/ONSdigital/dp-rchttp"
-	"github.com/ONSdigital/log.go/v2/log"
 	"time"
+
+	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	rchttp "github.com/ONSdigital/dp-rchttp"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 // Checker reads permission data and verifies that a user has a permission
@@ -28,13 +29,20 @@ func NewCheckerForStore(cache Cache) *Checker {
 	}
 }
 
+// request backoff schedule: 10/30/60 seconds
+var backoffSchedule = []time.Duration{
+	10 * time.Second,
+	30 * time.Second,
+	60 * time.Second,
+}
+
 // NewChecker creates a new Checker instance that uses the permissions API client, wrapped in a CachingStore
 func NewChecker(
 	ctx context.Context,
 	permissionsAPIHost string,
 	cacheUpdateInterval, expiryCheckInterval, maxCacheTime time.Duration) *Checker {
 
-	apiClient := NewAPIClient(permissionsAPIHost, rchttp.NewClient())
+	apiClient := NewAPIClient(permissionsAPIHost, rchttp.NewClient(), backoffSchedule)
 	cachingStore := NewCachingStore(apiClient)
 	cachingStore.StartCacheUpdater(ctx, cacheUpdateInterval)
 	cachingStore.StartExpiryChecker(ctx, expiryCheckInterval, maxCacheTime)
