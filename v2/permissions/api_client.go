@@ -56,18 +56,15 @@ func (c *APIClient) GetPermissionsBundle(ctx context.Context) (Bundle, error) {
 
 		var resp *http.Response
 		resp, bundlerError = c.httpCli.Do(ctx, req)
-		if bundlerError != nil {
-			break
-		}
 
 		defer func() {
 			if resp.Body != nil {
 				resp.Body.Close()
 			}
 		}()
-		
+
 		// 200 response, return bundle
-		if resp.StatusCode == http.StatusOK {
+		if bundlerError == nil && resp.StatusCode == http.StatusOK {
 			permissions, bundlerError = getPermissionsBundleFromResponse(resp.Body)
 			break
 		}
@@ -75,11 +72,15 @@ func (c *APIClient) GetPermissionsBundle(ctx context.Context) (Bundle, error) {
 		// if we've reached the last retry, set retryAllowed to false, error and break from loop
 		maxRetryLimit := len(c.backoffSchedule)-1
 		if retryCount >= maxRetryLimit {
-			bundlerError = fmt.Errorf("bundler data not successfully retrieved from service - max retries reached [%d] - final response: %d", maxRetryLimit, resp.StatusCode)
+			bundlerError = fmt.Errorf("bundler data not successfully retrieved from service - max retries reached [%d] - final response: %d", maxRetryLimit, http.StatusInternalServerError)
 			break
 		}
-			
-		log.Info(ctx, "unexpected status returned from the permissions api permissions-bundle endpoint: %s - retrying...", log.Data{"response": resp.Status})
+
+		httpStatus := http.StatusInternalServerError
+		if bundlerError == nil {
+			httpStatus = resp.StatusCode
+		}
+		log.Info(ctx, "unexpected status returned from the permissions api permissions-bundle endpoint: %s - retrying...", log.Data{"response": httpStatus})
 		time.Sleep(backOff)
 	}
 	return permissions, bundlerError
