@@ -65,6 +65,60 @@ func TestAPIClient_GetPermissionsBundle(t *testing.T) {
 	})
 }
 
+func TestAPIClient_GetPermissionsBundle_SucceedsOnSecondAttempt(t *testing.T) {
+	ctx := context.Background()
+
+	// GetPermissionsBundle request counter
+	retryCount := 1
+
+	Convey("Given a mock http client that returns a successful permissions bundle response", t, func() {
+		httpClient := &dphttp.ClienterMock{
+			DoFunc: func(ctx context.Context, req *http.Request) (*http.Response, error) {
+				if retryCount == 1 {
+					retryCount++
+					return &http.Response{
+						StatusCode: http.StatusInternalServerError,
+						Body:       ioutil.NopCloser(strings.NewReader(`bad response`)),
+					}, nil
+				}
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Body:       ioutil.NopCloser(bytes.NewReader(getExampleBundleJson())),
+				}, nil
+			},
+		}
+		apiClient := permissions.NewAPIClient(host, httpClient, backoffSchedule)
+
+		Convey("When GetPermissionsBundle is called", func() {
+
+			bundle, err := apiClient.GetPermissionsBundle(ctx)
+
+			Convey("Bundle request made twice (failed on first attempt)", func() {
+				So(retryCount, ShouldEqual, 2)
+			})
+
+			Convey("Then no error is returned", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("Then the expected permissions bundle is returned", func() {
+				So(bundle, ShouldNotBeNil)
+
+				policies := bundle["permission/admin"]["group/admin"]
+				So(policies, ShouldHaveLength, 1)
+
+				policy := policies[0]
+				So(policy.ID, ShouldEqual, "policy/123")
+				So(policy.Conditions[0].Attributes, ShouldHaveLength, 1)
+				So(policy.Conditions[0].Attributes[0], ShouldEqual, "collection_id")
+				So(policy.Conditions[0].Operator, ShouldEqual, "equals")
+				So(policy.Conditions[0].Values, ShouldHaveLength, 1)
+				So(policy.Conditions[0].Values[0], ShouldEqual, "col123")
+			})
+		})
+	})
+}
+
 func TestAPIClient_GetPermissionsBundle_HTTPError(t *testing.T) {
 	ctx := context.Background()
 	expectedErr := errors.New("something went wrong")

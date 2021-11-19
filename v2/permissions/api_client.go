@@ -3,12 +3,10 @@ package permissions
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/ONSdigital/log.go/v2/log"
@@ -45,21 +43,18 @@ func NewAPIClient(host string, httpClient HTTPClient, backoffSchedule []time.Dur
 
 // GetPermissionsBundle gets the permissions bundle data from the permissions API.
 func (c *APIClient) GetPermissionsBundle(ctx context.Context) (Bundle, error) {
-	// function vars
-	var (
-		permissions Bundle
-		uri = fmt.Sprintf(bundlerEndpoint, c.host)
-		bundlerError error
-		resp *http.Response
-		req *http.Request
-		maxRetryLimit = len(c.backoffSchedule)-1
-	)
+	var permissions Bundle
+	var bundlerError error
+
 	for retryCount, backOff := range c.backoffSchedule {
+		var req *http.Request
+		uri := fmt.Sprintf(bundlerEndpoint, c.host)
 		req, bundlerError = http.NewRequest(http.MethodGet, uri, nil)
 		if bundlerError != nil {
 			break
 		}
 
+		var resp *http.Response
 		resp, bundlerError = c.httpCli.Do(ctx, req)
 		if bundlerError != nil {
 			break
@@ -71,19 +66,20 @@ func (c *APIClient) GetPermissionsBundle(ctx context.Context) (Bundle, error) {
 			}
 		}()
 		
-		//check returned status and take appropriate action
-		if resp.StatusCode != http.StatusOK {
-			// if we've reached the last retry, set retryAllowed to false, error and break from loop
-			if retryCount == maxRetryLimit {
-				bundlerError = errors.New("bundler data not successfully retrieved from service - max retries reached ["+strconv.Itoa(maxRetryLimit)+"] - final response: "+strconv.Itoa(resp.StatusCode))
-				break
-			} else {
-				log.Info(ctx, "unexpected status returned from the permissions api permissions-bundle endpoint: %s - retrying...", log.Data{"response": resp.Status})
-			}
-		} else {
+		// 200 response, return bundle
+		if resp.StatusCode == http.StatusOK {
 			permissions, bundlerError = getPermissionsBundleFromResponse(resp.Body)
 			break
 		}
+
+		// if we've reached the last retry, set retryAllowed to false, error and break from loop
+		maxRetryLimit := len(c.backoffSchedule)-1
+		if retryCount >= maxRetryLimit {
+			bundlerError = fmt.Errorf("bundler data not successfully retrieved from service - max retries reached [%d] - final response: %d", maxRetryLimit, resp.StatusCode)
+			break
+		}
+			
+		log.Info(ctx, "unexpected status returned from the permissions api permissions-bundle endpoint: %s - retrying...", log.Data{"response": resp.Status})
 		time.Sleep(backOff)
 	}
 	return permissions, bundlerError
