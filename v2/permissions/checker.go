@@ -29,11 +29,11 @@ func NewCheckerForStore(cache Cache) *Checker {
 	}
 }
 
-// request backoff schedule: 10/30/60 seconds
+// request backoff schedule: 30/60/90 seconds
 var backoffSchedule = []time.Duration{
-	10 * time.Second,
 	30 * time.Second,
 	60 * time.Second,
+	90 * time.Second,
 }
 
 // NewChecker creates a new Checker instance that uses the permissions API client, wrapped in a CachingStore
