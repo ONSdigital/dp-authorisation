@@ -101,6 +101,7 @@ func (c *CachingStore) CheckCacheExpiry(ctx context.Context, maxCacheTime time.D
 // StartCacheUpdater starts a go routine to continually update cache data at time intervals.
 //  - updateInterval - how often to update the cache data.
 func (c *CachingStore) StartCacheUpdater(ctx context.Context, updateInterval time.Duration) {
+	c.updateWithErrLog(ctx)
 	go func() {
 		defer close(c.cacheUpdaterClosed)
 		startupTicker := time.NewTicker(time.Second * 30)
