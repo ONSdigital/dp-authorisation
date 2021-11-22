@@ -2,10 +2,11 @@ package permissions
 
 import (
 	"context"
-	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
-	"github.com/ONSdigital/log.go/v2/log"
 	"sync"
 	"time"
+
+	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 // Compiler check to ensure CachingStore implements the Store interface.
@@ -100,17 +101,23 @@ func (c *CachingStore) CheckCacheExpiry(ctx context.Context, maxCacheTime time.D
 // StartCacheUpdater starts a go routine to continually update cache data at time intervals.
 //  - updateInterval - how often to update the cache data.
 func (c *CachingStore) StartCacheUpdater(ctx context.Context, updateInterval time.Duration) {
-	c.updateWithErrLog(ctx)
 	go func() {
 		defer close(c.cacheUpdaterClosed)
-		ticker := time.NewTicker(updateInterval)
-
+		startupTicker := time.NewTicker(time.Second * 30)
+		initialisedTicker := time.NewTicker(updateInterval)
 		for {
 			select {
-			case <-ticker.C:
+			case <-startupTicker.C:
+				if c.cachedBundle == nil {
+					c.updateWithErrLog(ctx)
+				} else {
+					startupTicker.Stop()
+				}
+			case <-initialisedTicker.C:
 				c.updateWithErrLog(ctx)
 			case <-c.closing:
-				ticker.Stop()
+				startupTicker.Stop()	
+				initialisedTicker.Stop()
 				return
 			case <-ctx.Done():
 				c.Close(ctx)
