@@ -57,12 +57,21 @@ func (c *APIClient) GetPermissionsBundle(ctx context.Context) (Bundle, error) {
 		var resp *http.Response
 		resp, bundlerError = c.httpCli.Do(ctx, req)
 
+		if resp != nil {
+			log.Info(ctx, "[1] bundler data successful response received", log.Data{"response": resp.StatusCode, "retryInterval": backOff, "uri": uri})
+		}
+		if bundlerError != nil {
+			log.Info(ctx, "bundler data bundler error received", log.Data{"error": bundlerError.Error()})
+		}
+
 		if bundlerError == nil {
 			defer func() {
 				if resp.Body != nil {
 					resp.Body.Close()
 				}
 			}()
+
+			log.Info(ctx, "[2] bundler data successful response received", log.Data{"response": resp.StatusCode, "retryInterval": backOff, "uri": uri})
 
 			// 200 response, return bundle
 			if resp.StatusCode == http.StatusOK {
@@ -82,7 +91,7 @@ func (c *APIClient) GetPermissionsBundle(ctx context.Context) (Bundle, error) {
 		if bundlerError == nil {
 			httpStatus = resp.StatusCode
 		}
-		log.Info(ctx, "unexpected status returned from the permissions api permissions-bundle endpoint - retrying...", log.Data{"response": httpStatus, "retryInterval": backOff})
+		log.Info(ctx, "unexpected status returned from the permissions api permissions-bundle endpoint - retrying...", log.Data{"response": httpStatus, "retryInterval": backOff, "uri": uri})
 		time.Sleep(backOff)
 	}
 	return permissions, bundlerError
