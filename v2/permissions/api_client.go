@@ -82,7 +82,7 @@ func (c *APIClient) GetPermissionsBundle(ctx context.Context) (Bundle, error) {
 		if bundlerError == nil {
 			httpStatus = resp.StatusCode
 		}
-		log.Info(ctx, "unexpected status returned from the permissions api permissions-bundle endpoint - retrying:", log.Data{"response": httpStatus})
+		log.Info(ctx, "unexpected status returned from the permissions api permissions-bundle endpoint - retrying...", log.Data{"response": httpStatus, "retryInterval": backOff})
 		time.Sleep(backOff)
 	}
 	return permissions, bundlerError
