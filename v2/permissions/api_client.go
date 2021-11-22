@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 // package level constants
@@ -42,15 +44,19 @@ func NewAPIClient(host string, httpClient HTTPClient, backoffSchedule []time.Dur
 // GetPermissionsBundle gets the permissions bundle data from the permissions API.
 func (c *APIClient) GetPermissionsBundle(ctx context.Context) (Bundle, error) {
 
-    uri := fmt.Sprintf("%s/v1/permissions-bundle", c.host)
+    uri := fmt.Sprintf(bundlerEndpoint, c.host)
+
+	log.Info(ctx, "GetPermissionsBundle: starting permissions bundle request", log.Data{"uri": uri})
 
     req, err := http.NewRequest(http.MethodGet, uri, nil)
     if err != nil {
+		log.Info(ctx, "GetPermissionsBundle: error building new request", log.Data{"err": err.Error()})
         return nil, err
     }
 
     resp, err := c.httpCli.Do(ctx, req)
     if err != nil {
+		log.Info(ctx, "GetPermissionsBundle: error executing request", log.Data{"err": err.Error()})
         return nil, err
     }
 
@@ -59,14 +65,20 @@ func (c *APIClient) GetPermissionsBundle(ctx context.Context) (Bundle, error) {
             resp.Body.Close()
         }
     }()
-    if resp.StatusCode != 200 {
+
+	log.Info(ctx, "GetPermissionsBundle: request successfully executed", log.Data{"resp.StatusCode": resp.StatusCode})
+
+    if resp.StatusCode != http.StatusOK {
         return nil, fmt.Errorf("unexpected status returned from the permissions api permissions-bundle endpoint: %s", resp.Status)
     }
 
     permissions, err := getPermissionsBundleFromResponse(resp.Body)
     if err != nil {
+		log.Info(ctx, "GetPermissionsBundle: error getting permissions bundle from response", log.Data{"err": err.Error()})
         return nil, err
     }
+
+	log.Info(ctx, "GetPermissionsBundle: returning requested permissins to caller")
 
     return permissions, nil
 }
