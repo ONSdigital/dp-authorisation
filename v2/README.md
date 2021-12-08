@@ -70,6 +70,25 @@ A mock for the `Middleware` interface is available for unit testing:
     }
 ```
 
+##### Creating a mock ZebedeeClient instance for unit testing
+
+A mock for the `ZebedeeClient` interface is available for unit testing:
+```go
+    import (
+        authorisation "github.com/ONSdigital/dp-authorisation/v2/authorisation/mock"
+    )
+    
+    ...
+
+	zebedeeIdentity = &mock.ZebedeeClientMock{
+		CheckTokenIdentityFunc: func(ctx context.Context, token string) (*dprequest.IdentityResponse, error) {
+			return &dprequest.IdentityResponse{
+				Identifier: "bilbo.baggins@bilbo-baggins.io",
+			}, nil
+		},
+	}
+```
+
 #### Option 2 - Add authorisation within a handler (not via middleware)
 
 If the authorisation for a service requires something more complex than middleware around a handler, the implementation will depend on the services particular requirements. Though it will still come down to the two fundamental pieces of the authorisation - JWT token parsing, and permissions checking. Refer to the readme's for the  [JWT parser](jwt/README.md) and [permissions checker](permissions/README.md) for more information on creating and using them.

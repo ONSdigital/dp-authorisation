@@ -6,7 +6,7 @@ package mock
 import (
 	"context"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
-	"github.com/ONSdigital/dp-healthcheck/healthcheck"
+	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"net/http"
 	"sync"
 )
@@ -17,31 +17,31 @@ var _ authorisation.Middleware = &MiddlewareMock{}
 
 // MiddlewareMock is a mock implementation of authorisation.Middleware.
 //
-//     func TestSomethingThatUsesMiddleware(t *testing.T) {
+// 	func TestSomethingThatUsesMiddleware(t *testing.T) {
 //
-//         // make and configure a mocked authorisation.Middleware
-//         mockedMiddleware := &MiddlewareMock{
-//             CloseFunc: func(ctx context.Context) error {
-// 	               panic("mock out the Close method")
-//             },
-//             HealthCheckFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
-// 	               panic("mock out the HealthCheck method")
-//             },
-//             RequireFunc: func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
-// 	               panic("mock out the Require method")
-//             },
-//         }
+// 		// make and configure a mocked authorisation.Middleware
+// 		mockedMiddleware := &MiddlewareMock{
+// 			CloseFunc: func(ctx context.Context) error {
+// 				panic("mock out the Close method")
+// 			},
+// 			HealthCheckFunc: func(ctx context.Context, state *health.CheckState) error {
+// 				panic("mock out the HealthCheck method")
+// 			},
+// 			RequireFunc: func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
+// 				panic("mock out the Require method")
+// 			},
+// 		}
 //
-//         // use mockedMiddleware in code that requires authorisation.Middleware
-//         // and then make assertions.
+// 		// use mockedMiddleware in code that requires authorisation.Middleware
+// 		// and then make assertions.
 //
-//     }
+// 	}
 type MiddlewareMock struct {
 	// CloseFunc mocks the Close method.
 	CloseFunc func(ctx context.Context) error
 
 	// HealthCheckFunc mocks the HealthCheck method.
-	HealthCheckFunc func(ctx context.Context, state *healthcheck.CheckState) error
+	HealthCheckFunc func(ctx context.Context, state *health.CheckState) error
 
 	// RequireFunc mocks the Require method.
 	RequireFunc func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc
@@ -58,7 +58,7 @@ type MiddlewareMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// State is the state argument value.
-			State *healthcheck.CheckState
+			State *health.CheckState
 		}
 		// Require holds details about calls to the Require method.
 		Require []struct {
@@ -105,13 +105,13 @@ func (mock *MiddlewareMock) CloseCalls() []struct {
 }
 
 // HealthCheck calls HealthCheckFunc.
-func (mock *MiddlewareMock) HealthCheck(ctx context.Context, state *healthcheck.CheckState) error {
+func (mock *MiddlewareMock) HealthCheck(ctx context.Context, state *health.CheckState) error {
 	if mock.HealthCheckFunc == nil {
 		panic("MiddlewareMock.HealthCheckFunc: method is nil but Middleware.HealthCheck was just called")
 	}
 	callInfo := struct {
 		Ctx   context.Context
-		State *healthcheck.CheckState
+		State *health.CheckState
 	}{
 		Ctx:   ctx,
 		State: state,
@@ -127,11 +127,11 @@ func (mock *MiddlewareMock) HealthCheck(ctx context.Context, state *healthcheck.
 //     len(mockedMiddleware.HealthCheckCalls())
 func (mock *MiddlewareMock) HealthCheckCalls() []struct {
 	Ctx   context.Context
-	State *healthcheck.CheckState
+	State *health.CheckState
 } {
 	var calls []struct {
 		Ctx   context.Context
-		State *healthcheck.CheckState
+		State *health.CheckState
 	}
 	mock.lockHealthCheck.RLock()
 	calls = mock.calls.HealthCheck

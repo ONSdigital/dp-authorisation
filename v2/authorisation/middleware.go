@@ -2,18 +2,30 @@ package authorisation
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-authorisation/v2/jwt"
-	"github.com/ONSdigital/dp-authorisation/v2/permissions"
-	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
-	"github.com/ONSdigital/log.go/v2/log"
 	"net/http"
 	"strings"
+
+	"github.com/ONSdigital/dp-authorisation/v2/jwt"
+	"github.com/ONSdigital/dp-authorisation/v2/permissions"
+	"github.com/ONSdigital/dp-authorisation/v2/zebedeeclient"
+	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	"github.com/ONSdigital/log.go/v2/log"
+
+	b64 "encoding/base64"
+	"encoding/json"
 )
+
+type tokenHeaderData struct{
+	Kid string `json:"kid"`
+	Alg string `json:"alg"`
+	Typ string `json:"typ"`
+}
 
 // PermissionCheckMiddleware is used to wrap HTTP handlers with JWT token based authorisation
 type PermissionCheckMiddleware struct {
 	jwtParser          JWTParser
 	permissionsChecker PermissionsChecker
+	zebedeeClient      ZebedeeClient
 }
 
 // NewFeatureFlaggedMiddleware returns a different Middleware implementation depending on the configured feature flag value
@@ -26,11 +38,12 @@ func NewFeatureFlaggedMiddleware(ctx context.Context, config *Config) (Middlewar
 	return NewNoopMiddleware(), nil
 }
 
-// NewMiddlewareFromDependencies creates a new instance of PermissionCheckMiddleware, using injected dependencies.
-func NewMiddlewareFromDependencies(jwtParser JWTParser, permissionsChecker PermissionsChecker) *PermissionCheckMiddleware {
+// NewMiddlewareFromDependencies creates a new instance of PermissionCheckMiddleware, using injected dependencies
+func NewMiddlewareFromDependencies(jwtParser JWTParser, permissionsChecker PermissionsChecker, zebedeeClient ZebedeeClient) *PermissionCheckMiddleware {
 	return &PermissionCheckMiddleware{
 		jwtParser:          jwtParser,
 		permissionsChecker: permissionsChecker,
+		zebedeeClient:      zebedeeClient,
 	}
 }
 
@@ -50,9 +63,12 @@ func NewMiddlewareFromConfig(ctx context.Context, config *Config) (*PermissionCh
 		config.PermissionsAPIURL,
 		config.PermissionsCacheUpdateInterval,
 		config.PermissionsCacheExpiryCheckInterval,
-		config.PermissionsMaxCacheTime)
+		config.PermissionsMaxCacheTime,
+	)
 
-	return NewMiddlewareFromDependencies(jwtParser, permissionsChecker), nil
+	zebedeeClient := zebedeeclient.NewZebedeeClient(config.ZebedeeURL)
+
+	return NewMiddlewareFromDependencies(jwtParser, permissionsChecker, zebedeeClient), nil
 }
 
 // Require wraps an existing handler, only allowing it to be called if the request is
@@ -74,12 +90,34 @@ func (m PermissionCheckMiddleware) Require(permission string, handlerFunc http.H
 
 		authToken = strings.TrimPrefix(authToken, "Bearer ")
 
-		entityData, err := m.jwtParser.Parse(authToken)
-		if err != nil {
-			logData["message"] = err.Error()
-			log.Info(ctx, "authorisation failed due to jwt parsing issue", logData)
-			w.WriteHeader(http.StatusForbidden)
-			return
+		// is the token of the form xxx.yyy.zzz (i.e. JWT)?
+		sDec, _ := b64.StdEncoding.DecodeString(strings.Split(authToken, ".")[0])
+
+		var headerData = tokenHeaderData{}
+		json.Unmarshal(sDec, &headerData)
+
+		var (
+			entityData = &permissions.EntityData{}
+			err error
+		)
+		if headerData.Typ == "JWT" {
+			entityData, err = m.jwtParser.Parse(authToken)
+			if err != nil {
+				logData["message"] = err.Error()
+				log.Info(ctx, "authorisation failed due to jwt parsing issue", logData)
+				w.WriteHeader(http.StatusForbidden) 
+				return
+			}
+		} else {
+			zebedeeIdentityResponse, err := m.zebedeeClient.CheckTokenIdentity(ctx, authToken)
+			if err != nil {
+				logData["message"] = err.Error()
+				log.Info(ctx, "authorisation failed due to service token issue", logData)
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			// extract user name and proceed
+			entityData.UserID = zebedeeIdentityResponse.Identifier
 		}
 
 		hasPermission, err := m.permissionsChecker.HasPermission(req.Context(), *entityData, permission, nil)

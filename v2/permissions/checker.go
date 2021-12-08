@@ -79,9 +79,6 @@ func mapEntityDataToEntities(entityData EntityData) []string {
 	if len(entityData.UserID) > 0 {
 		entities = append(entities, "users/"+entityData.UserID)
 	}
-	if len(entityData.ServiceID) > 0 {
-		entities = append(entities, "services/"+entityData.ServiceID)
-	}
 	for _, group := range entityData.Groups {
 		if len(group) > 0 {
 			entities = append(entities, "groups/"+group)
