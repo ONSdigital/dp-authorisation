@@ -15,6 +15,7 @@ require (
 )
 
 require (
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.4.7 // indirect
 	github.com/ONSdigital/go-ns v0.0.0-20210916104633-ac1c1c52327e // indirect
 	github.com/ONSdigital/log.go v1.1.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
@@ -25,6 +26,6 @@ require (
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/smartystreets/assertions v1.2.0 // indirect
-	golang.org/x/net v0.0.0-20211208012354-db4efeb81f4b // indirect
-	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d // indirect
+	golang.org/x/net v0.0.0-20211209124913-491a49abca63 // indirect
+	golang.org/x/sys v0.0.0-20211210111614-af8b64212486 // indirect
 )

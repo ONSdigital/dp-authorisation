@@ -15,6 +15,11 @@ import (
 	"encoding/json"
 )
 
+const (
+	jwtIdentifier = "JWT"
+	chunkSize = 3
+)
+
 type tokenHeaderData struct{
 	Kid string `json:"kid"`
 	Alg string `json:"alg"`
@@ -90,21 +95,37 @@ func (m PermissionCheckMiddleware) Require(permission string, handlerFunc http.H
 
 		authToken = strings.TrimPrefix(authToken, "Bearer ")
 
+		var (
+			chunks = strings.Split(authToken, ".")
+			headerData = tokenHeaderData{}
+		)
 		// is the token of the form xxx.yyy.zzz (i.e. JWT)?
-		sDec, _ := b64.StdEncoding.DecodeString(strings.Split(authToken, ".")[0])
+		if len(chunks) == chunkSize {
+			sDec, decodeErr := b64.StdEncoding.DecodeString(chunks[0])
+			if decodeErr != nil {	
+				log.Error(ctx, "authorisation failed due to issue decoding authorisation token", decodeErr, logData)
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+	
+			unmarshalError := json.Unmarshal(sDec, &headerData)
+			if unmarshalError != nil {	
+				log.Error(ctx, "authorisation failed due to issue unmarshalling header data", unmarshalError, logData)
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+		}
 
-		var headerData = tokenHeaderData{}
-		json.Unmarshal(sDec, &headerData)
-
+		// process the token accordingly
 		var (
 			entityData = &permissions.EntityData{}
 			err error
 		)
-		if headerData.Typ == "JWT" {
+		if headerData.Typ == jwtIdentifier {
 			entityData, err = m.jwtParser.Parse(authToken)
 			if err != nil {
 				logData["message"] = err.Error()
-				log.Info(ctx, "authorisation failed due to jwt parsing issue", logData)
+				log.Error(ctx, "authorisation failed due to jwt parsing issue", err, logData)
 				w.WriteHeader(http.StatusForbidden) 
 				return
 			}
@@ -112,7 +133,7 @@ func (m PermissionCheckMiddleware) Require(permission string, handlerFunc http.H
 			zebedeeIdentityResponse, err := m.zebedeeClient.CheckTokenIdentity(ctx, authToken)
 			if err != nil {
 				logData["message"] = err.Error()
-				log.Info(ctx, "authorisation failed due to service token issue", logData)
+				log.Error(ctx, "authorisation failed due to service token issue", err, logData)
 				w.WriteHeader(http.StatusForbidden)
 				return
 			}

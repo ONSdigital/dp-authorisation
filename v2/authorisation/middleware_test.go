@@ -234,7 +234,7 @@ func TestMiddleware_ServiceTokenUser_SuccessfullyAuthorised(t *testing.T) {
 
 		response := httptest.NewRecorder()
 		request := httptest.NewRequest(http.MethodGet, "https://the-url.com", nil)
-		request.Header.Set("Authorization", "Bearer "+authorisationtest.ZebedeeServiceToken)
+		request.Header.Set("Authorization", authorisationtest.ZebedeeServiceToken)
 		mockHandler := &mockHandler{calls: 0}
 		jwtParser := newMockJWTParser()
 		middleware := authorisation.NewMiddlewareFromDependencies(jwtParser, permissionsChecker, zebedeeIdentity)
@@ -270,7 +270,7 @@ func TestMiddleware_ServiceTokenUser_AuthorisationDenied(t *testing.T) {
 
 		response := httptest.NewRecorder()
 		request := httptest.NewRequest(http.MethodGet, "https://the-url.com", nil)
-		request.Header.Set("Authorization", "Bearer "+authorisationtest.ZebedeeServiceToken)
+		request.Header.Set("Authorization", authorisationtest.ZebedeeServiceToken)
 		mockHandler := &mockHandler{calls: 0}
 		jwtParser := newMockJWTParser()
 		middleware := authorisation.NewMiddlewareFromDependencies(jwtParser, permissionsChecker, zebedeeIdentity)
@@ -313,7 +313,7 @@ func TestMiddleware_ServiceTokenUser_ZebedeeIdentityVerificationError(t *testing
 
 		response := httptest.NewRecorder()
 		request := httptest.NewRequest(http.MethodGet, "https://the-url.com", nil)
-		request.Header.Set("Authorization", "Bearer "+authorisationtest.ZebedeeServiceToken)
+		request.Header.Set("Authorization", authorisationtest.ZebedeeServiceToken)
 		mockHandler := &mockHandler{calls: 0}
 		jwtParser := newMockJWTParser()
 		middleware := authorisation.NewMiddlewareFromDependencies(jwtParser, permissionsChecker, zebedeeIdentity)

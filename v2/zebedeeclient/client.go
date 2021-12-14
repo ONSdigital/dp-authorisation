@@ -3,22 +3,28 @@ package zebedeeclient
 import (
 	"context"
 
-	"github.com/ONSdigital/dp-api-clients-go/identity"
+	"github.com/ONSdigital/dp-api-clients-go/v2/identity"
 	dprequest "github.com/ONSdigital/dp-net/request"
 )
 
+// IdentityClient interface contains one method
+type IdentityClient interface {
+	CheckTokenIdentity(ctx context.Context, token string, tokenType identity.TokenType) (*dprequest.IdentityResponse, error)
+}
+
+// ZebedeeClient contains zebedee client handler
 type ZebedeeClient struct {
-	client *identity.Client
+	Client IdentityClient
 }
 
 // NewZebedeeIdentity creates a new zebedee identity client
 func NewZebedeeClient(ZebedeeURL string) *ZebedeeClient {
 	return &ZebedeeClient{
-		client: identity.New(ZebedeeURL),
+		Client: identity.New(ZebedeeURL),
 	}
 }
 
 // CheckTokenIdentity calls dp-api-clients-go/identity
 func (z ZebedeeClient) CheckTokenIdentity(ctx context.Context, token string) (*dprequest.IdentityResponse, error) {
-	return z.client.CheckTokenIdentity(ctx, token, 0)
+	return z.Client.CheckTokenIdentity(ctx, token, 0)
 }
