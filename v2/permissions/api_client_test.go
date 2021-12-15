@@ -57,7 +57,7 @@ func TestAPIClient_GetPermissionsBundle(t *testing.T) {
 				So(policy.ID, ShouldEqual, "policy/123")
 				So(policy.Conditions[0].Attributes, ShouldHaveLength, 1)
 				So(policy.Conditions[0].Attributes[0], ShouldEqual, "collection_id")
-				So(policy.Conditions[0].Operator, ShouldEqual, "equals")
+				So(policy.Conditions[0].Operator, ShouldEqual, "StringEquals")
 				So(policy.Conditions[0].Values, ShouldHaveLength, 1)
 				So(policy.Conditions[0].Values[0], ShouldEqual, "col123")
 			})
@@ -111,7 +111,7 @@ func TestAPIClient_GetPermissionsBundle_SucceedsOnSecondAttempt(t *testing.T) {
 				So(policy.ID, ShouldEqual, "policy/123")
 				So(policy.Conditions[0].Attributes, ShouldHaveLength, 1)
 				So(policy.Conditions[0].Attributes[0], ShouldEqual, "collection_id")
-				So(policy.Conditions[0].Operator, ShouldEqual, "equals")
+				So(policy.Conditions[0].Operator, ShouldEqual, "StringEquals")
 				So(policy.Conditions[0].Values, ShouldHaveLength, 1)
 				So(policy.Conditions[0].Values[0], ShouldEqual, "col123")
 			})
@@ -249,7 +249,7 @@ func getExampleBundle() permissions.Bundle {
 					Conditions: []permissions.Condition{
 						{
 							Attributes: []string{"collection_id"},
-							Operator:   "equals",
+							Operator:   "StringEquals",
 							Values:     []string{"col123"}},
 					},
 				},

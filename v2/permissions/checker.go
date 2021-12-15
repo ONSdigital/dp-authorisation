@@ -10,6 +10,7 @@ package permissions
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
@@ -156,7 +157,10 @@ func conditionIsMet(condition Condition, attributes map[string]string) bool {
 		}
 
 		for _, conditionValue := range condition.Values {
-			if condition.Operator == "=" && value == conditionValue {
+			if condition.Operator == OperatorStringEquals && value == conditionValue {
+				return true
+			}
+			if condition.Operator == OperatorStartsWith && strings.HasPrefix(value, conditionValue) {
 				return true
 			}
 		}

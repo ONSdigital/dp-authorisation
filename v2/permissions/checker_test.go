@@ -2,11 +2,12 @@ package permissions_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions/mock"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 var permissionsBundle = permissions.Bundle{
@@ -37,18 +38,23 @@ var permissionsBundle = permissions.Bundle{
 				Conditions: []permissions.Condition{
 					{
 						Attributes: []string{"collection_id"},
-						Operator:   "=",
+						Operator:   permissions.OperatorStringEquals,
 						Values:     []string{"collection765"},
 					},
 					{
 						Attributes: []string{"collection_id"},
-						Operator:   "=",
+						Operator:   permissions.OperatorStringEquals,
 						Values:     []string{"collection766"},
 					},
 					{
 						Attributes: []string{"collection_id"},
-						Operator:   "=",
+						Operator:   permissions.OperatorStringEquals,
 						Values:     []string{"collection767"},
+					},
+					{
+						Attributes: []string{"collection_id"},
+						Operator:   "stringequals",
+						Values:     []string{"collection768"},
 					},
 				},
 			},
@@ -65,6 +71,25 @@ var permissionsBundle = permissions.Bundle{
 			permissions.Policy{
 				ID:         "policy6",
 				Conditions: []permissions.Condition{},
+			},
+		},
+	},
+	"some_service.write": map[string][]permissions.Policy{
+		"groups/publisher": {
+			permissions.Policy{
+				ID: "policy7",
+				Conditions: []permissions.Condition{
+					{
+						Attributes: []string{"path"},
+						Operator:   permissions.OperatorStartsWith,
+						Values:     []string{"/files/dir/a/"},
+					},
+					{
+						Attributes: []string{"path"},
+						Operator:   permissions.OperatorStartsWith,
+						Values:     []string{"/files/dir/b"},
+					},
+				},
 			},
 		},
 	},
@@ -142,7 +167,7 @@ func TestChecker_HasPermission_NoGroupMatch(t *testing.T) {
 	})
 }
 
-func TestChecker_HasPermission_WithConditionTrue(t *testing.T) {
+func TestChecker_HasPermission_WithStringEqualsConditionTrue(t *testing.T) {
 	ctx := context.Background()
 	store := newMockCache()
 	checker := permissions.NewCheckerForStore(store)
@@ -152,7 +177,7 @@ func TestChecker_HasPermission_WithConditionTrue(t *testing.T) {
 			Groups: []string{"viewer"},
 		}
 
-		Convey("When HasPermission is called with a collection ID that satisfies the policy condition", func() {
+		Convey("When HasPermission is called with a collection ID that satisfies the 'StringEquals' policy condition", func() {
 			attributes := map[string]string{"collection_id": "collection765"}
 			hasPermission, err := checker.HasPermission(ctx, entityData, "legacy.read", attributes)
 
@@ -162,6 +187,106 @@ func TestChecker_HasPermission_WithConditionTrue(t *testing.T) {
 
 			Convey("Then the result is true", func() {
 				So(hasPermission, ShouldBeTrue)
+			})
+		})
+	})
+}
+
+func TestChecker_HasPermission_WithStringEqualsConditionFalse(t *testing.T) {
+	ctx := context.Background()
+	store := newMockCache()
+	checker := permissions.NewCheckerForStore(store)
+
+	Convey("Given a viewer user", t, func() {
+		entityData := permissions.EntityData{
+			Groups: []string{"viewer"},
+		}
+
+		Convey("When HasPermission is called with a collection ID that does not satisfy a 'StringEquals' policy condition", func() {
+			attributes := map[string]string{"collection_id": "collection999"}
+			hasPermission, err := checker.HasPermission(ctx, entityData, "legacy.read", attributes)
+
+			Convey("Then there is no error returned", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("Then the result is false", func() {
+				So(hasPermission, ShouldBeFalse)
+			})
+		})
+	})
+}
+
+func TestChecker_HasPermission_WithCaseInsensitivePolicyConditionOperatorFalse(t *testing.T) {
+	ctx := context.Background()
+	store := newMockCache()
+	checker := permissions.NewCheckerForStore(store)
+
+	Convey("Given a viewer user", t, func() {
+		entityData := permissions.EntityData{
+			Groups: []string{"viewer"},
+		}
+
+		Convey("When HasPermission is called with a collection ID that satisfies an invalid (case-insensitive) 'stringequals' policy condition operator", func() {
+			attributes := map[string]string{"collection_id": "collection768"}
+			hasPermission, err := checker.HasPermission(ctx, entityData, "legacy.read", attributes)
+
+			Convey("Then there is no error returned", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("Then the result is false", func() {
+				So(hasPermission, ShouldBeFalse)
+			})
+		})
+	})
+}
+
+func TestChecker_HasPermission_WithStartsWithConditionTrue(t *testing.T) {
+	ctx := context.Background()
+	store := newMockCache()
+	checker := permissions.NewCheckerForStore(store)
+
+	Convey("Given a publisher user", t, func() {
+		entityData := permissions.EntityData{
+			Groups: []string{"publisher"},
+		}
+
+		Convey("When HasPermission is called with a collection ID that satisfies the 'StartsWith' policy condition", func() {
+			attributes := map[string]string{"path": "/files/dir/a/some/dir/"}
+			hasPermission, err := checker.HasPermission(ctx, entityData, "some_service.write", attributes)
+
+			Convey("Then there is no error returned", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("Then the result is true", func() {
+				So(hasPermission, ShouldBeTrue)
+			})
+		})
+	})
+}
+
+func TestChecker_HasPermission_WithStartsWithConditionFalse(t *testing.T) {
+	ctx := context.Background()
+	store := newMockCache()
+	checker := permissions.NewCheckerForStore(store)
+
+	Convey("Given a publisher user", t, func() {
+		entityData := permissions.EntityData{
+			Groups: []string{"publisher"},
+		}
+
+		Convey("When HasPermission is called with a collection ID that does not satisfy the 'StartsWith' policy condition", func() {
+			attributes := map[string]string{"path": "/files/dir/c/some/dir"}
+			hasPermission, err := checker.HasPermission(ctx, entityData, "some_service.write", attributes)
+
+			Convey("Then there is no error returned", func() {
+				So(err, ShouldBeNil)
+			})
+
+			Convey("Then the result is false", func() {
+				So(hasPermission, ShouldBeFalse)
 			})
 		})
 	})
@@ -177,7 +302,7 @@ func TestChecker_HasPermission_MultipleConditionsChecked(t *testing.T) {
 			Groups: []string{"viewer"},
 		}
 
-		Convey("When HasPermission is called with a collection ID that satisfies the last policy condition", func() {
+		Convey("When HasPermission is called with a collection ID that satisfies the last 'StringEquals' policy condition", func() {
 			attributes := map[string]string{"collection_id": "collection767"}
 			hasPermission, err := checker.HasPermission(ctx, entityData, "legacy.read", attributes)
 
@@ -187,31 +312,6 @@ func TestChecker_HasPermission_MultipleConditionsChecked(t *testing.T) {
 
 			Convey("Then the result is true", func() {
 				So(hasPermission, ShouldBeTrue)
-			})
-		})
-	})
-}
-
-func TestChecker_HasPermission_WithConditionFalse(t *testing.T) {
-	ctx := context.Background()
-	store := newMockCache()
-	checker := permissions.NewCheckerForStore(store)
-
-	Convey("Given a viewer user", t, func() {
-		entityData := permissions.EntityData{
-			Groups: []string{"viewer"},
-		}
-
-		Convey("When HasPermission is called with a collection ID that does not satisfy a policy condition", func() {
-			attributes := map[string]string{"collection_id": "collection999"}
-			hasPermission, err := checker.HasPermission(ctx, entityData, "legacy.read", attributes)
-
-			Convey("Then there is no error returned", func() {
-				So(err, ShouldBeNil)
-			})
-
-			Convey("Then the result is false", func() {
-				So(hasPermission, ShouldBeFalse)
 			})
 		})
 	})
