@@ -165,7 +165,7 @@ func TestAPIClient_GetPermissionsBundle_Non200ResponseCodeReturned(t *testing.T)
 			bundle, err := apiClient.GetPermissionsBundle(ctx)
 
 			Convey("Then the expected error is returned", func() {
-				So(err.Error(), ShouldEqual, "bundler data not successfully retrieved from service - max retries reached [2] - final response: 500")
+				So(err.Error(), ShouldEqual, "unexpected status returned from the permissions api permissions-bundle endpoint: 500 internal server error")
 			})
 
 			Convey("Then the permissions bundle is nil", func() {

@@ -3,18 +3,32 @@ package authorisation_test
 import (
 	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
+	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
+	dprequest "github.com/ONSdigital/dp-net/request"
+
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation/mock"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	. "github.com/smartystreets/goconvey/convey"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 var (
 	dummyEntityData = &permissions.EntityData{UserID: "fred"}
 	permission      = "dataset.read"
+	dummyServiveTokenEntityData = &permissions.EntityData{UserID: "bilbo.baggins@bilbo-baggins.io"}
+	zebedeeIdentity = &mock.ZebedeeClientMock{
+		CheckTokenIdentityFunc: func(ctx context.Context, token string) (*dprequest.IdentityResponse, error) {
+			return &dprequest.IdentityResponse{
+				Identifier: "bilbo.baggins@bilbo-baggins.io",
+			}, nil
+		},
+	}
+	trimmedToken = strings.TrimPrefix(authorisationtest.AdminJWTToken, "Bearer ")
 )
 
 type mockHandler struct {
@@ -29,7 +43,7 @@ func TestMiddleware_Require(t *testing.T) {
 	Convey("Given a request with a valid JWT token that has the required permissions", t, func() {
 		response := httptest.NewRecorder()
 		request := httptest.NewRequest(http.MethodGet, "https://the-url.com", nil)
-		request.Header.Set("Authorization", "Bearer 1234")
+		request.Header.Set("Authorization", authorisationtest.AdminJWTToken)
 		mockHandler := &mockHandler{calls: 0}
 		jwtParser := newMockJWTParser()
 
@@ -39,7 +53,7 @@ func TestMiddleware_Require(t *testing.T) {
 			},
 		}
 
-		middleware := authorisation.NewMiddlewareFromDependencies(jwtParser, permissionsChecker)
+		middleware := authorisation.NewMiddlewareFromDependencies(jwtParser, permissionsChecker, zebedeeIdentity)
 		middlewareFunc := middleware.Require(permission, mockHandler.ServeHTTP)
 
 		Convey("When the middleware function is called", func() {
@@ -47,7 +61,7 @@ func TestMiddleware_Require(t *testing.T) {
 
 			Convey("Then the JWT parser is called as expected", func() {
 				So(jwtParser.ParseCalls(), ShouldHaveLength, 1)
-				So(jwtParser.ParseCalls()[0].TokenString, ShouldEqual, "1234")
+				So(jwtParser.ParseCalls()[0].TokenString, ShouldEqual, trimmedToken)
 			})
 
 			Convey("Then the permissions checker is called as expected", func() {
@@ -74,7 +88,7 @@ func TestMiddleware_Require_NoAuthHeader(t *testing.T) {
 		mockHandler := &mockHandler{calls: 0}
 		jwtParser := &mock.JWTParserMock{}
 		permissionsChecker := &mock.PermissionsCheckerMock{}
-		middleware := authorisation.NewMiddlewareFromDependencies(jwtParser, permissionsChecker)
+		middleware := authorisation.NewMiddlewareFromDependencies(jwtParser, permissionsChecker, zebedeeIdentity)
 		middlewareFunc := middleware.Require(permission, mockHandler.ServeHTTP)
 
 		Convey("When the middleware function is called", func() {
@@ -102,10 +116,10 @@ func TestMiddleware_Require_JWTParseError(t *testing.T) {
 
 		response := httptest.NewRecorder()
 		request := httptest.NewRequest(http.MethodGet, "https://the-url.com", nil)
-		request.Header.Set("Authorization", "Bearer 1234")
+		request.Header.Set("Authorization", authorisationtest.AdminJWTToken)
 		mockHandler := &mockHandler{calls: 0}
 		permissionsChecker := &mock.PermissionsCheckerMock{}
-		middleware := authorisation.NewMiddlewareFromDependencies(jwtParser, permissionsChecker)
+		middleware := authorisation.NewMiddlewareFromDependencies(jwtParser, permissionsChecker, zebedeeIdentity)
 		middlewareFunc := middleware.Require(permission, mockHandler.ServeHTTP)
 
 		Convey("When the middleware function is called", func() {
@@ -113,7 +127,7 @@ func TestMiddleware_Require_JWTParseError(t *testing.T) {
 
 			Convey("Then the JWT parser is called as expected", func() {
 				So(jwtParser.ParseCalls(), ShouldHaveLength, 1)
-				So(jwtParser.ParseCalls()[0].TokenString, ShouldEqual, "1234")
+				So(jwtParser.ParseCalls()[0].TokenString, ShouldEqual, trimmedToken)
 			})
 
 			Convey("Then the underlying HTTP handler is not called", func() {
@@ -138,10 +152,10 @@ func TestMiddleware_Require_PermissionsCheckerError(t *testing.T) {
 
 		response := httptest.NewRecorder()
 		request := httptest.NewRequest(http.MethodGet, "https://the-url.com", nil)
-		request.Header.Set("Authorization", "Bearer 1234")
+		request.Header.Set("Authorization", authorisationtest.AdminJWTToken)
 		mockHandler := &mockHandler{calls: 0}
 		jwtParser := newMockJWTParser()
-		middleware := authorisation.NewMiddlewareFromDependencies(jwtParser, permissionsChecker)
+		middleware := authorisation.NewMiddlewareFromDependencies(jwtParser, permissionsChecker, zebedeeIdentity)
 		middlewareFunc := middleware.Require(permission, mockHandler.ServeHTTP)
 
 		Convey("When the middleware function is called", func() {
@@ -149,7 +163,7 @@ func TestMiddleware_Require_PermissionsCheckerError(t *testing.T) {
 
 			Convey("Then the JWT parser is called as expected", func() {
 				So(jwtParser.ParseCalls(), ShouldHaveLength, 1)
-				So(jwtParser.ParseCalls()[0].TokenString, ShouldEqual, "1234")
+				So(jwtParser.ParseCalls()[0].TokenString, ShouldEqual, trimmedToken)
 			})
 
 			Convey("Then the permissions checker is called as expected", func() {
@@ -179,10 +193,10 @@ func TestMiddleware_Require_PermissionDenied(t *testing.T) {
 
 		response := httptest.NewRecorder()
 		request := httptest.NewRequest(http.MethodGet, "https://the-url.com", nil)
-		request.Header.Set("Authorization", "Bearer 1234")
+		request.Header.Set("Authorization", authorisationtest.AdminJWTToken)
 		mockHandler := &mockHandler{calls: 0}
 		jwtParser := newMockJWTParser()
-		middleware := authorisation.NewMiddlewareFromDependencies(jwtParser, permissionsChecker)
+		middleware := authorisation.NewMiddlewareFromDependencies(jwtParser, permissionsChecker, zebedeeIdentity)
 		middlewareFunc := middleware.Require(permission, mockHandler.ServeHTTP)
 
 		Convey("When the middleware function is called", func() {
@@ -190,13 +204,126 @@ func TestMiddleware_Require_PermissionDenied(t *testing.T) {
 
 			Convey("Then the JWT parser is called as expected", func() {
 				So(jwtParser.ParseCalls(), ShouldHaveLength, 1)
-				So(jwtParser.ParseCalls()[0].TokenString, ShouldEqual, "1234")
+				So(jwtParser.ParseCalls()[0].TokenString, ShouldEqual, trimmedToken)
 			})
 
 			Convey("Then the permissions checker is called as expected", func() {
 				So(permissionsChecker.HasPermissionCalls(), ShouldHaveLength, 1)
 				So(permissionsChecker.HasPermissionCalls()[0].Permission, ShouldEqual, permission)
 				So(permissionsChecker.HasPermissionCalls()[0].EntityData, ShouldResemble, *dummyEntityData)
+			})
+
+			Convey("Then the underlying HTTP handler is not called", func() {
+				So(mockHandler.calls, ShouldEqual, 0)
+			})
+
+			Convey("Then the response code should be 403 forbidden", func() {
+				So(response.Code, ShouldEqual, http.StatusForbidden)
+			})
+		})
+	})	
+}
+
+func TestMiddleware_ServiceTokenUser_SuccessfullyAuthorised(t *testing.T) {
+	Convey("Given the permission check returns true", t, func() {
+		permissionsChecker := &mock.PermissionsCheckerMock{
+			HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
+				return true, nil
+			},
+		}
+
+		response := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, "https://the-url.com", nil)
+		request.Header.Set("Authorization", authorisationtest.ZebedeeServiceToken)
+		mockHandler := &mockHandler{calls: 0}
+		jwtParser := newMockJWTParser()
+		middleware := authorisation.NewMiddlewareFromDependencies(jwtParser, permissionsChecker, zebedeeIdentity)
+		middlewareFunc := middleware.Require(permission, mockHandler.ServeHTTP)
+
+		Convey("When the middleware function is called", func() {
+			middlewareFunc(response, request)
+
+			Convey("Then the permissions checker is called as expected", func() {
+				So(permissionsChecker.HasPermissionCalls(), ShouldHaveLength, 1)
+				So(permissionsChecker.HasPermissionCalls()[0].Permission, ShouldEqual, permission)
+				So(permissionsChecker.HasPermissionCalls()[0].EntityData, ShouldResemble, *dummyServiveTokenEntityData)
+			})
+
+			Convey("Then the underlying HTTP handler is called as expected", func() {
+				So(mockHandler.calls, ShouldEqual, 1)
+			})
+
+			Convey("Then the response code should be 200", func() {
+				So(response.Code, ShouldEqual, http.StatusOK)
+			})
+		})
+	})
+}
+
+func TestMiddleware_ServiceTokenUser_AuthorisationDenied(t *testing.T) {
+	Convey("Given the permission check returns false", t, func() {
+		permissionsChecker := &mock.PermissionsCheckerMock{
+			HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
+				return false, nil
+			},
+		}
+
+		response := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, "https://the-url.com", nil)
+		request.Header.Set("Authorization", authorisationtest.ZebedeeServiceToken)
+		mockHandler := &mockHandler{calls: 0}
+		jwtParser := newMockJWTParser()
+		middleware := authorisation.NewMiddlewareFromDependencies(jwtParser, permissionsChecker, zebedeeIdentity)
+		middlewareFunc := middleware.Require(permission, mockHandler.ServeHTTP)
+
+		Convey("When the middleware function is called", func() {
+			middlewareFunc(response, request)
+
+			Convey("Then the permissions checker is called as expected", func() {
+				So(permissionsChecker.HasPermissionCalls(), ShouldHaveLength, 1)
+				So(permissionsChecker.HasPermissionCalls()[0].Permission, ShouldEqual, permission)
+				So(permissionsChecker.HasPermissionCalls()[0].EntityData, ShouldResemble, *dummyServiveTokenEntityData)
+			})
+
+			Convey("Then the underlying HTTP handler is not called", func() {
+				So(mockHandler.calls, ShouldEqual, 0)
+			})
+
+			Convey("Then the response code should be 403 forbidden", func() {
+				So(response.Code, ShouldEqual, http.StatusForbidden)
+			})
+		})
+	})
+}
+
+
+func TestMiddleware_ServiceTokenUser_ZebedeeIdentityVerificationError(t *testing.T) {
+	Convey("Given the permission check returns false", t, func() {
+		permissionsChecker := &mock.PermissionsCheckerMock{
+			HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
+				return true, nil
+			},
+		}
+
+		zebedeeIdentity = &mock.ZebedeeClientMock{
+			CheckTokenIdentityFunc: func(ctx context.Context, token string) (*dprequest.IdentityResponse, error) {
+				return nil, errors.New("service token not valid")
+			},
+		}
+
+		response := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, "https://the-url.com", nil)
+		request.Header.Set("Authorization", authorisationtest.ZebedeeServiceToken)
+		mockHandler := &mockHandler{calls: 0}
+		jwtParser := newMockJWTParser()
+		middleware := authorisation.NewMiddlewareFromDependencies(jwtParser, permissionsChecker, zebedeeIdentity)
+		middlewareFunc := middleware.Require(permission, mockHandler.ServeHTTP)
+
+		Convey("When the middleware function is called", func() {
+			middlewareFunc(response, request)
+
+			Convey("Then the JWT parser is called as expected", func() {
+				So(jwtParser.ParseCalls(), ShouldHaveLength, 0)
 			})
 
 			Convey("Then the underlying HTTP handler is not called", func() {
