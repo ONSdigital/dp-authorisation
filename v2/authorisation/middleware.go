@@ -16,7 +16,6 @@ import (
 )
 
 const (
-	jwtIdentifier = "JWT"
 	chunkSize = 3
 )
 
@@ -121,7 +120,7 @@ func (m PermissionCheckMiddleware) Require(permission string, handlerFunc http.H
 			entityData = &permissions.EntityData{}
 			err error
 		)
-		if headerData.Typ == jwtIdentifier {
+		if headerData.Kid != "" {
 			entityData, err = m.jwtParser.Parse(authToken)
 			if err != nil {
 				logData["message"] = err.Error()
