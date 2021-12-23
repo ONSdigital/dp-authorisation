@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ONSdigital/dp-api-clients-go/headers"
 	"github.com/ONSdigital/dp-authorisation/v2/jwt"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	"github.com/ONSdigital/dp-authorisation/v2/zebedeeclient"
@@ -17,9 +18,10 @@ import (
 
 const (
 	chunkSize = 3
+	collectionIdAttributeKey = "collection_id"
 )
 
-type tokenHeaderData struct{
+type tokenHeaderData struct {
 	Kid string `json:"kid"`
 	Alg string `json:"alg"`
 	Typ string `json:"typ"`
@@ -101,14 +103,14 @@ func (m PermissionCheckMiddleware) Require(permission string, handlerFunc http.H
 		// is the token of the form xxx.yyy.zzz (i.e. JWT)?
 		if len(chunks) == chunkSize {
 			sDec, decodeErr := b64.StdEncoding.DecodeString(chunks[0])
-			if decodeErr != nil {	
+			if decodeErr != nil {
 				log.Error(ctx, "authorisation failed due to issue decoding authorisation token", decodeErr, logData)
 				w.WriteHeader(http.StatusForbidden)
 				return
 			}
-	
+
 			unmarshalError := json.Unmarshal(sDec, &headerData)
-			if unmarshalError != nil {	
+			if unmarshalError != nil {
 				log.Error(ctx, "authorisation failed due to issue unmarshalling header data", unmarshalError, logData)
 				w.WriteHeader(http.StatusForbidden)
 				return
@@ -125,7 +127,7 @@ func (m PermissionCheckMiddleware) Require(permission string, handlerFunc http.H
 			if err != nil {
 				logData["message"] = err.Error()
 				log.Error(ctx, "authorisation failed due to jwt parsing issue", err, logData)
-				w.WriteHeader(http.StatusForbidden) 
+				w.WriteHeader(http.StatusForbidden)
 				return
 			}
 		} else {
@@ -140,7 +142,14 @@ func (m PermissionCheckMiddleware) Require(permission string, handlerFunc http.H
 			entityData.UserID = zebedeeIdentityResponse.Identifier
 		}
 
-		hasPermission, err := m.permissionsChecker.HasPermission(req.Context(), *entityData, permission, nil)
+		attributes := map[string]string{}
+
+		collectionIdAttribute, _ := headers.GetCollectionID(req)
+		if collectionIdAttribute != "" {
+			attributes[collectionIdAttributeKey] = collectionIdAttribute
+		}
+
+		hasPermission, err := m.permissionsChecker.HasPermission(req.Context(), *entityData, permission, attributes)
 		if err != nil {
 			log.Error(ctx, "authorisation failed due to permissions lookup error", err, logData)
 			w.WriteHeader(http.StatusInternalServerError)

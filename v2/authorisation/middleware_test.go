@@ -18,8 +18,9 @@ import (
 )
 
 var (
-	dummyEntityData = &permissions.EntityData{UserID: "fred"}
-	permission      = "dataset.read"
+	dummyEntityData             = &permissions.EntityData{UserID: "fred"}
+	dummyAttributesData         = &map[string]string{"collection_id": "some-collection_id-uuid"}
+	permission                  = "dataset.read"
 	dummyServiveTokenEntityData = &permissions.EntityData{UserID: "bilbo.baggins@bilbo-baggins.io"}
 	zebedeeIdentity = &mock.ZebedeeClientMock{
 		CheckTokenIdentityFunc: func(ctx context.Context, token string) (*dprequest.IdentityResponse, error) {
@@ -44,6 +45,7 @@ func TestMiddleware_Require(t *testing.T) {
 		response := httptest.NewRecorder()
 		request := httptest.NewRequest(http.MethodGet, "https://the-url.com", nil)
 		request.Header.Set("Authorization", authorisationtest.AdminJWTToken)
+		request.Header.Set("Collection-Id", (*dummyAttributesData)["collection_id"])
 		mockHandler := &mockHandler{calls: 0}
 		jwtParser := newMockJWTParser()
 
@@ -68,6 +70,7 @@ func TestMiddleware_Require(t *testing.T) {
 				So(permissionsChecker.HasPermissionCalls(), ShouldHaveLength, 1)
 				So(permissionsChecker.HasPermissionCalls()[0].Permission, ShouldEqual, permission)
 				So(permissionsChecker.HasPermissionCalls()[0].EntityData, ShouldResemble, *dummyEntityData)
+				So(permissionsChecker.HasPermissionCalls()[0].Attributes, ShouldResemble, *dummyAttributesData)
 			})
 
 			Convey("Then the underlying HTTP handler is called as expected", func() {
@@ -100,6 +103,49 @@ func TestMiddleware_Require_NoAuthHeader(t *testing.T) {
 
 			Convey("Then the response code should be 403 forbidden", func() {
 				So(response.Code, ShouldEqual, http.StatusForbidden)
+			})
+		})
+	})
+}
+
+func TestMiddleware_Require_NoCollectionIdHeader(t *testing.T) {
+	Convey("Given a request with a valid JWT token that has the required permissions And no collection_id header", t, func() {
+		response := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, "https://the-url.com", nil)
+		request.Header.Set("Authorization", authorisationtest.AdminJWTToken)
+		mockHandler := &mockHandler{calls: 0}
+		jwtParser := newMockJWTParser()
+
+		permissionsChecker := &mock.PermissionsCheckerMock{
+			HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
+				return true, nil
+			},
+		}
+
+		middleware := authorisation.NewMiddlewareFromDependencies(jwtParser, permissionsChecker, zebedeeIdentity)
+		middlewareFunc := middleware.Require(permission, mockHandler.ServeHTTP)
+
+		Convey("When the middleware function is called", func() {
+			middlewareFunc(response, request)
+
+			Convey("Then the JWT parser is called as expected", func() {
+				So(jwtParser.ParseCalls(), ShouldHaveLength, 1)
+				So(jwtParser.ParseCalls()[0].TokenString, ShouldEqual, trimmedToken)
+			})
+
+			Convey("Then the permissions checker is called as expected", func() {
+				So(permissionsChecker.HasPermissionCalls(), ShouldHaveLength, 1)
+				So(permissionsChecker.HasPermissionCalls()[0].Permission, ShouldEqual, permission)
+				So(permissionsChecker.HasPermissionCalls()[0].EntityData, ShouldResemble, *dummyEntityData)
+				So(permissionsChecker.HasPermissionCalls()[0].Attributes, ShouldResemble, map[string]string{})
+			})
+
+			Convey("Then the underlying HTTP handler is called as expected", func() {
+				So(mockHandler.calls, ShouldEqual, 1)
+			})
+
+			Convey("Then the response code should be 200", func() {
+				So(response.Code, ShouldEqual, http.StatusOK)
 			})
 		})
 	})
@@ -221,7 +267,7 @@ func TestMiddleware_Require_PermissionDenied(t *testing.T) {
 				So(response.Code, ShouldEqual, http.StatusForbidden)
 			})
 		})
-	})	
+	})
 }
 
 func TestMiddleware_ServiceTokenUser_SuccessfullyAuthorised(t *testing.T) {
@@ -295,7 +341,6 @@ func TestMiddleware_ServiceTokenUser_AuthorisationDenied(t *testing.T) {
 		})
 	})
 }
-
 
 func TestMiddleware_ServiceTokenUser_ZebedeeIdentityVerificationError(t *testing.T) {
 	Convey("Given the permission check returns false", t, func() {
