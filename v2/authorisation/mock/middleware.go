@@ -30,6 +30,9 @@ var _ authorisation.Middleware = &MiddlewareMock{}
 // 			RequireFunc: func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
 // 				panic("mock out the Require method")
 // 			},
+// 			RequireWithAttributesFunc: func(permission string, handlerFunc http.HandlerFunc, getAttributes authorisation.GetAttributesFromRequest) http.HandlerFunc {
+// 				panic("mock out the RequireWithAttributes method")
+// 			},
 // 		}
 //
 // 		// use mockedMiddleware in code that requires authorisation.Middleware
@@ -45,6 +48,9 @@ type MiddlewareMock struct {
 
 	// RequireFunc mocks the Require method.
 	RequireFunc func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc
+
+	// RequireWithAttributesFunc mocks the RequireWithAttributes method.
+	RequireWithAttributesFunc func(permission string, handlerFunc http.HandlerFunc, getAttributes authorisation.GetAttributesFromRequest) http.HandlerFunc
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -67,10 +73,20 @@ type MiddlewareMock struct {
 			// HandlerFunc is the handlerFunc argument value.
 			HandlerFunc http.HandlerFunc
 		}
+		// RequireWithAttributes holds details about calls to the RequireWithAttributes method.
+		RequireWithAttributes []struct {
+			// Permission is the permission argument value.
+			Permission string
+			// HandlerFunc is the handlerFunc argument value.
+			HandlerFunc http.HandlerFunc
+			// GetAttributes is the getAttributes argument value.
+			GetAttributes authorisation.GetAttributesFromRequest
+		}
 	}
-	lockClose       sync.RWMutex
-	lockHealthCheck sync.RWMutex
-	lockRequire     sync.RWMutex
+	lockClose                 sync.RWMutex
+	lockHealthCheck           sync.RWMutex
+	lockRequire               sync.RWMutex
+	lockRequireWithAttributes sync.RWMutex
 }
 
 // Close calls CloseFunc.
@@ -171,5 +187,44 @@ func (mock *MiddlewareMock) RequireCalls() []struct {
 	mock.lockRequire.RLock()
 	calls = mock.calls.Require
 	mock.lockRequire.RUnlock()
+	return calls
+}
+
+// RequireWithAttributes calls RequireWithAttributesFunc.
+func (mock *MiddlewareMock) RequireWithAttributes(permission string, handlerFunc http.HandlerFunc, getAttributes authorisation.GetAttributesFromRequest) http.HandlerFunc {
+	if mock.RequireWithAttributesFunc == nil {
+		panic("MiddlewareMock.RequireWithAttributesFunc: method is nil but Middleware.RequireWithAttributes was just called")
+	}
+	callInfo := struct {
+		Permission    string
+		HandlerFunc   http.HandlerFunc
+		GetAttributes authorisation.GetAttributesFromRequest
+	}{
+		Permission:    permission,
+		HandlerFunc:   handlerFunc,
+		GetAttributes: getAttributes,
+	}
+	mock.lockRequireWithAttributes.Lock()
+	mock.calls.RequireWithAttributes = append(mock.calls.RequireWithAttributes, callInfo)
+	mock.lockRequireWithAttributes.Unlock()
+	return mock.RequireWithAttributesFunc(permission, handlerFunc, getAttributes)
+}
+
+// RequireWithAttributesCalls gets all the calls that were made to RequireWithAttributes.
+// Check the length with:
+//     len(mockedMiddleware.RequireWithAttributesCalls())
+func (mock *MiddlewareMock) RequireWithAttributesCalls() []struct {
+	Permission    string
+	HandlerFunc   http.HandlerFunc
+	GetAttributes authorisation.GetAttributesFromRequest
+} {
+	var calls []struct {
+		Permission    string
+		HandlerFunc   http.HandlerFunc
+		GetAttributes authorisation.GetAttributesFromRequest
+	}
+	mock.lockRequireWithAttributes.RLock()
+	calls = mock.calls.RequireWithAttributes
+	mock.lockRequireWithAttributes.RUnlock()
 	return calls
 }

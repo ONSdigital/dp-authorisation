@@ -2,8 +2,9 @@ package authorisation
 
 import (
 	"context"
-	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"net/http"
+
+	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 )
 
 // NoopMiddleware provides a middleware implementation that does not do any permissions checking.
@@ -12,6 +13,13 @@ type NoopMiddleware struct{}
 // NewNoopMiddleware creates a new instance of NoopMiddleware.
 func NewNoopMiddleware() *NoopMiddleware {
 	return &NoopMiddleware{}
+}
+
+// RequireWithAttributes wraps an existing handler. The Noop implementation just calls the underlying handler.
+func (m NoopMiddleware) RequireWithAttributes(permission string, handlerFunc http.HandlerFunc, getAttributesFunc GetAttributesFromRequest) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		handlerFunc(w, req)
+	}
 }
 
 // Require wraps an existing handler. The Noop implementation just calls the underlying handler.
