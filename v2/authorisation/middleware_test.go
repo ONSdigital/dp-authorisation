@@ -40,6 +40,63 @@ func (m *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m.calls++
 }
 
+type mockAttributes struct {
+	attributes map[string]string
+	calls      int
+}
+
+func (m *mockAttributes) GetAttributes(req *http.Request) (attributes map[string]string, err error) {
+	m.calls++
+	return m.attributes, nil
+}
+
+func TestMiddleware_RequireWithAttributes(t *testing.T) {
+	Convey("Given a request with a valid JWT token and collection_id header that have the required permissions", t, func() {
+		response := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, "https://the-url.com", nil)
+		request.Header.Set("Authorization", authorisationtest.AdminJWTToken)
+		mockHandler := &mockHandler{calls: 0}
+		mockJWTParser := newMockJWTParser()
+		mockAttributes := mockAttributes{attributes: *dummyAttributesData, calls: 0}
+		permissionsChecker := &mock.PermissionsCheckerMock{
+			HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
+				return true, nil
+			},
+		}
+
+		middleware := authorisation.NewMiddlewareFromDependencies(mockJWTParser, permissionsChecker, zebedeeIdentity)
+		middlewareFunc := middleware.RequireWithAttributes(permission, mockHandler.ServeHTTP, mockAttributes.GetAttributes)
+
+		Convey("When the middleware function is called", func() {
+			middlewareFunc(response, request)
+
+			Convey("Then the JWT parser is called as expected", func() {
+				So(mockJWTParser.ParseCalls(), ShouldHaveLength, 1)
+				So(mockJWTParser.ParseCalls()[0].TokenString, ShouldEqual, trimmedToken)
+			})
+
+			Convey("Then the request attributes func is called as expected", func() {
+				So(mockAttributes.calls, ShouldEqual, 1)
+			})
+
+			Convey("Then the permissions checker is called as expected", func() {
+				So(permissionsChecker.HasPermissionCalls(), ShouldHaveLength, 1)
+				So(permissionsChecker.HasPermissionCalls()[0].Permission, ShouldEqual, permission)
+				So(permissionsChecker.HasPermissionCalls()[0].EntityData, ShouldResemble, *dummyEntityData)
+				So(permissionsChecker.HasPermissionCalls()[0].Attributes, ShouldResemble, *dummyAttributesData)
+			})
+
+			Convey("Then the underlying HTTP handler is called as expected", func() {
+				So(mockHandler.calls, ShouldEqual, 1)
+			})
+
+			Convey("Then the response code should be 200", func() {
+				So(response.Code, ShouldEqual, http.StatusOK)
+			})
+		})
+	})
+}
+
 func TestMiddleware_Require(t *testing.T) {
 	Convey("Given a request with a valid JWT token that has the required permissions", t, func() {
 		response := httptest.NewRecorder()
