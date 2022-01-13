@@ -34,6 +34,11 @@ type PermissionCheckMiddleware struct {
 	zebedeeClient      ZebedeeClient
 }
 
+// GetAttributesFromRequest defines the func that retrieves and returns attributes from the request. Used by
+// RequireWithAttributes. Use an implementation provided within this package or alternatively use a custom
+// implementation that meets your requirements.
+type GetAttributesFromRequest func(req *http.Request) (attributes map[string]string, err error)
+
 // NewFeatureFlaggedMiddleware returns a different Middleware implementation depending on the configured feature flag value
 // Use this constructor when first adding authorisation as middleware so that it can be toggled off if required.
 func NewFeatureFlaggedMiddleware(ctx context.Context, config *Config) (Middleware, error) {
@@ -77,9 +82,9 @@ func NewMiddlewareFromConfig(ctx context.Context, config *Config) (*PermissionCh
 	return NewMiddlewareFromDependencies(jwtParser, permissionsChecker, zebedeeClient), nil
 }
 
-// Require wraps an existing handler, only allowing it to be called if the request is
-// authorised against the given permission.
-func (m PermissionCheckMiddleware) Require(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
+// RequireWithAttributes wraps an existing handler, only allowing it to be called if the request is
+// authorised against the given permission. Includes any attributes returned by getAttributes in the permission check.
+func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, handlerFunc http.HandlerFunc, getAttributes GetAttributesFromRequest) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 		logData := log.Data{
@@ -142,11 +147,14 @@ func (m PermissionCheckMiddleware) Require(permission string, handlerFunc http.H
 			entityData.UserID = zebedeeIdentityResponse.Identifier
 		}
 
-		attributes := map[string]string{}
-
-		collectionIdAttribute, _ := headers.GetCollectionID(req)
-		if collectionIdAttribute != "" {
-			attributes[collectionIdAttributeKey] = collectionIdAttribute
+		var attributes map[string]string
+		if getAttributes != nil {
+			attributes, err = getAttributes(req)
+			if err != nil {
+				log.Error(ctx, "authorisation failed due to request attributes retrieval error", err, logData)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 		}
 
 		hasPermission, err := m.permissionsChecker.HasPermission(req.Context(), *entityData, permission, attributes)
@@ -166,6 +174,12 @@ func (m PermissionCheckMiddleware) Require(permission string, handlerFunc http.H
 	}
 }
 
+// Require wraps an existing handler, only allowing it to be called if the request is
+// authorised against the given permission. Calls method RequireWithAttributes() with nil getAttributes
+func (m PermissionCheckMiddleware) Require(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
+	return m.RequireWithAttributes(permission, handlerFunc, nil)
+}
+
 // Close resources used by the middleware.
 func (m PermissionCheckMiddleware) Close(ctx context.Context) error {
 	return m.permissionsChecker.Close(ctx)
@@ -174,4 +188,18 @@ func (m PermissionCheckMiddleware) Close(ctx context.Context) error {
 // HealthCheck updates the health status of the permissions checker
 func (m PermissionCheckMiddleware) HealthCheck(ctx context.Context, state *health.CheckState) error {
 	return m.permissionsChecker.HealthCheck(ctx, state)
+}
+
+// GetCollectionIdAttribute provides an implementation of GetAttributesFromRequest. Retrieves and returns
+// header 'Collection-Id' from the request if it exists, otherwise returns an empty map. Never returns an
+// error as the header is not mandatory
+func GetCollectionIdAttribute(req *http.Request) (map[string]string, error) {
+	attributes := make(map[string]string, 0)
+
+	collectionIdAttribute, _ := headers.GetCollectionID(req)
+	if collectionIdAttribute != "" {
+		attributes[collectionIdAttributeKey] = collectionIdAttribute
+	}
+
+	return attributes, nil
 }

@@ -18,6 +18,7 @@ import (
 // Middleware represents the high level interface for authorisation middleware
 type Middleware interface {
 	Require(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc
+	RequireWithAttributes(permission string, handlerFunc http.HandlerFunc, getAttributes GetAttributesFromRequest) http.HandlerFunc
 	Close(ctx context.Context) error
 	HealthCheck(ctx context.Context, state *health.CheckState) error
 }
