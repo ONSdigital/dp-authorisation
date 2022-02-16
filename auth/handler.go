@@ -74,6 +74,7 @@ func NewHandler(requestBuilder GetPermissionsRequestBuilder, permissionsClient C
 // permissions then the wrapped handler is NOT called and the appropriate HTTP error status is returned.
 func (h *Handler) Require(required Permissions, handler http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		fmt.Println("inside the require authentication validator")
 		ctx := req.Context()
 		logD := log.Data{"requested_uri": req.URL.RequestURI()}
 
