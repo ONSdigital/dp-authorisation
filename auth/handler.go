@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/ONSdigital/log.go/v2/log"
@@ -79,24 +78,18 @@ func (h *Handler) Require(required Permissions, handler http.HandlerFunc) http.H
 
 		getPermissionsRequest, err := h.requestBuilder.NewPermissionsRequest(req)
 		if err != nil {
-			fmt.Printf("in Require - error from NewPermissionsRequest %s", err.Error())
-			fmt.Printf("details of the request %s", req.Header.Get("Authorization"))
 			handleAuthoriseError(req.Context(), err, w, logD)
 			return
 		}
 
 		permissions, err := h.permissionsClient.GetPermissions(ctx, getPermissionsRequest)
 		if err != nil {
-			fmt.Printf("in Require - error from GetPermissions %s", err.Error())
-			fmt.Printf("details of the request %s", req.Header.Get("Authorization"))
 			handleAuthoriseError(req.Context(), err, w, logD)
 			return
 		}
 
 		err = h.permissionsVerifier.CheckAuthorisation(ctx, permissions, &required)
 		if err != nil {
-			fmt.Printf("in Require - error from CheckAuthorisation %s", err.Error())
-			fmt.Printf("details of the request %s", req.Header.Get("Authorization"))
 			handleAuthoriseError(req.Context(), err, w, logD)
 			return
 		}
