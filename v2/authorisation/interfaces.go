@@ -21,6 +21,7 @@ type Middleware interface {
 	RequireWithAttributes(permission string, handlerFunc http.HandlerFunc, getAttributes GetAttributesFromRequest) http.HandlerFunc
 	Close(ctx context.Context) error
 	HealthCheck(ctx context.Context, state *health.CheckState) error
+	IdentityHealthCheck(ctx context.Context, state *health.CheckState) error
 }
 
 // JWTParser takes a raw JWT token string, verifying it and extracting the required entity data.
@@ -39,7 +40,7 @@ type PermissionsChecker interface {
 	HealthCheck(ctx context.Context, state *health.CheckState) error
 }
 
-// ValidateToken validates old world token
+// ZebedeeClient validates old world token
 type ZebedeeClient interface {
 	CheckTokenIdentity(ctx context.Context, token string) (*dprequest.IdentityResponse, error)
 }

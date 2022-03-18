@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/ONSdigital/dp-api-clients-go/headers"
+	"github.com/ONSdigital/dp-authorisation/v2/identityclient"
 	"github.com/ONSdigital/dp-authorisation/v2/jwt"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	"github.com/ONSdigital/dp-authorisation/v2/zebedeeclient"
@@ -17,14 +18,15 @@ import (
 )
 
 const (
-	chunkSize = 3
+	chunkSize                = 3
 	collectionIdAttributeKey = "collection_id"
+	IdentityClientError      = "identity client cannot be nil"
 )
 
 type tokenHeaderData struct {
 	Kid string `json:"kid"`
 	Alg string `json:"alg"`
-	Typ string `json:"typ"`
+	Typ string `json:"typ"`	
 }
 
 // PermissionCheckMiddleware is used to wrap HTTP handlers with JWT token based authorisation
@@ -32,6 +34,7 @@ type PermissionCheckMiddleware struct {
 	jwtParser          JWTParser
 	permissionsChecker PermissionsChecker
 	zebedeeClient      ZebedeeClient
+	IdentityClient     *identityclient.IdentityClient
 }
 
 // GetAttributesFromRequest defines the func that retrieves and returns attributes from the request. Used by
@@ -41,34 +44,47 @@ type GetAttributesFromRequest func(req *http.Request) (attributes map[string]str
 
 // NewFeatureFlaggedMiddleware returns a different Middleware implementation depending on the configured feature flag value
 // Use this constructor when first adding authorisation as middleware so that it can be toggled off if required.
-func NewFeatureFlaggedMiddleware(ctx context.Context, config *Config) (Middleware, error) {
+func NewFeatureFlaggedMiddleware(ctx context.Context, config *Config, jwtRSAPublicKeys map[string]string) (Middleware, error) {
 	if config.Enabled {
-		return NewMiddlewareFromConfig(ctx, config)
+		return NewMiddlewareFromConfig(ctx, config, jwtRSAPublicKeys)
 	}
 
 	return NewNoopMiddleware(), nil
 }
 
 // NewMiddlewareFromDependencies creates a new instance of PermissionCheckMiddleware, using injected dependencies
-func NewMiddlewareFromDependencies(jwtParser JWTParser, permissionsChecker PermissionsChecker, zebedeeClient ZebedeeClient) *PermissionCheckMiddleware {
+func NewMiddlewareFromDependencies(jwtParser JWTParser, permissionsChecker PermissionsChecker, zebedeeClient ZebedeeClient, identityClient *identityclient.IdentityClient) *PermissionCheckMiddleware {
 	return &PermissionCheckMiddleware{
 		jwtParser:          jwtParser,
 		permissionsChecker: permissionsChecker,
 		zebedeeClient:      zebedeeClient,
+		IdentityClient: 	identityClient,
 	}
 }
 
 // NewMiddlewareFromConfig creates a new instance of PermissionCheckMiddleware, instantiating the required dependencies from
 // the given configuration values.
 //
-// This constructor uses default dependencies - the Cognito specific JWT parser, and caching permissions checker.
+// This constructor uses default dependencies - the Cognito specific JWT parser, caching permissions checker and JWT RSA public signing keys (optional)
 // If different dependencies are required, use the NewMiddlewareFromDependencies constructor.
-func NewMiddlewareFromConfig(ctx context.Context, config *Config) (*PermissionCheckMiddleware, error) {
-	jwtParser, err := jwt.NewCognitoRSAParser(config.JWTVerificationPublicKeys)
+func NewMiddlewareFromConfig(ctx context.Context, config *Config, jwtRSAPublicKeys map[string]string) (*PermissionCheckMiddleware, error) {
+	// identity client retrieves jwt keys from identity service
+	identityClient, err := identityclient.NewIdentityClient(config.IdentityWebKeySetURL, config.IdentityClientMaxRetries)
 	if err != nil {
 		return nil, err
 	}
 
+	// get the JWT verification keys - from identity service initially or configs as a fall back
+	err = identityClient.GetJWTVerificationKeys(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	jwtParser, err := NewCognitoRSAParser(jwtRSAPublicKeys, identityClient.JWTKeys)
+	if err != nil {
+		return nil, err
+	}
+	
 	permissionsChecker := permissions.NewChecker(
 		ctx,
 		config.PermissionsAPIURL,
@@ -79,7 +95,19 @@ func NewMiddlewareFromConfig(ctx context.Context, config *Config) (*PermissionCh
 
 	zebedeeClient := zebedeeclient.NewZebedeeClient(config.ZebedeeURL)
 
-	return NewMiddlewareFromDependencies(jwtParser, permissionsChecker, zebedeeClient), nil
+	return NewMiddlewareFromDependencies(jwtParser, permissionsChecker, zebedeeClient, identityClient), nil
+}
+
+// NewCognitoRSAParser returns a CognitoRSAParser with correct RSA Public Signing Keys set
+func NewCognitoRSAParser(jwtRSAPublicKeys, identityClientKeys map[string]string) (*jwt.CognitoRSAParser, error) {
+	// If the keys passed to the constructor, use those, else use identityClient.JWTKeys
+	var jwtRSAKeys map[string]string 
+	if jwtRSAPublicKeys != nil {
+		jwtRSAKeys = jwtRSAPublicKeys
+	} else {
+		jwtRSAKeys = identityClientKeys
+	}
+	return jwt.NewCognitoRSAParser(jwtRSAKeys)
 }
 
 // RequireWithAttributes wraps an existing handler, only allowing it to be called if the request is
@@ -102,7 +130,7 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 		authToken = strings.TrimPrefix(authToken, "Bearer ")
 
 		var (
-			chunks = strings.Split(authToken, ".")
+			chunks     = strings.Split(authToken, ".")
 			headerData = tokenHeaderData{}
 		)
 		// is the token of the form xxx.yyy.zzz (i.e. JWT)?
@@ -125,7 +153,7 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 		// process the token accordingly
 		var (
 			entityData = &permissions.EntityData{}
-			err error
+			err        error
 		)
 		if headerData.Kid != "" {
 			entityData, err = m.jwtParser.Parse(authToken)
@@ -188,6 +216,11 @@ func (m PermissionCheckMiddleware) Close(ctx context.Context) error {
 // HealthCheck updates the health status of the permissions checker
 func (m PermissionCheckMiddleware) HealthCheck(ctx context.Context, state *health.CheckState) error {
 	return m.permissionsChecker.HealthCheck(ctx, state)
+}
+
+// IdentityHealthCheck updates the health status of the jwt keys request against identity api
+func (m PermissionCheckMiddleware) IdentityHealthCheck(ctx context.Context, state *health.CheckState) error {
+	return m.IdentityClient.IdentityHealthCheck(ctx, state)
 }
 
 // GetCollectionIdAttribute provides an implementation of GetAttributesFromRequest. Retrieves and returns

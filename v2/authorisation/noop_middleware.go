@@ -38,3 +38,8 @@ func (m NoopMiddleware) Close(ctx context.Context) error {
 func (m NoopMiddleware) HealthCheck(ctx context.Context, state *health.CheckState) error {
 	return state.Update(health.StatusOK, "noop permissions check", 0)
 }
+
+// IdentityHealthCheck updates the health status of the jwt keys request against identity api
+func (m NoopMiddleware) IdentityHealthCheck(ctx context.Context, state *health.CheckState) error {
+	return state.Update(health.StatusOK, "noop jwt keys request", 0)
+}
