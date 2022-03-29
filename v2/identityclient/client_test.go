@@ -19,17 +19,17 @@ import (
 )
 
 const (
-	testURL                   = "www.dummytest.io"
-	errorString               = "this is an error"
-	testStatusOK              = 200
-	clientTypeReflection      = "*http.Client"
-	identityTypeReflection    = "*identityclient.IdentityClient"
-	testJWTPublicKeyAPIString = `{"GHB723n83jw=":"MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA0TpTemKodQNChMNj1f/NF19nM","HUHJ83nbs8h=":"MIICIjANBAbjKbwRENSKujO5iwXLIt0hCjh5dz4egKQo7KEr2ex3qdy50LWKD871gRfAgDoRD5/1kUUVqII5K09IDCVY/EohukrI+Uep/Z5ymPNPXXD1yJvBx/YmmuMGUAT5UKHKBCP+FcoAxYAKcaKhtL0iyVjhtD0Y4V8gcQnQq3bOYhF4FEHoHBNh23AKcJM1VvNVtSHViMuTOzsFLHAgy2lLsRLnxtXovEovAiTay+Sn1FuDOq2gswl2Uujh1GO8kfkXE1gNRn/l7RUYIRrql8kROHMSYvPBAIqYhGSWOG3JX1oFlI1erYaeIPI4l4Qj/P+YSnrRx0di3vy6ZDAnhs8kdZP81F+3rFrNUNIOVFBRKscMnvOH4HO4f9PpXynde5xTlVvqdgXVlWkxGgQk0d323ka8fPY1xsmxV99idmmgmfglPOeLxuOkFxfXJSpbP/kn9AEyKBcF2BImfc12uvdSn46zZ1f/8nvzQ9naruwEtho4t6cIb7A+5KxVAILCQHvm3xIxfxMy5RFI=="}`
-	healthCheckTestName       = "dp-authorisation-v2-test"
-	jwtKeyRequestError        = "jwt keys request error"
-	jwtKeyRequestOK           = "jwt keys request ok"
-	healthErrorStatus         = "CRITICAL"
-	healthOKStatus            = "OK"
+	testURL                = "www.dummytest.io"
+	errorString            = "this is an error"
+	testStatusOK           = 200
+	clientTypeReflection   = "*http.Client"
+	identityTypeReflection = "*identityclient.IdentityClient"
+	healthCheckTestName    = "dp-authorisation-v2-test"
+	jwtKeyRequestError     = "jwt keys request error"
+	jwtKeyRequestOK        = "jwt keys request ok"
+	healthErrorStatus      = "CRITICAL"
+	healthOKStatus         = "OK"
+	testJWTPublicKeyAPIMap = `{"test123=": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyehkd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdgcKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbcmwIDAQAB","test456=": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyehkd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdgcKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbcmwIDAQAB"}`
 )
 
 var (
@@ -95,7 +95,7 @@ func TestIndentityClient_GetJWTVerificationKeys(t *testing.T) {
 				GetFunc: func(ctx context.Context, url string) (*http.Response, error) {
 					r := &http.Response{
 						StatusCode: http.StatusOK,
-						Body:       ioutil.NopCloser(bytes.NewBufferString(testJWTPublicKeyAPIString)),
+						Body:       ioutil.NopCloser(bytes.NewBufferString(testJWTPublicKeyAPIMap)),
 					}
 					return r, nil
 				},
@@ -105,8 +105,8 @@ func TestIndentityClient_GetJWTVerificationKeys(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(len(identityClient.JWTKeys), ShouldEqual, 2)
-		So(identityClient.JWTKeys["GHB723n83jw="], ShouldEqual, "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA0TpTemKodQNChMNj1f/NF19nM")
-		So(identityClient.JWTKeys["HUHJ83nbs8h="], ShouldEqual, "MIICIjANBAbjKbwRENSKujO5iwXLIt0hCjh5dz4egKQo7KEr2ex3qdy50LWKD871gRfAgDoRD5/1kUUVqII5K09IDCVY/EohukrI+Uep/Z5ymPNPXXD1yJvBx/YmmuMGUAT5UKHKBCP+FcoAxYAKcaKhtL0iyVjhtD0Y4V8gcQnQq3bOYhF4FEHoHBNh23AKcJM1VvNVtSHViMuTOzsFLHAgy2lLsRLnxtXovEovAiTay+Sn1FuDOq2gswl2Uujh1GO8kfkXE1gNRn/l7RUYIRrql8kROHMSYvPBAIqYhGSWOG3JX1oFlI1erYaeIPI4l4Qj/P+YSnrRx0di3vy6ZDAnhs8kdZP81F+3rFrNUNIOVFBRKscMnvOH4HO4f9PpXynde5xTlVvqdgXVlWkxGgQk0d323ka8fPY1xsmxV99idmmgmfglPOeLxuOkFxfXJSpbP/kn9AEyKBcF2BImfc12uvdSn46zZ1f/8nvzQ9naruwEtho4t6cIb7A+5KxVAILCQHvm3xIxfxMy5RFI==")
+		So(identityClient.JWTKeys["test123="], ShouldEqual, "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyehkd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdgcKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbcmwIDAQAB")
+		So(identityClient.JWTKeys["test456="], ShouldEqual, "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyehkd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdgcKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbcmwIDAQAB")
 	})
 
 	Convey("Get JWT Verification keys - dp-net Get request returns error", t, func() {
@@ -136,7 +136,7 @@ func TestIndentityClient_IdentityHealthCheck(t *testing.T) {
 				GetFunc: func(ctx context.Context, url string) (*http.Response, error) {
 					r := &http.Response{
 						StatusCode: http.StatusOK,
-						Body:       ioutil.NopCloser(bytes.NewBufferString(testJWTPublicKeyAPIString)),
+						Body:       ioutil.NopCloser(bytes.NewBufferString(testJWTPublicKeyAPIMap)),
 					}
 					return r, nil
 				},
@@ -146,8 +146,8 @@ func TestIndentityClient_IdentityHealthCheck(t *testing.T) {
 
 		So(err, ShouldBeNil)
 		So(len(identityClient.JWTKeys), ShouldEqual, 2)
-		So(identityClient.JWTKeys["GHB723n83jw="], ShouldEqual, "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA0TpTemKodQNChMNj1f/NF19nM")
-		So(identityClient.JWTKeys["HUHJ83nbs8h="], ShouldEqual, "MIICIjANBAbjKbwRENSKujO5iwXLIt0hCjh5dz4egKQo7KEr2ex3qdy50LWKD871gRfAgDoRD5/1kUUVqII5K09IDCVY/EohukrI+Uep/Z5ymPNPXXD1yJvBx/YmmuMGUAT5UKHKBCP+FcoAxYAKcaKhtL0iyVjhtD0Y4V8gcQnQq3bOYhF4FEHoHBNh23AKcJM1VvNVtSHViMuTOzsFLHAgy2lLsRLnxtXovEovAiTay+Sn1FuDOq2gswl2Uujh1GO8kfkXE1gNRn/l7RUYIRrql8kROHMSYvPBAIqYhGSWOG3JX1oFlI1erYaeIPI4l4Qj/P+YSnrRx0di3vy6ZDAnhs8kdZP81F+3rFrNUNIOVFBRKscMnvOH4HO4f9PpXynde5xTlVvqdgXVlWkxGgQk0d323ka8fPY1xsmxV99idmmgmfglPOeLxuOkFxfXJSpbP/kn9AEyKBcF2BImfc12uvdSn46zZ1f/8nvzQ9naruwEtho4t6cIb7A+5KxVAILCQHvm3xIxfxMy5RFI==")
+		So(identityClient.JWTKeys["test123="], ShouldEqual, "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyehkd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdgcKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbcmwIDAQAB")
+		So(identityClient.JWTKeys["test456="], ShouldEqual, "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyehkd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdgcKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbcmwIDAQAB")
 		So(checkState.StatusCode(), ShouldEqual, http.StatusOK)
 		So(checkState.Status(), ShouldEqual, healthOKStatus)
 		So(checkState.Message(), ShouldEqual, jwtKeyRequestOK)

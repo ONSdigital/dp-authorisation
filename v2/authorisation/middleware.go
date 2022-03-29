@@ -26,7 +26,7 @@ const (
 type tokenHeaderData struct {
 	Kid string `json:"kid"`
 	Alg string `json:"alg"`
-	Typ string `json:"typ"`	
+	Typ string `json:"typ"`
 }
 
 // PermissionCheckMiddleware is used to wrap HTTP handlers with JWT token based authorisation
@@ -58,7 +58,7 @@ func NewMiddlewareFromDependencies(jwtParser JWTParser, permissionsChecker Permi
 		jwtParser:          jwtParser,
 		permissionsChecker: permissionsChecker,
 		zebedeeClient:      zebedeeClient,
-		IdentityClient: 	identityClient,
+		IdentityClient:     identityClient,
 	}
 }
 
@@ -74,17 +74,22 @@ func NewMiddlewareFromConfig(ctx context.Context, config *Config, jwtRSAPublicKe
 		return nil, err
 	}
 
-	// get the JWT verification keys - from identity service initially or configs as a fall back
-	err = identityClient.GetJWTVerificationKeys(ctx)
-	if err != nil {
-		return nil, err
+	// get the JWT verification keys - from identity service initially
+	if jwtRSAPublicKeys != nil {
+		identityClient.JWTKeys = jwtRSAPublicKeys
+	} else {
+		err = identityClient.GetJWTVerificationKeys(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	jwtParser, err := NewCognitoRSAParser(jwtRSAPublicKeys, identityClient.JWTKeys)
+	jwtParser, err := NewCognitoRSAParser(identityClient.JWTKeys)
 	if err != nil {
 		return nil, err
 	}
-	
+	identityClient.CognitoRSAParser = jwtParser
+
 	permissionsChecker := permissions.NewChecker(
 		ctx,
 		config.PermissionsAPIURL,
@@ -99,15 +104,8 @@ func NewMiddlewareFromConfig(ctx context.Context, config *Config, jwtRSAPublicKe
 }
 
 // NewCognitoRSAParser returns a CognitoRSAParser with correct RSA Public Signing Keys set
-func NewCognitoRSAParser(jwtRSAPublicKeys, identityClientKeys map[string]string) (*jwt.CognitoRSAParser, error) {
-	// If the keys passed to the constructor, use those, else use identityClient.JWTKeys
-	var jwtRSAKeys map[string]string 
-	if jwtRSAPublicKeys != nil {
-		jwtRSAKeys = jwtRSAPublicKeys
-	} else {
-		jwtRSAKeys = identityClientKeys
-	}
-	return jwt.NewCognitoRSAParser(jwtRSAKeys)
+func NewCognitoRSAParser(identityClientKeys map[string]string) (*jwt.CognitoRSAParser, error) {
+	return jwt.NewCognitoRSAParser(identityClientKeys)
 }
 
 // RequireWithAttributes wraps an existing handler, only allowing it to be called if the request is
@@ -157,6 +155,9 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 		)
 		if headerData.Kid != "" {
 			entityData, err = m.jwtParser.Parse(authToken)
+			if err != nil && err.Error() == jwt.ErrPublickeysEmpty.Error() {
+				entityData, err = m.IdentityClient.CognitoRSAParser.Parse(authToken)
+			}
 			if err != nil {
 				logData["message"] = err.Error()
 				log.Error(ctx, "authorisation failed due to jwt parsing issue", err, logData)

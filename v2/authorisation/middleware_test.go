@@ -11,6 +11,8 @@ import (
 	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
 	dprequest "github.com/ONSdigital/dp-net/request"
 
+	"github.com/ONSdigital/dp-authorisation/v2/jwt"
+
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation/mock"
 	"github.com/ONSdigital/dp-authorisation/v2/identityclient"
@@ -32,8 +34,8 @@ var (
 			}, nil
 		},
 	}
-	trimmedToken              = strings.TrimPrefix(authorisationtest.AdminJWTToken, "Bearer ")
-	testURL                   = "https://the-url.com"
+	trimmedToken             = strings.TrimPrefix(authorisationtest.AdminJWTToken, "Bearer ")
+	testURL                  = "https://the-url.com"
 	testJWTPublicKeyAPIMapx1 = map[string]string{
 		"test789=": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyehkd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdgcKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbcmwIDAQAB",
 	}
@@ -72,6 +74,8 @@ var identityClient = &identityclient.IdentityClient{
 	},
 }
 
+var NewCognitoRSAParserTest, _ = jwt.NewCognitoRSAParser(testJWTPublicKeyAPIMapx1)
+
 func TestMiddleware_RequireWithAttributes(t *testing.T) {
 	Convey("Given a request with a valid JWT token and collection_id header that have the required permissions", t, func() {
 		response := httptest.NewRecorder()
@@ -79,13 +83,14 @@ func TestMiddleware_RequireWithAttributes(t *testing.T) {
 		request.Header.Set("Authorization", authorisationtest.AdminJWTToken)
 		mockHandler := &mockHandler{calls: 0}
 		mockJWTParser := newMockJWTParser()
+		identityClient.CognitoRSAParser = NewCognitoRSAParserTest
 		mockAttributes := mockAttributes{attributes: *dummyAttributesData, calls: 0}
 		permissionsChecker := &mock.PermissionsCheckerMock{
 			HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
 				return true, nil
 			},
 		}
-    
+
 		middleware := authorisation.NewMiddlewareFromDependencies(mockJWTParser, permissionsChecker, zebedeeIdentity, identityClient)
 		middlewareFunc := middleware.RequireWithAttributes(permission, mockHandler.ServeHTTP, mockAttributes.GetAttributes)
 
@@ -461,17 +466,17 @@ func TestGetCollectionIdAttribute_NoCollectionIdHeader(t *testing.T) {
 }
 
 func TestMiddleware_NewMiddlewareFromConfig_JWTKeys(t *testing.T) {
-	identityClient.JWTKeys = testJWTPublicKeyAPIMapx2
-
 	Convey("Test Setting RSA Keys manually", t, func() {
-		rsaParser, _ := authorisation.NewCognitoRSAParser(testJWTPublicKeyAPIMapx1, identityClient.JWTKeys)
+		identityClient.JWTKeys = testJWTPublicKeyAPIMapx1
+		rsaParser, _ := authorisation.NewCognitoRSAParser(identityClient.JWTKeys)
 
 		So(len(rsaParser.PublicKeys), ShouldEqual, 1)
 		So(rsaParser.PublicKeys["test789="], ShouldNotBeNil)
 	})
 
 	Convey("Test Setting RSA Keys via identity client", t, func() {
-		rsaParser, _ := authorisation.NewCognitoRSAParser(nil, identityClient.JWTKeys)
+		identityClient.JWTKeys = testJWTPublicKeyAPIMapx2
+		rsaParser, _ := authorisation.NewCognitoRSAParser(identityClient.JWTKeys)
 
 		So(len(rsaParser.PublicKeys), ShouldEqual, 2)
 		So(rsaParser.PublicKeys["test123="], ShouldNotBeNil)

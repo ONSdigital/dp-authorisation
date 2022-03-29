@@ -29,6 +29,7 @@ var (
 	ErrFailedToParseClaims        = errors.New("failed to read claims from jwt token")
 	ErrNoGroups                   = errors.New("jwt token does not have any groups")
 	ErrJWTKeySet                  = errors.New("key id unknown or invalid")
+	ErrPublickeysEmpty            = errors.New("public keys map is empty")
 )
 
 // CognitoRSAParser parses JWT tokens that have an RSA encrypted signature, and contain AWS cognito specific claims.
@@ -40,6 +41,7 @@ type CognitoRSAParser struct {
 // NewCognitoRSAParser creates a new instance of CognitoRSAParser using the given public key value.
 func NewCognitoRSAParser(base64EncodedPublicKey map[string]string) (*CognitoRSAParser, error) {
 	PublicKeys := map[string]*rsa.PublicKey{}
+
 	for kid, encodedPublicKey := range base64EncodedPublicKey {
 		publicKey, err := parsePublicKey(encodedPublicKey)
 		if err != nil {
@@ -60,7 +62,11 @@ func NewCognitoRSAParser(base64EncodedPublicKey map[string]string) (*CognitoRSAP
 
 // Parse and verify the given JWT token, and return the EntityData contained within the JWT (user ID and groups list)
 func (p CognitoRSAParser) Parse(tokenString string) (*permissions.EntityData, error) {
+	if len(p.PublicKeys) == 0 {
+		return nil, ErrPublickeysEmpty
+	}
 	token, err := p.jwtParser.Parse(tokenString, p.getKey)
+	
 	if err != nil {
 		err = determineErrorType(err)
 		return nil, err

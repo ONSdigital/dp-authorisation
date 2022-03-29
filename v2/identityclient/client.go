@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ONSdigital/dp-authorisation/v2/jwt"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/log.go/v2/log"
 
@@ -39,9 +40,10 @@ type IdentityInterface interface {
 // IdentityClient contains identity client handler
 type IdentityClient struct {
 	Client,
-	BasicClient      IdentityInterface
+	BasicClient IdentityInterface
 	JWTKeys          map[string]string
 	IdentityEndpoint string
+	CognitoRSAParser *jwt.CognitoRSAParser
 }
 
 // NewIdentityClient identity client constructor
@@ -64,7 +66,7 @@ func NewIdentityClient(identityEndpoint string, maxRetries int) (*IdentityClient
 		},
 		BasicClient:      dphttp.NewClient(),
 		JWTKeys:          nil,
-		IdentityEndpoint: identityEndpoint+identityServiceJWTKeys,
+		IdentityEndpoint: identityEndpoint + identityServiceJWTKeys,
 	}, nil
 }
 
@@ -94,6 +96,10 @@ func (c *IdentityClient) IdentityHealthCheck(ctx context.Context, state *health.
 			return err
 		} else {
 			err = c.unmarshalIdentityResponse(identityResponse.Body)
+			if err != nil {
+				return err
+			}
+			c.CognitoRSAParser, err = jwt.NewCognitoRSAParser(c.JWTKeys)
 			if err != nil {
 				return err
 			}
