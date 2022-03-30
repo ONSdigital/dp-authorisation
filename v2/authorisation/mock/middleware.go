@@ -27,6 +27,9 @@ var _ authorisation.Middleware = &MiddlewareMock{}
 // 			HealthCheckFunc: func(ctx context.Context, state *health.CheckState) error {
 // 				panic("mock out the HealthCheck method")
 // 			},
+// 			IdentityHealthCheckFunc: func(ctx context.Context, state *health.CheckState) error {
+// 				panic("mock out the IdentityHealthCheck method")
+// 			},
 // 			RequireFunc: func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
 // 				panic("mock out the Require method")
 // 			},
@@ -46,6 +49,9 @@ type MiddlewareMock struct {
 	// HealthCheckFunc mocks the HealthCheck method.
 	HealthCheckFunc func(ctx context.Context, state *health.CheckState) error
 
+	// IdentityHealthCheckFunc mocks the IdentityHealthCheck method.
+	IdentityHealthCheckFunc func(ctx context.Context, state *health.CheckState) error
+
 	// RequireFunc mocks the Require method.
 	RequireFunc func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc
 
@@ -61,6 +67,13 @@ type MiddlewareMock struct {
 		}
 		// HealthCheck holds details about calls to the HealthCheck method.
 		HealthCheck []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// State is the state argument value.
+			State *health.CheckState
+		}
+		// IdentityHealthCheck holds details about calls to the IdentityHealthCheck method.
+		IdentityHealthCheck []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// State is the state argument value.
@@ -85,6 +98,7 @@ type MiddlewareMock struct {
 	}
 	lockClose                 sync.RWMutex
 	lockHealthCheck           sync.RWMutex
+	lockIdentityHealthCheck   sync.RWMutex
 	lockRequire               sync.RWMutex
 	lockRequireWithAttributes sync.RWMutex
 }
@@ -152,6 +166,41 @@ func (mock *MiddlewareMock) HealthCheckCalls() []struct {
 	mock.lockHealthCheck.RLock()
 	calls = mock.calls.HealthCheck
 	mock.lockHealthCheck.RUnlock()
+	return calls
+}
+
+// IdentityHealthCheck calls IdentityHealthCheckFunc.
+func (mock *MiddlewareMock) IdentityHealthCheck(ctx context.Context, state *health.CheckState) error {
+	if mock.IdentityHealthCheckFunc == nil {
+		panic("MiddlewareMock.IdentityHealthCheckFunc: method is nil but Middleware.IdentityHealthCheck was just called")
+	}
+	callInfo := struct {
+		Ctx   context.Context
+		State *health.CheckState
+	}{
+		Ctx:   ctx,
+		State: state,
+	}
+	mock.lockIdentityHealthCheck.Lock()
+	mock.calls.IdentityHealthCheck = append(mock.calls.IdentityHealthCheck, callInfo)
+	mock.lockIdentityHealthCheck.Unlock()
+	return mock.IdentityHealthCheckFunc(ctx, state)
+}
+
+// IdentityHealthCheckCalls gets all the calls that were made to IdentityHealthCheck.
+// Check the length with:
+//     len(mockedMiddleware.IdentityHealthCheckCalls())
+func (mock *MiddlewareMock) IdentityHealthCheckCalls() []struct {
+	Ctx   context.Context
+	State *health.CheckState
+} {
+	var calls []struct {
+		Ctx   context.Context
+		State *health.CheckState
+	}
+	mock.lockIdentityHealthCheck.RLock()
+	calls = mock.calls.IdentityHealthCheck
+	mock.lockIdentityHealthCheck.RUnlock()
 	return calls
 }
 

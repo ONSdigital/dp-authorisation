@@ -5,10 +5,11 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"strings"
+
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 const (
@@ -27,23 +28,26 @@ var (
 	ErrNoUserID                   = errors.New("jwt token does not have a user id")
 	ErrFailedToParseClaims        = errors.New("failed to read claims from jwt token")
 	ErrNoGroups                   = errors.New("jwt token does not have any groups")
+	ErrJWTKeySet                  = errors.New("key id unknown or invalid")
+	ErrPublickeysEmpty            = errors.New("public keys map is empty")
 )
 
 // CognitoRSAParser parses JWT tokens that have an RSA encrypted signature, and contain AWS cognito specific claims.
 type CognitoRSAParser struct {
-	publicKeys map[string]*rsa.PublicKey
+	PublicKeys map[string]*rsa.PublicKey
 	jwtParser  *jwt.Parser
 }
 
 // NewCognitoRSAParser creates a new instance of CognitoRSAParser using the given public key value.
 func NewCognitoRSAParser(base64EncodedPublicKey map[string]string) (*CognitoRSAParser, error) {
-	publicKeys := map[string]*rsa.PublicKey{}
+	PublicKeys := map[string]*rsa.PublicKey{}
+
 	for kid, encodedPublicKey := range base64EncodedPublicKey {
 		publicKey, err := parsePublicKey(encodedPublicKey)
 		if err != nil {
 			return nil, ErrFailedToParsePublicKey
 		}
-		publicKeys[kid] = publicKey
+		PublicKeys[kid] = publicKey
 	}
 
 	jwtParser := &jwt.Parser{
@@ -51,14 +55,18 @@ func NewCognitoRSAParser(base64EncodedPublicKey map[string]string) (*CognitoRSAP
 	}
 
 	return &CognitoRSAParser{
-		publicKeys: publicKeys,
+		PublicKeys: PublicKeys,
 		jwtParser:  jwtParser,
 	}, nil
 }
 
 // Parse and verify the given JWT token, and return the EntityData contained within the JWT (user ID and groups list)
 func (p CognitoRSAParser) Parse(tokenString string) (*permissions.EntityData, error) {
+	if len(p.PublicKeys) == 0 {
+		return nil, ErrPublickeysEmpty
+	}
 	token, err := p.jwtParser.Parse(tokenString, p.getKey)
+	
 	if err != nil {
 		err = determineErrorType(err)
 		return nil, err
@@ -169,8 +177,12 @@ func (p CognitoRSAParser) getPublicSigningKey(token string) (*rsa.PublicKey, err
 
 	var decodedHeaders map[string]string
 	if json.Unmarshal(pubKeyBytes, &decodedHeaders) != nil {
-		return nil, err
+		return nil, err 
 	}
 
-	return p.publicKeys[decodedHeaders[Kid]], nil
+	if p.PublicKeys[decodedHeaders[Kid]] == nil {
+		return nil, ErrJWTKeySet
+	}
+
+	return p.PublicKeys[decodedHeaders[Kid]], nil
 }

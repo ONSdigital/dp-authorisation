@@ -78,7 +78,7 @@ func (c *APIClient) GetPermissionsBundle(ctx context.Context) (Bundle, error) {
         return nil, err
     }
 
-	log.Info(ctx, "GetPermissionsBundle: returning requested permissins to caller")
+	log.Info(ctx, "GetPermissionsBundle: returning requested permissions to caller")
 
     return permissions, nil
 }
