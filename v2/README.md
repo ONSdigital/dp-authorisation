@@ -185,6 +185,77 @@ Then the JWT token can be added to a request in the feature file:
   When ...
 ```
 
-      
+#### An example of parsing the JWT token and permission checking seperately
+
+The authorisation library both parses the JWT token and checks authorisation permissions as a combined convenience function. It is also possible to perform these steps separately as shown below:
+
+```go
+
+// main.go
+package main
+
+import (
+        "context"
+        "fmt"
+        "reflect"
+
+        "github.com/ONSdigital/dp-authorisation/v2/authorisation"
+        "github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
+        "github.com/ONSdigital/dp-authorisation/v2/permissions"
+)
+
+func main() {
+        ctx := context.Background()
+        cfg := authorisation.NewDefaultConfig()
+        ExpectedEntityData := permissions.EntityData{
+                UserID: "janedoe@example.com",
+                Groups: []string{"role-admin"},
+        }
+// Parse JWT token and retrieve entity Data
+        jwtParser, err := authorisation.NewCognitoRSAParser(cfg.JWTVerificationPublicKeys)
+        if err != nil {
+                println(err)
+        }
+        token := "eyJraWQiOiJOZUtiNjUxOTRKbz0iLCJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYWFhYWFhYS1iYmJiLWNjY2MtZGRkZC1lZWVlZWVlZWVlZWUiLCJkZXZpY2Vfa2V5IjoiYWFhYWFhYWEtYmJiYi1jY2NjLWRkZGQtZWVlZWVlZWVlZWVlIiwiY29nbml0bzpncm91cHMiOlsicm9sZS1hZG1pbiJdLCJ0b2tlbl91c2UiOiJhY2Nlc3MiLCJzY29wZSI6ImF3cy5jb2duaXRvLnNpZ25pbi51c2VyLmFkbWluIiwiYXV0aF90aW1lIjoxNTYyMTkwNTI0LCJpc3MiOiJodHRwczovL2NvZ25pdG8taWRwLnVzLXdlc3QtMi5hbWF6b25hd3MuY29tL3VzLXdlc3QtMl9leGFtcGxlIiwiZXhwIjo5OTk5OTk5OTk5OTksImlhdCI6MTU2MjE5MDUyNCwianRpIjoiYWFhYWFhYWEtYmJiYi1jY2NjLWRkZGQtZWVlZWVlZWVlZWVlIiwiY2xpZW50X2lkIjoiNTdjYmlzaGs0ajI0cGFiYzEyMzQ1Njc4OTAiLCJ1c2VybmFtZSI6ImphbmVkb2VAZXhhbXBsZS5jb20ifQ.ZmZkZlrAtFxG5PnfC7dOru_KykJJ5f5bu7YkpCaNMwjXtBM8hWmiWk88QGfbx9kqI1wYs479cFrZ0FablR_38ek6RH9yAVaxTk7ZKOBUqSbVbIB-82B5iRXI8vLquZYjZEunH7LDv0kfZbsqoCZCe3nAJU5aV-hVMF1Cbz2LgIymRqMFqDxD2YIu5RgRHc71FtPebNfMTFCmnTs2v5b4KOqDNZZuab7eLMc-B941M6XyfdF7I6RRfvxw7xTv-qi6ZhGzkbe7K2rlxUmSwjQRDPYrOD7qji_V7yxon9okPyvpTHp-8yaHyrVv1CUCHX67c3OSRT7x3gZqRcPYpEZmScyj7M38Kwn04CKcNqc4ouozIBqhtkBgnCWJuaj1wl7AxQDRR5_F_IS962Y8t2IfU-UurqoZAZvQqWWyeBVJB3aIKrhSJHx62ayZVjd3u2za2WS8aZT97pjEuKLjSoYcgdEqnL9_fKdZc4Vv3QBZmtj_rZsb-zOrj2u_kMox8g-uaIC6ehkNucmM-HEfSuTA7nf_pPNw9c6HLDXJizGWMBVf18K94HPFTyWtJWB7yhXCuV9Kulp9iVGEn8230e6mn7ui0z8lU8R-KpZm3_aPTXBXKsUVdsoj0ZK5sd4y5ARdZ5BOGurT5NpMsw8avW-CqMF0dPY2kmUv3EtBE6dkvdg"
+
+        ParsedEntityData, err := jwtParser.Parse(token)
+        if err != nil {
+                println(err)
+        }
+        fmt.Printf("%+v\n", ParsedEntityData)
+        fmt.Println("valid parsed JWT: ", reflect.DeepEqual(ParsedEntityData, &ExpectedEntityData))
+
+// Check authorisation permissions
+        fakePermissionsAPI := authorisationtest.NewFakePermissionsAPI()
+
+        permissionChecker := permissions.NewChecker(
+                ctx,
+                fakePermissionsAPI.URL(),
+                cfg.PermissionsCacheUpdateInterval,
+                cfg.PermissionsCacheExpiryCheckInterval,
+                cfg.PermissionsMaxCacheTime,
+        )
+
+        permission := "users:create"
+
+        hasPermission, err := permissionChecker.HasPermission(ctx, *ParsedEntityData, permission, nil)
+        if err != nil {
+                println(err)
+        }
+        fmt.Println("entity has permission: ", hasPermission)
+}
+
+```
+
+```bash
+
+$ go run main.go
+&{UserID:janedoe@example.com Groups:[role-admin]}
+valid parsed JWT:  true
+{"created_at":"2022-05-12T08:27:57.344261Z","namespace":"main","event":"GetPermissionsBundle: starting permissions bundle request","severity":3,"data":{"uri":"http://127.0.0.1:57766/v1/permissions-bundle"}}
+{"created_at":"2022-05-12T08:27:57.345428Z","namespace":"main","event":"GetPermissionsBundle: request successfully executed","severity":3,"data":{"resp.StatusCode":200}}
+{"created_at":"2022-05-12T08:27:57.345538Z","namespace":"main","event":"GetPermissionsBundle: returning requested permissions to caller","severity":3}
+entity has permission:  true
+```
 
 
