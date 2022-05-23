@@ -150,18 +150,17 @@ func aConditionIsMet(conditions []Condition, attributes map[string]string) bool 
 }
 
 func conditionIsMet(condition Condition, attributes map[string]string) bool {
-	for attribute, value := range attributes {
-		if attribute != condition.Attribute {
-			continue
-		}
+	value, ok := attributes[condition.Attribute]
+	if !ok {
+		return false
+	}
 
-		for _, conditionValue := range condition.Values {
-			if condition.Operator == OperatorStringEquals && value == conditionValue {
-				return true
-			}
-			if condition.Operator == OperatorStartsWith && strings.HasPrefix(value, conditionValue) {
-				return true
-			}
+	for _, conditionValue := range condition.Values {
+		if condition.Operator == OperatorStringEquals && value == conditionValue {
+			return true
+		}
+		if condition.Operator == OperatorStartsWith && strings.HasPrefix(value, conditionValue) {
+			return true
 		}
 	}
 
