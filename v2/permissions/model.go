@@ -14,9 +14,9 @@ type Policy struct {
 
 // Condition is used within a policy to match additional attributes.
 type Condition struct {
-	Attributes []string `json:"attributes"`
-	Operator   Operator `json:"operator"`
-	Values     []string `json:"values"`
+	Attribute string   `json:"attribute"`
+	Operator  Operator `json:"operator"`
+	Values    []string `json:"values"`
 }
 
 // Operator is used to define a set of supported Condition operators
@@ -24,8 +24,8 @@ type Operator string
 
 // EntityData groups the different entity types into a single parameter
 type EntityData struct {
-	UserID    string
-	Groups    []string
+	UserID string
+	Groups []string
 }
 
 const (

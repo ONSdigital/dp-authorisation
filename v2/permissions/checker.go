@@ -150,9 +150,8 @@ func aConditionIsMet(conditions []Condition, attributes map[string]string) bool 
 }
 
 func conditionIsMet(condition Condition, attributes map[string]string) bool {
-	for _, attribute := range condition.Attributes {
-		value, ok := attributes[attribute]
-		if !ok {
+	for attribute, value := range attributes {
+		if attribute != condition.Attribute {
 			continue
 		}
 
