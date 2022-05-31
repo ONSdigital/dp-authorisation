@@ -150,10 +150,11 @@ func TestMiddleware_Require(t *testing.T) {
 			})
 
 			Convey("Then the permissions checker is called as expected", func() {
+				dummyMap := make(map[string]string)
 				So(permissionsChecker.HasPermissionCalls(), ShouldHaveLength, 1)
 				So(permissionsChecker.HasPermissionCalls()[0].Permission, ShouldEqual, permission)
 				So(permissionsChecker.HasPermissionCalls()[0].EntityData, ShouldResemble, *dummyEntityData)
-				So(permissionsChecker.HasPermissionCalls()[0].Attributes, ShouldEqual, nil)
+				So(permissionsChecker.HasPermissionCalls()[0].Attributes, ShouldResemble, dummyMap)
 			})
 
 			Convey("Then the underlying HTTP handler is called as expected", func() {
