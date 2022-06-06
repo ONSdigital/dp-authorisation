@@ -2,6 +2,7 @@ package authorisation
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -117,8 +118,8 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 
 		authToken := req.Header.Get("Authorization")
 		if len(authToken) == 0 {
-			log.Info(ctx, "authorisation failed due to no authorisation header being in the request", logData)
-			w.WriteHeader(http.StatusForbidden)
+			log.Info(ctx, "authorisation failed: no authorisation header in request", logData)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
@@ -132,19 +133,21 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 		if strings.Contains(authToken, ".") {
 			entityData, err = m.jwtParser.Parse(authToken)
 			if err != nil {
-				if err.Error() != jwt.ErrPublickeysEmpty.Error() {
+				if errors.Is(err, jwt.ErrPublickeysEmpty) {
+					log.Error(ctx, "no public keys", err)
+					w.WriteHeader(http.StatusInternalServerError)
+				} else {
 					logData["message"] = err.Error()
-					log.Error(ctx, "authorisation failed due to jwt parsing issue", err, logData)
-					w.WriteHeader(http.StatusForbidden)
-					return
+					log.Error(ctx, "authorisation failed: unable to parse jwt", err, logData)
+					w.WriteHeader(http.StatusUnauthorized)
 				}
-				entityData, err = m.IdentityClient.CognitoRSAParser.Parse(authToken)
+				return
 			}
 		} else {
 			zebedeeIdentityResponse, err := m.zebedeeClient.CheckTokenIdentity(ctx, authToken)
 			if err != nil {
 				logData["message"] = err.Error()
-				log.Error(ctx, "authorisation failed due to service token issue", err, logData)
+				log.Error(ctx, "authorisation failed: service token issue", err, logData)
 				w.WriteHeader(http.StatusForbidden)
 				return
 			}
@@ -156,7 +159,7 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 		if getAttributes != nil {
 			attributes, err = getAttributes(req)
 			if err != nil {
-				log.Error(ctx, "authorisation failed due to request attributes retrieval error", err, logData)
+				log.Error(ctx, "authorisation failed: request attributes retrieval error", err, logData)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
@@ -164,13 +167,13 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 
 		hasPermission, err := m.permissionsChecker.HasPermission(req.Context(), *entityData, permission, attributes)
 		if err != nil {
-			log.Error(ctx, "authorisation failed due to permissions lookup error", err, logData)
+			log.Error(ctx, "authorisation failed: permissions lookup error", err, logData)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		if !hasPermission {
-			log.Info(ctx, "request does not have permission", logData)
+			log.Info(ctx, "authorisation failed: request has no permission", logData)
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
