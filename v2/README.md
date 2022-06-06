@@ -244,7 +244,6 @@ func main() {
                 ctx,
                 fakePermissionsAPI.URL(),
                 cfg.PermissionsCacheUpdateInterval,
-                cfg.PermissionsCacheExpiryCheckInterval,
                 cfg.PermissionsMaxCacheTime,
         )
 
