@@ -24,7 +24,7 @@ func NewZebedeeClient(ZebedeeURL string) *ZebedeeClient {
 	}
 }
 
-// CheckTokenIdentity calls dp-api-clients-go/identity
+// CheckTokenIdentity calls dp-api-clients-go/identity to check service token
 func (z ZebedeeClient) CheckTokenIdentity(ctx context.Context, token string) (*dprequest.IdentityResponse, error) {
-	return z.Client.CheckTokenIdentity(ctx, token, 0)
+	return z.Client.CheckTokenIdentity(ctx, token, identity.TokenTypeService)
 }

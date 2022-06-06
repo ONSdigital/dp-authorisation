@@ -129,6 +129,8 @@ func TestMiddleware_Require(t *testing.T) {
 		response := httptest.NewRecorder()
 		request := httptest.NewRequest(http.MethodGet, testURL, nil)
 		request.Header.Set("Authorization", authorisationtest.AdminJWTToken)
+		request.Header.Set("Collection-Id", "123abc")
+		expectMap := map[string]string{"collection_id": "123abc"}
 		mockHandler := &mockHandler{calls: 0}
 		mockJWTParser := newMockJWTParser()
 
@@ -153,7 +155,7 @@ func TestMiddleware_Require(t *testing.T) {
 				So(permissionsChecker.HasPermissionCalls(), ShouldHaveLength, 1)
 				So(permissionsChecker.HasPermissionCalls()[0].Permission, ShouldEqual, permission)
 				So(permissionsChecker.HasPermissionCalls()[0].EntityData, ShouldResemble, *dummyEntityData)
-				So(permissionsChecker.HasPermissionCalls()[0].Attributes, ShouldEqual, nil)
+				So(permissionsChecker.HasPermissionCalls()[0].Attributes, ShouldResemble, expectMap)
 			})
 
 			Convey("Then the underlying HTTP handler is called as expected", func() {
@@ -184,8 +186,8 @@ func TestMiddleware_Require_NoAuthHeader(t *testing.T) {
 				So(mockHandler.calls, ShouldEqual, 0)
 			})
 
-			Convey("Then the response code should be 403 forbidden", func() {
-				So(response.Code, ShouldEqual, http.StatusForbidden)
+			Convey("Then the response code should be 401 unauthorised", func() {
+				So(response.Code, ShouldEqual, http.StatusUnauthorized)
 			})
 		})
 	})
@@ -220,8 +222,8 @@ func TestMiddleware_Require_JWTParseError(t *testing.T) {
 				So(mockHandler.calls, ShouldEqual, 0)
 			})
 
-			Convey("Then the response code should be 403 forbidden", func() {
-				So(response.Code, ShouldEqual, http.StatusForbidden)
+			Convey("Then the response code should be 401 unauthorised", func() {
+				So(response.Code, ShouldEqual, http.StatusUnauthorized)
 			})
 		})
 	})
@@ -387,12 +389,6 @@ func TestMiddleware_ServiceTokenUser_ZebedeeIdentityVerificationError(t *testing
 		permissionsChecker := &mock.PermissionsCheckerMock{
 			HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
 				return true, nil
-			},
-		}
-
-		zebedeeIdentity = &mock.ZebedeeClientMock{
-			CheckTokenIdentityFunc: func(ctx context.Context, token string) (*dprequest.IdentityResponse, error) {
-				return nil, errors.New("service token not valid")
 			},
 		}
 

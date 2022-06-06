@@ -2,6 +2,7 @@ package authorisation
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -12,9 +13,6 @@ import (
 	"github.com/ONSdigital/dp-authorisation/v2/zebedeeclient"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/log.go/v2/log"
-
-	b64 "encoding/base64"
-	"encoding/json"
 )
 
 const (
@@ -120,55 +118,36 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 
 		authToken := req.Header.Get("Authorization")
 		if len(authToken) == 0 {
-			log.Info(ctx, "authorisation failed due to no authorisation header being in the request", logData)
-			w.WriteHeader(http.StatusForbidden)
+			log.Info(ctx, "authorisation failed: no authorisation header in request", logData)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
 		authToken = strings.TrimPrefix(authToken, "Bearer ")
-
-		var (
-			chunks     = strings.Split(authToken, ".")
-			headerData = tokenHeaderData{}
-		)
-		// is the token of the form xxx.yyy.zzz (i.e. JWT)?
-		if len(chunks) == chunkSize {
-			sDec, decodeErr := b64.StdEncoding.DecodeString(chunks[0])
-			if decodeErr != nil {
-				log.Error(ctx, "authorisation failed due to issue decoding authorisation token", decodeErr, logData)
-				w.WriteHeader(http.StatusForbidden)
-				return
-			}
-
-			unmarshalError := json.Unmarshal(sDec, &headerData)
-			if unmarshalError != nil {
-				log.Error(ctx, "authorisation failed due to issue unmarshalling header data", unmarshalError, logData)
-				w.WriteHeader(http.StatusForbidden)
-				return
-			}
-		}
 
 		// process the token accordingly
 		var (
 			entityData = &permissions.EntityData{}
 			err        error
 		)
-		if headerData.Kid != "" {
+		if strings.Contains(authToken, ".") {
 			entityData, err = m.jwtParser.Parse(authToken)
-			if err != nil && err.Error() == jwt.ErrPublickeysEmpty.Error() {
-				entityData, err = m.IdentityClient.CognitoRSAParser.Parse(authToken)
-			}
 			if err != nil {
-				logData["message"] = err.Error()
-				log.Error(ctx, "authorisation failed due to jwt parsing issue", err, logData)
-				w.WriteHeader(http.StatusForbidden)
+				if errors.Is(err, jwt.ErrPublickeysEmpty) {
+					log.Error(ctx, "no public keys", err)
+					w.WriteHeader(http.StatusInternalServerError)
+				} else {
+					logData["message"] = err.Error()
+					log.Error(ctx, "authorisation failed: unable to parse jwt", err, logData)
+					w.WriteHeader(http.StatusUnauthorized)
+				}
 				return
 			}
 		} else {
 			zebedeeIdentityResponse, err := m.zebedeeClient.CheckTokenIdentity(ctx, authToken)
 			if err != nil {
 				logData["message"] = err.Error()
-				log.Error(ctx, "authorisation failed due to service token issue", err, logData)
+				log.Error(ctx, "authorisation failed: service token issue", err, logData)
 				w.WriteHeader(http.StatusForbidden)
 				return
 			}
@@ -180,7 +159,7 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 		if getAttributes != nil {
 			attributes, err = getAttributes(req)
 			if err != nil {
-				log.Error(ctx, "authorisation failed due to request attributes retrieval error", err, logData)
+				log.Error(ctx, "authorisation failed: request attributes retrieval error", err, logData)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
@@ -188,13 +167,13 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 
 		hasPermission, err := m.permissionsChecker.HasPermission(req.Context(), *entityData, permission, attributes)
 		if err != nil {
-			log.Error(ctx, "authorisation failed due to permissions lookup error", err, logData)
+			log.Error(ctx, "authorisation failed: permissions lookup error", err, logData)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		if !hasPermission {
-			log.Info(ctx, "request does not have permission", logData)
+			log.Info(ctx, "authorisation failed: request has no permission", logData)
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
@@ -206,7 +185,7 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 // Require wraps an existing handler, only allowing it to be called if the request is
 // authorised against the given permission. Calls method RequireWithAttributes() with nil getAttributes
 func (m PermissionCheckMiddleware) Require(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
-	return m.RequireWithAttributes(permission, handlerFunc, nil)
+	return m.RequireWithAttributes(permission, handlerFunc, GetCollectionIdAttribute)
 }
 
 // Close resources used by the middleware.

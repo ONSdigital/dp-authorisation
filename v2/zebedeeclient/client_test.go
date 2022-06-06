@@ -34,9 +34,8 @@ func TestZebedeeClient(t *testing.T) {
 
 		r, _ := zc.CheckTokenIdentity(ctx, authorisationtest.ZebedeeServiceToken)
 
-		Convey("Response is as ex§pected", func() {
+		Convey("Response is as expected", func() {
 			So(r.Identifier, ShouldEqual, "bob.monkhouse@bm.io")
 		})
 	})
 }
-
