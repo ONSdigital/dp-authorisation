@@ -11,15 +11,11 @@ require (
 )
 
 require (
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.92.2 // indirect
-	github.com/ONSdigital/dp-net v1.2.0 // indirect
-	github.com/ONSdigital/dp-net/v2 v2.1.0 // indirect
 	github.com/ONSdigital/go-ns v0.0.0-20210916104633-ac1c1c52327e // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20220104163920-15ed2e8cf2bd // indirect
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
-	github.com/justinas/alice v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/smartystreets/assertions v1.2.1 // indirect

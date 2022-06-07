@@ -17,7 +17,6 @@ type CachingStore struct {
 	underlyingStore      Store
 	cachedBundle         Bundle
 	closing              chan struct{}
-	expiryCheckerClosed  chan struct{}
 	cacheUpdaterClosed   chan struct{}
 	lastUpdated          time.Time
 	lastUpdateSuccessful bool
@@ -27,10 +26,9 @@ type CachingStore struct {
 // NewCachingStore constructs a new instance of CachingStore
 func NewCachingStore(underlyingStore Store) *CachingStore {
 	return &CachingStore{
-		underlyingStore:     underlyingStore,
-		closing:             make(chan struct{}),
-		expiryCheckerClosed: make(chan struct{}),
-		cacheUpdaterClosed:  make(chan struct{}),
+		underlyingStore:    underlyingStore,
+		closing:            make(chan struct{}),
+		cacheUpdaterClosed: make(chan struct{}),
 	}
 }
 
@@ -47,7 +45,7 @@ func (c *CachingStore) GetPermissionsBundle(ctx context.Context) (Bundle, error)
 }
 
 // Update the permissions cache data, by calling the underlying permissions store
-func (c *CachingStore) Update(ctx context.Context) (Bundle, error) {
+func (c *CachingStore) Update(ctx context.Context, maxCacheTime time.Duration) (Bundle, error) {
 	bundle, err := c.underlyingStore.GetPermissionsBundle(ctx)
 
 	c.mutex.Lock()
@@ -55,6 +53,9 @@ func (c *CachingStore) Update(ctx context.Context) (Bundle, error) {
 
 	if err != nil {
 		c.lastUpdateSuccessful = false
+		go func() {
+			c.CheckCacheExpiry(ctx, maxCacheTime)
+		}()
 	} else {
 		c.lastUpdateSuccessful = true
 		c.cachedBundle = bundle
@@ -62,28 +63,6 @@ func (c *CachingStore) Update(ctx context.Context) (Bundle, error) {
 	c.lastUpdated = time.Now()
 
 	return bundle, err
-}
-
-// StartExpiryChecker starts a goroutine to continually check for expired cache data.
-//  - checkInterval - how often to check for expired cache data.
-//  - maxCacheTime - how long to cache permissions data before it's expired.
-func (c *CachingStore) StartExpiryChecker(ctx context.Context, checkInterval, maxCacheTime time.Duration) {
-	go func() {
-		defer close(c.expiryCheckerClosed)
-		ticker := time.NewTicker(checkInterval)
-
-		for {
-			select {
-			case <-ticker.C:
-				c.CheckCacheExpiry(ctx, maxCacheTime)
-			case <-c.closing:
-				ticker.Stop()
-				return
-			case <-ctx.Done():
-				c.Close(ctx)
-			}
-		}
-	}()
 }
 
 // CheckCacheExpiry clears the cache data it it's gone beyond it's expiry time.
@@ -100,8 +79,8 @@ func (c *CachingStore) CheckCacheExpiry(ctx context.Context, maxCacheTime time.D
 
 // StartCacheUpdater starts a go routine to continually update cache data at time intervals.
 //  - updateInterval - how often to update the cache data.
-func (c *CachingStore) StartCacheUpdater(ctx context.Context, updateInterval time.Duration) {
-	c.updateWithErrLog(ctx)
+func (c *CachingStore) StartCacheUpdater(ctx context.Context, updateInterval time.Duration, maxCacheTime time.Duration) {
+	c.updateWithErrLog(ctx, maxCacheTime)
 	go func() {
 		defer close(c.cacheUpdaterClosed)
 		startupTicker := time.NewTicker(time.Second * 30)
@@ -110,14 +89,14 @@ func (c *CachingStore) StartCacheUpdater(ctx context.Context, updateInterval tim
 			select {
 			case <-startupTicker.C:
 				if c.cachedBundle == nil {
-					c.updateWithErrLog(ctx)
+					c.updateWithErrLog(ctx, maxCacheTime)
 				} else {
 					startupTicker.Stop()
 				}
 			case <-initialisedTicker.C:
-				c.updateWithErrLog(ctx)
+				c.updateWithErrLog(ctx, maxCacheTime)
 			case <-c.closing:
-				startupTicker.Stop()	
+				startupTicker.Stop()
 				initialisedTicker.Stop()
 				return
 			case <-ctx.Done():
@@ -131,7 +110,6 @@ func (c *CachingStore) StartCacheUpdater(ctx context.Context, updateInterval tim
 func (c *CachingStore) Close(ctx context.Context) error {
 	close(c.closing)
 	<-c.cacheUpdaterClosed
-	<-c.expiryCheckerClosed
 	return nil
 }
 
@@ -150,8 +128,8 @@ func (c *CachingStore) HealthCheck(ctx context.Context, state *health.CheckState
 	return state.Update(health.StatusOK, "permissions cache is ok", 0)
 }
 
-func (c *CachingStore) updateWithErrLog(ctx context.Context) {
-	_, err := c.Update(ctx)
+func (c *CachingStore) updateWithErrLog(ctx context.Context, maxCacheTime time.Duration) {
+	_, err := c.Update(ctx, maxCacheTime)
 	if err != nil {
 		log.Error(ctx, "failed to update permissions cache", err)
 	}

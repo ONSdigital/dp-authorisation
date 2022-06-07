@@ -41,12 +41,11 @@ var backoffSchedule = []time.Duration{
 func NewChecker(
 	ctx context.Context,
 	permissionsAPIHost string,
-	cacheUpdateInterval, expiryCheckInterval, maxCacheTime time.Duration) *Checker {
+	cacheUpdateInterval, maxCacheTime time.Duration) *Checker {
 
 	apiClient := NewAPIClient(permissionsAPIHost, rchttp.NewClient(), backoffSchedule)
 	cachingStore := NewCachingStore(apiClient)
-	cachingStore.StartCacheUpdater(ctx, cacheUpdateInterval)
-	cachingStore.StartExpiryChecker(ctx, expiryCheckInterval, maxCacheTime)
+	cachingStore.StartCacheUpdater(ctx, cacheUpdateInterval, maxCacheTime)
 
 	return NewCheckerForStore(cachingStore)
 }

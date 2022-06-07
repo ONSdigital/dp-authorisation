@@ -92,7 +92,6 @@ func NewMiddlewareFromConfig(ctx context.Context, config *Config, jwtRSAPublicKe
 		ctx,
 		config.PermissionsAPIURL,
 		config.PermissionsCacheUpdateInterval,
-		config.PermissionsCacheExpiryCheckInterval,
 		config.PermissionsMaxCacheTime,
 	)
 

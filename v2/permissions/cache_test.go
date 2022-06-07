@@ -3,13 +3,16 @@ package permissions_test
 import (
 	"context"
 	"errors"
+	"testing"
+	"time"
+
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions/mock"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
-	"time"
 )
+
+var maxCacheTime time.Duration = 1 * time.Minute
 
 func TestCachingStore_Update(t *testing.T) {
 	expectedBundle := permissions.Bundle{}
@@ -24,7 +27,7 @@ func TestCachingStore_Update(t *testing.T) {
 		store := permissions.NewCachingStore(underlyingStore)
 
 		Convey("When Update is called", func() {
-			bundle, err := store.Update(ctx)
+			bundle, err := store.Update(ctx, maxCacheTime)
 
 			Convey("Then no error is returned", func() {
 				So(err, ShouldBeNil)
@@ -50,7 +53,7 @@ func TestCachingStore_Update_UnderlyingStoreErr(t *testing.T) {
 		store := permissions.NewCachingStore(underlyingStore)
 
 		Convey("When Update is called", func() {
-			bundle, err := store.Update(ctx)
+			bundle, err := store.Update(ctx, maxCacheTime)
 
 			Convey("Then the expected error is returned", func() {
 				So(err, ShouldEqual, expectedErr)
@@ -74,7 +77,7 @@ func TestCachingStore_GetPermissionsBundle(t *testing.T) {
 
 	Convey("Given a CachingStore that has a cached permissions bundle", t, func() {
 		store := permissions.NewCachingStore(underlyingStore)
-		store.Update(ctx)
+		store.Update(ctx, maxCacheTime)
 
 		Convey("When GetPermissionsBundle is called", func() {
 			bundle, err := store.GetPermissionsBundle(ctx)
@@ -122,7 +125,7 @@ func TestCachingStore_CheckCacheExpiry(t *testing.T) {
 
 	Convey("Given a CachingStore with cached data that's not expired", t, func() {
 		store := permissions.NewCachingStore(underlyingStore)
-		store.Update(ctx)
+		store.Update(ctx, maxCacheTime)
 
 		Convey("When CheckCacheExpiry is called", func() {
 			store.CheckCacheExpiry(ctx, time.Second)
@@ -147,7 +150,7 @@ func TestCachingStore_CheckCacheExpiry_Expired(t *testing.T) {
 
 	Convey("Given a CachingStore with cached data that has expired", t, func() {
 		store := permissions.NewCachingStore(underlyingStore)
-		store.Update(ctx)
+		store.Update(ctx, maxCacheTime)
 
 		Convey("When CheckCacheExpiry is called", func() {
 			store.CheckCacheExpiry(ctx, time.Nanosecond)
@@ -215,7 +218,7 @@ func TestCachingStore_HealthCheck_OK(t *testing.T) {
 			},
 		}
 		store := permissions.NewCachingStore(underlyingStore)
-		store.Update(ctx)
+		store.Update(ctx, maxCacheTime)
 
 		Convey("When HealthCheck is called", func() {
 			checkState := healthcheck.NewCheckState("")
@@ -251,8 +254,8 @@ func TestCachingStore_HealthCheck_Warning(t *testing.T) {
 			},
 		}
 		store := permissions.NewCachingStore(underlyingStore)
-		store.Update(ctx) // first update succeeds to update cache
-		store.Update(ctx) // second update returns an error to imitate a failed update
+		store.Update(ctx, maxCacheTime) // first update succeeds to update cache
+		store.Update(ctx, maxCacheTime) // second update returns an error to imitate a failed update
 
 		Convey("When HealthCheck is called", func() {
 			checkState := healthcheck.NewCheckState("")
@@ -281,8 +284,7 @@ func TestCachingStore_BackgroundGoRoutines(t *testing.T) {
 
 	Convey("Given a CachingStore the background go routines started", t, func() {
 		store := permissions.NewCachingStore(underlyingStore)
-		store.StartCacheUpdater(ctx, time.Second)
-		store.StartExpiryChecker(ctx, time.Second, time.Minute)
+		store.StartCacheUpdater(ctx, time.Second, maxCacheTime)
 
 		Convey("When Close is called", func() {
 			err := store.Close(ctx)
