@@ -27,16 +27,16 @@ type HTTPClient interface {
 
 // APIClient implementation of permissions.Store that gets permission data from the permissions API
 type APIClient struct {
-	host    string
-	httpCli HTTPClient
+	host            string
+	httpCli         HTTPClient
 	backoffSchedule []time.Duration
 }
 
 // NewAPIClient constructs a new APIClient instance.
 func NewAPIClient(host string, httpClient HTTPClient, backoffSchedule []time.Duration) *APIClient {
 	return &APIClient{
-		host:    host,
-		httpCli: httpClient,
+		host:            host,
+		httpCli:         httpClient,
 		backoffSchedule: backoffSchedule,
 	}
 }
@@ -44,43 +44,43 @@ func NewAPIClient(host string, httpClient HTTPClient, backoffSchedule []time.Dur
 // GetPermissionsBundle gets the permissions bundle data from the permissions API.
 func (c *APIClient) GetPermissionsBundle(ctx context.Context) (Bundle, error) {
 
-    uri := fmt.Sprintf(bundlerEndpoint, c.host)
+	uri := fmt.Sprintf(bundlerEndpoint, c.host)
 
 	log.Info(ctx, "GetPermissionsBundle: starting permissions bundle request", log.Data{"uri": uri})
 
-    req, err := http.NewRequest(http.MethodGet, uri, nil)
-    if err != nil {
+	req, err := http.NewRequest(http.MethodGet, uri, nil)
+	if err != nil {
 		log.Info(ctx, "GetPermissionsBundle: error building new request", log.Data{"err": err.Error()})
-        return nil, err
-    }
+		return nil, err
+	}
 
-    resp, err := c.httpCli.Do(ctx, req)
-    if err != nil {
+	resp, err := c.httpCli.Do(ctx, req)
+	if err != nil {
 		log.Info(ctx, "GetPermissionsBundle: error executing request", log.Data{"err": err.Error()})
-        return nil, err
-    }
+		return nil, err
+	}
 
-    defer func() {
-        if resp.Body != nil {
-            resp.Body.Close()
-        }
-    }()
+	defer func() {
+		if resp.Body != nil {
+			resp.Body.Close()
+		}
+	}()
 
 	log.Info(ctx, "GetPermissionsBundle: request successfully executed", log.Data{"resp.StatusCode": resp.StatusCode})
 
-    if resp.StatusCode != http.StatusOK {
-        return nil, fmt.Errorf("unexpected status returned from the permissions api permissions-bundle endpoint: %s", resp.Status)
-    }
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status returned from the permissions api permissions-bundle endpoint: %s", resp.Status)
+	}
 
-    permissions, err := getPermissionsBundleFromResponse(resp.Body)
-    if err != nil {
+	permissions, err := getPermissionsBundleFromResponse(resp.Body)
+	if err != nil {
 		log.Info(ctx, "GetPermissionsBundle: error getting permissions bundle from response", log.Data{"err": err.Error()})
-        return nil, err
-    }
+		return nil, err
+	}
 
 	log.Info(ctx, "GetPermissionsBundle: returning requested permissions to caller")
 
-    return permissions, nil
+	return permissions, nil
 }
 
 func getPermissionsBundleFromResponse(reader io.Reader) (Bundle, error) {
