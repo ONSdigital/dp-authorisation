@@ -1,3 +1,5 @@
+SHELL=bash
+
 example:
 	go build -o ./example/example example/main.go
 	go run -race example/main.go
