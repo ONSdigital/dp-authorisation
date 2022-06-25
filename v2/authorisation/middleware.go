@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ONSdigital/dp-api-clients-go/headers"
+	"github.com/ONSdigital/dp-api-clients-go/v2/headers"
 	"github.com/ONSdigital/dp-authorisation/v2/identityclient"
 	"github.com/ONSdigital/dp-authorisation/v2/jwt"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
@@ -136,16 +136,15 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 					log.Error(ctx, "no public keys", err)
 					w.WriteHeader(http.StatusInternalServerError)
 				} else {
-					logData["message"] = err.Error()
 					log.Error(ctx, "authorisation failed: unable to parse jwt", err, logData)
 					w.WriteHeader(http.StatusUnauthorized)
 				}
 				return
 			}
 		} else {
+			// assume service token, use zebedee
 			zebedeeIdentityResponse, err := m.zebedeeClient.CheckTokenIdentity(ctx, authToken)
 			if err != nil {
-				logData["message"] = err.Error()
 				log.Error(ctx, "authorisation failed: service token issue", err, logData)
 				w.WriteHeader(http.StatusForbidden)
 				return

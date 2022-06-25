@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/identity"
-	dprequest "github.com/ONSdigital/dp-net/request"
+	dprequest "github.com/ONSdigital/dp-net/v2/request"
 )
 
 // IdentityClient interface contains one method

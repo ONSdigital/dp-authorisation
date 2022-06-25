@@ -15,19 +15,19 @@ var _ authorisation.JWTParser = &JWTParserMock{}
 
 // JWTParserMock is a mock implementation of authorisation.JWTParser.
 //
-//     func TestSomethingThatUsesJWTParser(t *testing.T) {
+// 	func TestSomethingThatUsesJWTParser(t *testing.T) {
 //
-//         // make and configure a mocked authorisation.JWTParser
-//         mockedJWTParser := &JWTParserMock{
-//             ParseFunc: func(tokenString string) (*permissions.EntityData, error) {
-// 	               panic("mock out the Parse method")
-//             },
-//         }
+// 		// make and configure a mocked authorisation.JWTParser
+// 		mockedJWTParser := &JWTParserMock{
+// 			ParseFunc: func(tokenString string) (*permissions.EntityData, error) {
+// 				panic("mock out the Parse method")
+// 			},
+// 		}
 //
-//         // use mockedJWTParser in code that requires authorisation.JWTParser
-//         // and then make assertions.
+// 		// use mockedJWTParser in code that requires authorisation.JWTParser
+// 		// and then make assertions.
 //
-//     }
+// 	}
 type JWTParserMock struct {
 	// ParseFunc mocks the Parse method.
 	ParseFunc func(tokenString string) (*permissions.EntityData, error)

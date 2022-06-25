@@ -14,7 +14,7 @@ import (
 	"time"
 
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
-	rchttp "github.com/ONSdigital/dp-rchttp"
+	rchttp "github.com/ONSdigital/dp-net/v2/http"
 	"github.com/ONSdigital/log.go/v2/log"
 )
 

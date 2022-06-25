@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
-	dprequest "github.com/ONSdigital/dp-net/request"
+	dprequest "github.com/ONSdigital/dp-net/v2/request"
 
 	"github.com/ONSdigital/dp-authorisation/v2/jwt"
 

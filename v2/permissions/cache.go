@@ -65,7 +65,7 @@ func (c *CachingStore) Update(ctx context.Context, maxCacheTime time.Duration) (
 	return bundle, err
 }
 
-// CheckCacheExpiry clears the cache data it it's gone beyond it's expiry time.
+// CheckCacheExpiry clears the cache data if it's gone beyond its expiry time
 func (c *CachingStore) CheckCacheExpiry(ctx context.Context, maxCacheTime time.Duration) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()

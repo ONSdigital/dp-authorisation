@@ -7,7 +7,7 @@ import (
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 
-	dprequest "github.com/ONSdigital/dp-net/request"
+	dprequest "github.com/ONSdigital/dp-net/v2/request"
 )
 
 //go:generate moq -out mock/jwt_parser.go -pkg mock . JWTParser

@@ -7,7 +7,7 @@ import (
 	"context"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
-	"github.com/ONSdigital/dp-healthcheck/healthcheck"
+	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"sync"
 )
 
@@ -17,25 +17,25 @@ var _ authorisation.PermissionsChecker = &PermissionsCheckerMock{}
 
 // PermissionsCheckerMock is a mock implementation of authorisation.PermissionsChecker.
 //
-//     func TestSomethingThatUsesPermissionsChecker(t *testing.T) {
+// 	func TestSomethingThatUsesPermissionsChecker(t *testing.T) {
 //
-//         // make and configure a mocked authorisation.PermissionsChecker
-//         mockedPermissionsChecker := &PermissionsCheckerMock{
-//             CloseFunc: func(ctx context.Context) error {
-// 	               panic("mock out the Close method")
-//             },
-//             HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
-// 	               panic("mock out the HasPermission method")
-//             },
-//             HealthCheckFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
-// 	               panic("mock out the HealthCheck method")
-//             },
-//         }
+// 		// make and configure a mocked authorisation.PermissionsChecker
+// 		mockedPermissionsChecker := &PermissionsCheckerMock{
+// 			CloseFunc: func(ctx context.Context) error {
+// 				panic("mock out the Close method")
+// 			},
+// 			HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
+// 				panic("mock out the HasPermission method")
+// 			},
+// 			HealthCheckFunc: func(ctx context.Context, state *health.CheckState) error {
+// 				panic("mock out the HealthCheck method")
+// 			},
+// 		}
 //
-//         // use mockedPermissionsChecker in code that requires authorisation.PermissionsChecker
-//         // and then make assertions.
+// 		// use mockedPermissionsChecker in code that requires authorisation.PermissionsChecker
+// 		// and then make assertions.
 //
-//     }
+// 	}
 type PermissionsCheckerMock struct {
 	// CloseFunc mocks the Close method.
 	CloseFunc func(ctx context.Context) error
@@ -44,7 +44,7 @@ type PermissionsCheckerMock struct {
 	HasPermissionFunc func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error)
 
 	// HealthCheckFunc mocks the HealthCheck method.
-	HealthCheckFunc func(ctx context.Context, state *healthcheck.CheckState) error
+	HealthCheckFunc func(ctx context.Context, state *health.CheckState) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -69,7 +69,7 @@ type PermissionsCheckerMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// State is the state argument value.
-			State *healthcheck.CheckState
+			State *health.CheckState
 		}
 	}
 	lockClose         sync.RWMutex
@@ -152,13 +152,13 @@ func (mock *PermissionsCheckerMock) HasPermissionCalls() []struct {
 }
 
 // HealthCheck calls HealthCheckFunc.
-func (mock *PermissionsCheckerMock) HealthCheck(ctx context.Context, state *healthcheck.CheckState) error {
+func (mock *PermissionsCheckerMock) HealthCheck(ctx context.Context, state *health.CheckState) error {
 	if mock.HealthCheckFunc == nil {
 		panic("PermissionsCheckerMock.HealthCheckFunc: method is nil but PermissionsChecker.HealthCheck was just called")
 	}
 	callInfo := struct {
 		Ctx   context.Context
-		State *healthcheck.CheckState
+		State *health.CheckState
 	}{
 		Ctx:   ctx,
 		State: state,
@@ -174,11 +174,11 @@ func (mock *PermissionsCheckerMock) HealthCheck(ctx context.Context, state *heal
 //     len(mockedPermissionsChecker.HealthCheckCalls())
 func (mock *PermissionsCheckerMock) HealthCheckCalls() []struct {
 	Ctx   context.Context
-	State *healthcheck.CheckState
+	State *health.CheckState
 } {
 	var calls []struct {
 		Ctx   context.Context
-		State *healthcheck.CheckState
+		State *health.CheckState
 	}
 	mock.lockHealthCheck.RLock()
 	calls = mock.calls.HealthCheck

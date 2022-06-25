@@ -15,19 +15,19 @@ var _ permissions.Store = &StoreMock{}
 
 // StoreMock is a mock implementation of permissions.Store.
 //
-//     func TestSomethingThatUsesStore(t *testing.T) {
+// 	func TestSomethingThatUsesStore(t *testing.T) {
 //
-//         // make and configure a mocked permissions.Store
-//         mockedStore := &StoreMock{
-//             GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
-// 	               panic("mock out the GetPermissionsBundle method")
-//             },
-//         }
+// 		// make and configure a mocked permissions.Store
+// 		mockedStore := &StoreMock{
+// 			GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
+// 				panic("mock out the GetPermissionsBundle method")
+// 			},
+// 		}
 //
-//         // use mockedStore in code that requires permissions.Store
-//         // and then make assertions.
+// 		// use mockedStore in code that requires permissions.Store
+// 		// and then make assertions.
 //
-//     }
+// 	}
 type StoreMock struct {
 	// GetPermissionsBundleFunc mocks the GetPermissionsBundle method.
 	GetPermissionsBundleFunc func(ctx context.Context) (permissions.Bundle, error)

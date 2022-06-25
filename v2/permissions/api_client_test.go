@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
-	dphttp "github.com/ONSdigital/dp-net/http"
+	dphttp "github.com/ONSdigital/dp-net/v2/http"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
