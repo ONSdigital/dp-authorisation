@@ -202,6 +202,11 @@ func (m PermissionCheckMiddleware) IdentityHealthCheck(ctx context.Context, stat
 	return m.IdentityClient.IdentityHealthCheck(ctx, state)
 }
 
+// Parse returns the parsed JWT token EntityData
+func (m PermissionCheckMiddleware) Parse(token string) (*permissions.EntityData, error) {
+	return m.jwtParser.Parse(token)
+}
+
 // GetCollectionIdAttribute provides an implementation of GetAttributesFromRequest. Retrieves and returns
 // header 'Collection-Id' from the request if it exists, otherwise returns an empty map. Never returns an
 // error as the header is not mandatory
