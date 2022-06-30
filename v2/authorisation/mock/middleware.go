@@ -6,6 +6,7 @@ package mock
 import (
 	"context"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
+	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"net/http"
 	"sync"
@@ -30,6 +31,9 @@ var _ authorisation.Middleware = &MiddlewareMock{}
 // 			IdentityHealthCheckFunc: func(ctx context.Context, state *health.CheckState) error {
 // 				panic("mock out the IdentityHealthCheck method")
 // 			},
+// 			ParseFunc: func(token string) (*permissions.EntityData, error) {
+// 				panic("mock out the Parse method")
+// 			},
 // 			RequireFunc: func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
 // 				panic("mock out the Require method")
 // 			},
@@ -51,6 +55,9 @@ type MiddlewareMock struct {
 
 	// IdentityHealthCheckFunc mocks the IdentityHealthCheck method.
 	IdentityHealthCheckFunc func(ctx context.Context, state *health.CheckState) error
+
+	// ParseFunc mocks the Parse method.
+	ParseFunc func(token string) (*permissions.EntityData, error)
 
 	// RequireFunc mocks the Require method.
 	RequireFunc func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc
@@ -79,6 +86,11 @@ type MiddlewareMock struct {
 			// State is the state argument value.
 			State *health.CheckState
 		}
+		// Parse holds details about calls to the Parse method.
+		Parse []struct {
+			// Token is the token argument value.
+			Token string
+		}
 		// Require holds details about calls to the Require method.
 		Require []struct {
 			// Permission is the permission argument value.
@@ -99,6 +111,7 @@ type MiddlewareMock struct {
 	lockClose                 sync.RWMutex
 	lockHealthCheck           sync.RWMutex
 	lockIdentityHealthCheck   sync.RWMutex
+	lockParse                 sync.RWMutex
 	lockRequire               sync.RWMutex
 	lockRequireWithAttributes sync.RWMutex
 }
@@ -201,6 +214,37 @@ func (mock *MiddlewareMock) IdentityHealthCheckCalls() []struct {
 	mock.lockIdentityHealthCheck.RLock()
 	calls = mock.calls.IdentityHealthCheck
 	mock.lockIdentityHealthCheck.RUnlock()
+	return calls
+}
+
+// Parse calls ParseFunc.
+func (mock *MiddlewareMock) Parse(token string) (*permissions.EntityData, error) {
+	if mock.ParseFunc == nil {
+		panic("MiddlewareMock.ParseFunc: method is nil but Middleware.Parse was just called")
+	}
+	callInfo := struct {
+		Token string
+	}{
+		Token: token,
+	}
+	mock.lockParse.Lock()
+	mock.calls.Parse = append(mock.calls.Parse, callInfo)
+	mock.lockParse.Unlock()
+	return mock.ParseFunc(token)
+}
+
+// ParseCalls gets all the calls that were made to Parse.
+// Check the length with:
+//     len(mockedMiddleware.ParseCalls())
+func (mock *MiddlewareMock) ParseCalls() []struct {
+	Token string
+} {
+	var calls []struct {
+		Token string
+	}
+	mock.lockParse.RLock()
+	calls = mock.calls.Parse
+	mock.lockParse.RUnlock()
 	return calls
 }
 
