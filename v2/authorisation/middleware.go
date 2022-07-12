@@ -202,8 +202,14 @@ func (m PermissionCheckMiddleware) IdentityHealthCheck(ctx context.Context, stat
 	return m.IdentityClient.IdentityHealthCheck(ctx, state)
 }
 
-// Parse returns the parsed JWT token EntityData
+// Parse token using returned Parser object
 func (m PermissionCheckMiddleware) Parse(token string) (*permissions.EntityData, error) {
+	//	jwtParser, err := NewCognitoRSAParser(m.IdentityClient.JWTKeys)
+	//	if err != nil {
+	//		j, _ := json.Marshal(m.IdentityClient.JWTKeys)
+	//		fmt.Println(m.IdentityClient.JWTKeys)
+	//		return nil, errors.New(string(j))
+	//	}
 	return m.jwtParser.Parse(token)
 }
 
