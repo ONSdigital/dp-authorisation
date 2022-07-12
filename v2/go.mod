@@ -4,12 +4,12 @@ go 1.18
 
 require (
 	github.com/ONSdigital/dp-api-clients-go v1.43.0
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.153.0
-	github.com/ONSdigital/dp-healthcheck v1.4.0-beta
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.146.0
+	github.com/ONSdigital/dp-healthcheck v1.3.0
 	github.com/ONSdigital/dp-net v1.4.1
-	github.com/ONSdigital/dp-net/v2 v2.5.0-beta
+	github.com/ONSdigital/dp-net/v2 v2.4.0
 	github.com/ONSdigital/dp-rchttp v1.0.0
-	github.com/ONSdigital/log.go/v2 v2.3.0-beta
+	github.com/ONSdigital/log.go/v2 v2.2.0
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/maxcnunes/httpfake v1.2.4
 	github.com/pkg/errors v0.9.1
