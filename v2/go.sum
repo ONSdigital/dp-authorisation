@@ -1,7 +1,7 @@
-github.com/ONSdigital/dp-api-clients-go/v2 v2.150.0-beta h1:O9rpupXWc+wbAfDa+zxDSEaOiuyBffixtfmyk+5d4c0=
-github.com/ONSdigital/dp-api-clients-go/v2 v2.150.0-beta/go.mod h1:PW75Y2J2edrAspaB6MiT5rhwS2ga1GlMuZRyf76VDRo=
-github.com/ONSdigital/dp-healthcheck v1.4.0-beta h1:rnFF65/1gaswgOzs4zMjoR7yD4vF+8aqoOQ9SRS1DB0=
-github.com/ONSdigital/dp-healthcheck v1.4.0-beta/go.mod h1:rIy35w7Bqos8+iSMISsiYG4GsDUH7vgKgtjAQCP5cVo=
+github.com/ONSdigital/dp-api-clients-go/v2 v2.153.0-beta.99 h1:giPmFCmpCVztsNHeOAbSuWwHQe3BCEVeCKoZ5dlQxk4=
+github.com/ONSdigital/dp-api-clients-go/v2 v2.153.0-beta.99/go.mod h1:x1kIksvpwcDcoU4lNqBOIQVg3mMHeZYbjUJ9JJIxrDk=
+github.com/ONSdigital/dp-healthcheck v1.4.0-beta.1 h1:U5rgko7nWxZK22fIor4v81Mu/34aR6NrccMxbTPCZY8=
+github.com/ONSdigital/dp-healthcheck v1.4.0-beta.1/go.mod h1:YwWlueMucOMrTJ7648o9H2JdIS8naNw6gI2/Mu82YTE=
 github.com/ONSdigital/dp-mocking v0.9.0-beta h1:a1tpJ39sh76JQcM9kHqJMKgEnbIJ7pTc0HSXhhymRJ4=
 github.com/ONSdigital/dp-net/v2 v2.5.0-beta h1:be/sM3nEXy5ejU/bvpO/KigUXcfED9o6c+zAh/V2K74=
 github.com/ONSdigital/dp-net/v2 v2.5.0-beta/go.mod h1:QJK9K2N8qwjMS5nZEzxSVALxJ/72KHAFDyFLj/mdLtw=
