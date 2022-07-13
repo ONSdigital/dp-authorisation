@@ -201,6 +201,17 @@ func (m PermissionCheckMiddleware) IdentityHealthCheck(ctx context.Context, stat
 	return m.IdentityClient.IdentityHealthCheck(ctx, state)
 }
 
+// Parse token using returned Parser object
+func (m PermissionCheckMiddleware) Parse(token string) (*permissions.EntityData, error) {
+	//	jwtParser, err := NewCognitoRSAParser(m.IdentityClient.JWTKeys)
+	//	if err != nil {
+	//		j, _ := json.Marshal(m.IdentityClient.JWTKeys)
+	//		fmt.Println(m.IdentityClient.JWTKeys)
+	//		return nil, errors.New(string(j))
+	//	}
+	return m.jwtParser.Parse(token)
+}
+
 // GetCollectionIdAttribute provides an implementation of GetAttributesFromRequest. Retrieves and returns
 // header 'Collection-Id' from the request if it exists, otherwise returns an empty map. Never returns an
 // error as the header is not mandatory

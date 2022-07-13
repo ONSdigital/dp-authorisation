@@ -20,6 +20,7 @@ type Middleware interface {
 	Require(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc
 	RequireWithAttributes(permission string, handlerFunc http.HandlerFunc, getAttributes GetAttributesFromRequest) http.HandlerFunc
 	Close(ctx context.Context) error
+	Parse(token string) (*permissions.EntityData, error)
 	HealthCheck(ctx context.Context, state *health.CheckState) error
 	IdentityHealthCheck(ctx context.Context, state *health.CheckState) error
 }

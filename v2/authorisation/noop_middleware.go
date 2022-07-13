@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 )
 
@@ -27,6 +28,11 @@ func (m NoopMiddleware) Require(permission string, handlerFunc http.HandlerFunc)
 	return func(w http.ResponseWriter, req *http.Request) {
 		handlerFunc(w, req)
 	}
+}
+
+// Parse token used by the middleware.
+func (m NoopMiddleware) Parse(token string) (*permissions.EntityData, error) {
+	return nil, nil
 }
 
 // Close resources used by the middleware.
