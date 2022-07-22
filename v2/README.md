@@ -222,6 +222,7 @@ func main() {
         if err != nil {
                 fmt.Println(err)
         }
+        // NOTE: If you retrieve the token from florence, ensure to strip out the `Bearer` string preceding the token.
         token := "eyJraWQiOiIyYTh2WG1JSzY3WlozaEZaXC9Ed1FBVGd2cVpnUkJGanV1VmF2bHczekV3bz0iLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJiOTIyM2VjZi0wYzMxLTRmZWUtODVkOC0zZmJlNjAwM2M1MWQiLCJjb2duaXRvOmdyb3VwcyI6WyJhZmU5ODA0OS0wNzU4LTRiYTgtYmQwNy1mOTY4ZjllYmFkMWQiXSwiaXNzIjoiaHR0cHM6XC9cL2NvZ25pdG8taWRwLmV1LXdlc3QtMS5hbWF6b25hd3MuY29tXC9ldS13ZXN0LTFfUm5tYTlscDJxIiwiY2xpZW50X2lkIjoiZGZjbTRvbms2MHJtc3NhOHJuN3NoamtpdiIsIm9yaWdpbl9qdGkiOiJlMGYzMjdiYS02MzA0LTQ0MzEtYjZmMy1jNTUwZTgwZTllYmIiLCJldmVudF9pZCI6IjYyZmM3Y2NjLWM0MTgtNGFmNC1hMDhlLThlZmU2NDU5MWUwNSIsInRva2VuX3VzZSI6ImFjY2VzcyIsInNjb3BlIjoiYXdzLmNvZ25pdG8uc2lnbmluLnVzZXIuYWRtaW4iLCJhdXRoX3RpbWUiOjE2NTY1MDE3NTUsImV4cCI6MTY1NjUwNTM1NSwiaWF0IjoxNjU2NTAxNzU1LCJqdGkiOiI0MzQ5OTc2Zi1kMjIyLTQwNGQtYTJkMy0zNTM4NjRjZGVjOWYiLCJ1c2VybmFtZSI6IjFjZjFlMDI1LTJhZDYtNGQ1NC04NmRiLTEzYTlhMjcxMTg1OCJ9.F6w7yuEh-tThF8Q_qH7oOwq5wNSvhDLltCKVTEHvyOa15CsMBepoAOu3XW6xHO-S6z60I17t3u4KGCI6iOsPclo7nGQsoq0bpxsgMAoPjZhOCk7qzDjbHBvk_MA2NLR8tDbxwfdlDiCQviKK3rLj6xT_n9jdcGhDrf58AO2gNNHxrGIg83iWhG650OS0AdGtc1rcVudlNoIpbwKOk1cLtfj44jozc4ZWI34MgGuz5bFtCJ39ZPAJuA8bebNa0krb4CW7W8Il0MnUO-h6wMfocZr6HpfrKoMJHGRvBuh6uVnULRGL1ZjgfqjduCSYF7r24PLHS1V-nIbaa-4-WDIojA"
         entityData, err := authorisationMiddleware.Parse(token)
         if err != nil {
@@ -272,6 +273,7 @@ func main() {
         if err != nil {
                 println(err)
         }
+        // NOTE: If you retrieve the token from florence, ensure to strip out the `Bearer` string preceding the token.
         token := "eyJraWQiOiJOZUtiNjUxOTRKbz0iLCJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYWFhYWFhYS1iYmJiLWNjY2MtZGRkZC1lZWVlZWVlZWVlZWUiLCJkZXZpY2Vfa2V5IjoiYWFhYWFhYWEtYmJiYi1jY2NjLWRkZGQtZWVlZWVlZWVlZWVlIiwiY29nbml0bzpncm91cHMiOlsicm9sZS1hZG1pbiJdLCJ0b2tlbl91c2UiOiJhY2Nlc3MiLCJzY29wZSI6ImF3cy5jb2duaXRvLnNpZ25pbi51c2VyLmFkbWluIiwiYXV0aF90aW1lIjoxNTYyMTkwNTI0LCJpc3MiOiJodHRwczovL2NvZ25pdG8taWRwLnVzLXdlc3QtMi5hbWF6b25hd3MuY29tL3VzLXdlc3QtMl9leGFtcGxlIiwiZXhwIjo5OTk5OTk5OTk5OTksImlhdCI6MTU2MjE5MDUyNCwianRpIjoiYWFhYWFhYWEtYmJiYi1jY2NjLWRkZGQtZWVlZWVlZWVlZWVlIiwiY2xpZW50X2lkIjoiNTdjYmlzaGs0ajI0cGFiYzEyMzQ1Njc4OTAiLCJ1c2VybmFtZSI6ImphbmVkb2VAZXhhbXBsZS5jb20ifQ.ZmZkZlrAtFxG5PnfC7dOru_KykJJ5f5bu7YkpCaNMwjXtBM8hWmiWk88QGfbx9kqI1wYs479cFrZ0FablR_38ek6RH9yAVaxTk7ZKOBUqSbVbIB-82B5iRXI8vLquZYjZEunH7LDv0kfZbsqoCZCe3nAJU5aV-hVMF1Cbz2LgIymRqMFqDxD2YIu5RgRHc71FtPebNfMTFCmnTs2v5b4KOqDNZZuab7eLMc-B941M6XyfdF7I6RRfvxw7xTv-qi6ZhGzkbe7K2rlxUmSwjQRDPYrOD7qji_V7yxon9okPyvpTHp-8yaHyrVv1CUCHX67c3OSRT7x3gZqRcPYpEZmScyj7M38Kwn04CKcNqc4ouozIBqhtkBgnCWJuaj1wl7AxQDRR5_F_IS962Y8t2IfU-UurqoZAZvQqWWyeBVJB3aIKrhSJHx62ayZVjd3u2za2WS8aZT97pjEuKLjSoYcgdEqnL9_fKdZc4Vv3QBZmtj_rZsb-zOrj2u_kMox8g-uaIC6ehkNucmM-HEfSuTA7nf_pPNw9c6HLDXJizGWMBVf18K94HPFTyWtJWB7yhXCuV9Kulp9iVGEn8230e6mn7ui0z8lU8R-KpZm3_aPTXBXKsUVdsoj0ZK5sd4y5ARdZ5BOGurT5NpMsw8avW-CqMF0dPY2kmUv3EtBE6dkvdg"
 
         ParsedEntityData, err := jwtParser.Parse(token)
