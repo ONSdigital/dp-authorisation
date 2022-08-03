@@ -14,48 +14,31 @@ var permissionsBundle = permissions.Bundle{
 	"users.add": map[string][]permissions.Policy{
 		"groups/admin": {
 			permissions.Policy{
-				ID:         "policy1",
-				Conditions: nil,
+				ID:        "policy1",
+				Condition: permissions.Condition{},
 			},
 		},
 	},
 	"legacy.read": map[string][]permissions.Policy{
 		"groups/admin": {
 			permissions.Policy{
-				ID:         "policy3",
-				Conditions: []permissions.Condition{},
+				ID:        "policy3",
+				Condition: permissions.Condition{},
 			},
 		},
 		"groups/publisher": {
 			permissions.Policy{
-				ID:         "policy4",
-				Conditions: []permissions.Condition{},
+				ID:        "policy4",
+				Condition: permissions.Condition{},
 			},
 		},
 		"groups/viewer": {
 			permissions.Policy{
 				ID: "policy2",
-				Conditions: []permissions.Condition{
-					{
-						Attribute: "collection_id",
-						Operator:  permissions.OperatorStringEquals,
-						Values:    []string{"collection765"},
-					},
-					{
-						Attribute: "collection_id",
-						Operator:  permissions.OperatorStringEquals,
-						Values:    []string{"collection766"},
-					},
-					{
-						Attribute: "collection_id",
-						Operator:  permissions.OperatorStringEquals,
-						Values:    []string{"collection767"},
-					},
-					{
-						Attribute: "collection_id",
-						Operator:  "stringequals",
-						Values:    []string{"collection768"},
-					},
+				Condition: permissions.Condition{
+					Attribute: "collection_id",
+					Operator:  permissions.OperatorStringEquals,
+					Values:    []string{"collection765"},
 				},
 			},
 		},
@@ -63,14 +46,14 @@ var permissionsBundle = permissions.Bundle{
 	"legacy.write": map[string][]permissions.Policy{
 		"groups/admin": {
 			permissions.Policy{
-				ID:         "policy5",
-				Conditions: []permissions.Condition{},
+				ID:        "policy5",
+				Condition: permissions.Condition{},
 			},
 		},
 		"groups/publisher": {
 			permissions.Policy{
-				ID:         "policy6",
-				Conditions: []permissions.Condition{},
+				ID:        "policy6",
+				Condition: permissions.Condition{},
 			},
 		},
 	},
@@ -78,17 +61,10 @@ var permissionsBundle = permissions.Bundle{
 		"groups/publisher": {
 			permissions.Policy{
 				ID: "policy7",
-				Conditions: []permissions.Condition{
-					{
-						Attribute: "path",
-						Operator:  permissions.OperatorStartsWith,
-						Values:    []string{"/files/dir/a/"},
-					},
-					{
-						Attribute: "path",
-						Operator:  permissions.OperatorStartsWith,
-						Values:    []string{"/files/dir/b"},
-					},
+				Condition: permissions.Condition{
+					Attribute: "path",
+					Operator:  permissions.OperatorStartsWith,
+					Values:    []string{"/files/dir/a/"},
 				},
 			},
 		},
@@ -179,6 +155,7 @@ func TestChecker_HasPermission_WithStringEqualsConditionTrue(t *testing.T) {
 
 		Convey("When HasPermission is called with a collection ID that satisfies the 'StringEquals' policy condition", func() {
 			attributes := map[string]string{"collection_id": "collection765"}
+
 			hasPermission, err := checker.HasPermission(ctx, entityData, "legacy.read", attributes)
 
 			Convey("Then there is no error returned", func() {
@@ -204,6 +181,7 @@ func TestChecker_HasPermission_WithStringEqualsConditionFalse(t *testing.T) {
 
 		Convey("When HasPermission is called with a collection ID that does not satisfy a 'StringEquals' policy condition", func() {
 			attributes := map[string]string{"collection_id": "collection999"}
+
 			hasPermission, err := checker.HasPermission(ctx, entityData, "legacy.read", attributes)
 
 			Convey("Then there is no error returned", func() {
@@ -229,6 +207,7 @@ func TestChecker_HasPermission_WithCaseInsensitivePolicyConditionOperatorFalse(t
 
 		Convey("When HasPermission is called with a collection ID that satisfies an invalid (case-insensitive) 'stringequals' policy condition operator", func() {
 			attributes := map[string]string{"collection_id": "collection768"}
+
 			hasPermission, err := checker.HasPermission(ctx, entityData, "legacy.read", attributes)
 
 			Convey("Then there is no error returned", func() {
@@ -254,6 +233,7 @@ func TestChecker_HasPermission_WithStartsWithConditionTrue(t *testing.T) {
 
 		Convey("When HasPermission is called with a collection ID that satisfies the 'StartsWith' policy condition", func() {
 			attributes := map[string]string{"path": "/files/dir/a/some/dir/"}
+
 			hasPermission, err := checker.HasPermission(ctx, entityData, "some_service.write", attributes)
 
 			Convey("Then there is no error returned", func() {
@@ -278,7 +258,8 @@ func TestChecker_HasPermission_WithStartsWithConditionFalse(t *testing.T) {
 		}
 
 		Convey("When HasPermission is called with a collection ID that does not satisfy the 'StartsWith' policy condition", func() {
-			attributes := map[string]string{"path": "/files/dir/c/some/dir"}
+			attributes := map[string]string{"path": "/files/dir/c/some/dir/"}
+
 			hasPermission, err := checker.HasPermission(ctx, entityData, "some_service.write", attributes)
 
 			Convey("Then there is no error returned", func() {
@@ -304,6 +285,7 @@ func TestChecker_HasPermission_MultipleConditionsChecked(t *testing.T) {
 
 		Convey("When HasPermission is called with a collection ID that satisfies the last 'StringEquals' policy condition", func() {
 			attributes := map[string]string{"collection_id": "collection767"}
+
 			hasPermission, err := checker.HasPermission(ctx, entityData, "legacy.read", attributes)
 
 			Convey("Then there is no error returned", func() {
