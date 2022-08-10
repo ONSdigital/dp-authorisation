@@ -126,21 +126,7 @@ func aPolicyApplies(policies []Policy, attributes map[string]string) bool {
 	}
 
 	for _, policy := range policies {
-		if aConditionIsMet(policy.Conditions, attributes) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func aConditionIsMet(conditions []Condition, attributes map[string]string) bool {
-	if conditions == nil || len(conditions) == 0 {
-		return true
-	}
-
-	for _, condition := range conditions {
-		if conditionIsMet(condition, attributes) {
+		if conditionIsMet(policy.Condition, attributes) {
 			return true
 		}
 	}

@@ -55,10 +55,10 @@ func TestAPIClient_GetPermissionsBundle(t *testing.T) {
 
 				policy := policies[0]
 				So(policy.ID, ShouldEqual, "policy/123")
-				So(policy.Conditions[0].Attribute, ShouldEqual, "collection_id")
-				So(policy.Conditions[0].Operator, ShouldEqual, "StringEquals")
-				So(policy.Conditions[0].Values, ShouldHaveLength, 1)
-				So(policy.Conditions[0].Values[0], ShouldEqual, "col123")
+				So(policy.Condition.Attribute, ShouldEqual, "collection_id")
+				So(policy.Condition.Operator, ShouldEqual, "StringEquals")
+				So(policy.Condition.Values, ShouldHaveLength, 1)
+				So(policy.Condition.Values[0], ShouldEqual, "col123")
 			})
 		})
 	})
@@ -108,10 +108,10 @@ func TestAPIClient_GetPermissionsBundle_SucceedsOnSecondAttempt(t *testing.T) {
 
 				policy := policies[0]
 				So(policy.ID, ShouldEqual, "policy/123")
-				So(policy.Conditions[0].Attribute, ShouldEqual, "collection_id")
-				So(policy.Conditions[0].Operator, ShouldEqual, "StringEquals")
-				So(policy.Conditions[0].Values, ShouldHaveLength, 1)
-				So(policy.Conditions[0].Values[0], ShouldEqual, "col123")
+				So(policy.Condition.Attribute, ShouldEqual, "collection_id")
+				So(policy.Condition.Operator, ShouldEqual, "StringEquals")
+				So(policy.Condition.Values, ShouldHaveLength, 1)
+				So(policy.Condition.Values[0], ShouldEqual, "col123")
 			})
 		})
 	})
@@ -244,12 +244,10 @@ func getExampleBundle() permissions.Bundle {
 			"group/admin": {
 				{
 					ID: "policy/123",
-					Conditions: []permissions.Condition{
-						{
-							Attribute: "collection_id",
-							Operator:  "StringEquals",
-							Values:    []string{"col123"}},
-					},
+					Condition: permissions.Condition{
+						Attribute: "collection_id",
+						Operator:  "StringEquals",
+						Values:    []string{"col123"}},
 				},
 			},
 		},

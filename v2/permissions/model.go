@@ -8,8 +8,8 @@ type Bundle map[string]EntityIDToPolicies
 
 // Policy is the policy model as stored in the permissions API.
 type Policy struct {
-	ID         string      `json:"id"`
-	Conditions []Condition `json:"conditions"`
+	ID        string    `json:"id"`
+	Condition Condition `json:"condition"`
 }
 
 // Condition is used within a policy to match additional attributes.
