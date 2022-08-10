@@ -1,4 +1,3 @@
-
 # dp-authorisation V2
 
 Authorisation is broken down into two parts:
@@ -15,6 +14,8 @@ The permission check will typically be wrapped around an entire endpoint via mid
 The config values for authorisation are the same regardless of how authorisation is applied to a service. The authorisation package provides a configuration type that can be embedded within an existing service config type.
 
 ```go
+  import "github.com/ONSdigital/dp-authorisation/v2/authorisation"
+
   type Config struct {
     ...
     AuthorisationConfig *authorisation.Config

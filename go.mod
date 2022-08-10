@@ -11,8 +11,6 @@ require (
 )
 
 require (
-	github.com/ONSdigital/dp-healthcheck v1.1.0 // indirect
-	github.com/ONSdigital/dp-net v1.2.0 // indirect
 	github.com/ONSdigital/go-ns v0.0.0-20210916104633-ac1c1c52327e // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20220104163920-15ed2e8cf2bd // indirect
