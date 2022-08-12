@@ -284,7 +284,7 @@ func TestChecker_HasPermission_MultipleConditionsChecked(t *testing.T) {
 		}
 
 		Convey("When HasPermission is called with a collection ID that satisfies the last 'StringEquals' policy condition", func() {
-			attributes := map[string]string{"collection_id": "collection767"}
+			attributes := map[string]string{"collection_id": "collection765"}
 
 			hasPermission, err := checker.HasPermission(ctx, entityData, "legacy.read", attributes)
 
