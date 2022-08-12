@@ -51,9 +51,10 @@ func NewChecker(
 }
 
 // HasPermission returns true if one of the given entities has the given permission.
-//    entityData - ID of the caller (user or service), as well as any associated groups
-//    permission - the action or permission the user wants to take, e.g. `datasets:edit`
-//    attributes - other key value attributes for use in access control decision, e.g. `collectionID`, `datasetID`, `isPublished`, `roleId`, etc
+//
+//	entityData - ID of the caller (user or service), as well as any associated groups
+//	permission - the action or permission the user wants to take, e.g. `datasets:edit`
+//	attributes - other key value attributes for use in access control decision, e.g. `collectionID`, `datasetID`, `isPublished`, `roleId`, etc
 func (c Checker) HasPermission(
 	ctx context.Context,
 	entityData EntityData,
@@ -135,6 +136,10 @@ func aPolicyApplies(policies []Policy, attributes map[string]string) bool {
 }
 
 func conditionIsMet(condition Condition, attributes map[string]string) bool {
+	if condition.Attribute == "" {
+		// an empty Attribute indicates the policy is unconditional
+		return true
+	}
 	value, ok := attributes[condition.Attribute]
 	if !ok {
 		return false
