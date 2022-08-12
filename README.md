@@ -1,5 +1,7 @@
 # dp-authorisation
 
+Note: This version of the library is deprecated. [Documentation for the newest version](https://github.com/ONSdigital/dp-authorisation/blob/main/README.md) can be found on the `main` branch.
+
 Library providing functionality for applying an authorisation check to `http.HandlerFunc`. 
 
 This will check the incoming request is authenticated (has a valid authorisation token) and then once identified will check if the user or service is authorised to access the endpoint/resources by verifying the user or service has the same permissions as those set against the handler.
