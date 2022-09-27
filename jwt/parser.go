@@ -66,7 +66,7 @@ func (p CognitoRSAParser) Parse(tokenString string) (*permissions.EntityData, er
 		return nil, ErrPublickeysEmpty
 	}
 	token, err := p.jwtParser.Parse(tokenString, p.getKey)
-	
+
 	if err != nil {
 		err = determineErrorType(err)
 		return nil, err
@@ -170,14 +170,14 @@ func (p CognitoRSAParser) getKey(token *jwt.Token) (interface{}, error) {
 
 func (p CognitoRSAParser) getPublicSigningKey(token string) (*rsa.PublicKey, error) {
 	tokenHeader := strings.Split(token, ".")[0]
-	pubKeyBytes, err := base64.StdEncoding.DecodeString(tokenHeader)
+	pubKeyBytes, err := base64.RawURLEncoding.DecodeString(tokenHeader)
 	if err != nil {
 		return nil, err
 	}
 
 	var decodedHeaders map[string]string
 	if json.Unmarshal(pubKeyBytes, &decodedHeaders) != nil {
-		return nil, err 
+		return nil, err
 	}
 
 	if p.PublicKeys[decodedHeaders[Kid]] == nil {
