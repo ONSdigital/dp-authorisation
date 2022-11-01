@@ -16,19 +16,19 @@ var _ authorisation.ZebedeeClient = &ZebedeeClientMock{}
 
 // ZebedeeClientMock is a mock implementation of authorisation.ZebedeeClient.
 //
-// 	func TestSomethingThatUsesZebedeeClient(t *testing.T) {
+//	func TestSomethingThatUsesZebedeeClient(t *testing.T) {
 //
-// 		// make and configure a mocked authorisation.ZebedeeClient
-// 		mockedZebedeeClient := &ZebedeeClientMock{
-// 			CheckTokenIdentityFunc: func(ctx context.Context, token string) (*dprequest.IdentityResponse, error) {
-// 				panic("mock out the CheckTokenIdentity method")
-// 			},
-// 		}
+//		// make and configure a mocked authorisation.ZebedeeClient
+//		mockedZebedeeClient := &ZebedeeClientMock{
+//			CheckTokenIdentityFunc: func(ctx context.Context, token string) (*dprequest.IdentityResponse, error) {
+//				panic("mock out the CheckTokenIdentity method")
+//			},
+//		}
 //
-// 		// use mockedZebedeeClient in code that requires authorisation.ZebedeeClient
-// 		// and then make assertions.
+//		// use mockedZebedeeClient in code that requires authorisation.ZebedeeClient
+//		// and then make assertions.
 //
-// 	}
+//	}
 type ZebedeeClientMock struct {
 	// CheckTokenIdentityFunc mocks the CheckTokenIdentity method.
 	CheckTokenIdentityFunc func(ctx context.Context, token string) (*dprequest.IdentityResponse, error)
@@ -66,7 +66,8 @@ func (mock *ZebedeeClientMock) CheckTokenIdentity(ctx context.Context, token str
 
 // CheckTokenIdentityCalls gets all the calls that were made to CheckTokenIdentity.
 // Check the length with:
-//     len(mockedZebedeeClient.CheckTokenIdentityCalls())
+//
+//	len(mockedZebedeeClient.CheckTokenIdentityCalls())
 func (mock *ZebedeeClientMock) CheckTokenIdentityCalls() []struct {
 	Ctx   context.Context
 	Token string

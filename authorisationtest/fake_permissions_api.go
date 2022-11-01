@@ -2,7 +2,8 @@ package authorisationtest
 
 import (
 	"encoding/json"
-	"github.com/ONSdigital/dp-authorisation/v2/permissions"
+
+	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	"github.com/maxcnunes/httpfake"
 )
 
@@ -31,7 +32,7 @@ func (f *FakePermissionsAPI) URL() string {
 }
 
 // UpdatePermissionsBundleResponse overrides the default response to return custom permission bundle data.
-func (f *FakePermissionsAPI) UpdatePermissionsBundleResponse(bundle *permissions.Bundle) error {
+func (f *FakePermissionsAPI) UpdatePermissionsBundleResponse(bundle *permsdk.Bundle) error {
 	bundleJson, err := json.Marshal(bundle)
 	if err != nil {
 		return err
@@ -42,8 +43,8 @@ func (f *FakePermissionsAPI) UpdatePermissionsBundleResponse(bundle *permissions
 }
 
 // GetDefaultPermissionsBundle returns a default set permissions bundle data.
-func GetDefaultPermissionsBundle() *permissions.Bundle {
-	return &permissions.Bundle{
+func GetDefaultPermissionsBundle() *permsdk.Bundle {
+	return &permsdk.Bundle{
 		"users:create": { // role
 			"groups/role-admin": { // group
 				{

@@ -8,25 +8,22 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
-	dprequest "github.com/ONSdigital/dp-net/request"
-
-	"github.com/ONSdigital/dp-authorisation/v2/jwt"
-
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation/mock"
+	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
 	"github.com/ONSdigital/dp-authorisation/v2/identityclient"
 	identityClientMock "github.com/ONSdigital/dp-authorisation/v2/identityclient/mock"
-	"github.com/ONSdigital/dp-authorisation/v2/permissions"
-
+	"github.com/ONSdigital/dp-authorisation/v2/jwt"
+	dprequest "github.com/ONSdigital/dp-net/request"
+	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 var (
-	dummyEntityData             = &permissions.EntityData{UserID: "fred"}
+	dummyEntityData             = &permsdk.EntityData{UserID: "fred"}
 	dummyAttributesData         = &map[string]string{"collection_id": "some-collection_id-uuid"}
 	permission                  = "dataset.read"
-	dummyServiveTokenEntityData = &permissions.EntityData{UserID: "bilbo.baggins@bilbo-baggins.io"}
+	dummyServiveTokenEntityData = &permsdk.EntityData{UserID: "bilbo.baggins@bilbo-baggins.io"}
 	zebedeeIdentity             = &mock.ZebedeeClientMock{
 		CheckTokenIdentityFunc: func(ctx context.Context, token string) (*dprequest.IdentityResponse, error) {
 			return &dprequest.IdentityResponse{
@@ -86,7 +83,7 @@ func TestMiddleware_RequireWithAttributes(t *testing.T) {
 		identityClient.CognitoRSAParser = NewCognitoRSAParserTest
 		mockAttributes := mockAttributes{attributes: *dummyAttributesData, calls: 0}
 		permissionsChecker := &mock.PermissionsCheckerMock{
-			HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
+			HasPermissionFunc: func(ctx context.Context, entityData permsdk.EntityData, permission string, attributes map[string]string) (bool, error) {
 				return true, nil
 			},
 		}
@@ -135,7 +132,7 @@ func TestMiddleware_Require(t *testing.T) {
 		mockJWTParser := newMockJWTParser()
 
 		permissionsChecker := &mock.PermissionsCheckerMock{
-			HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
+			HasPermissionFunc: func(ctx context.Context, entityData permsdk.EntityData, permission string, attributes map[string]string) (bool, error) {
 				return true, nil
 			},
 		}
@@ -197,7 +194,7 @@ func TestMiddleware_Require_JWTParseError(t *testing.T) {
 	Convey("Given the JWT parse fails with an error", t, func() {
 		expectedError := errors.New("failed to parse JWT token")
 		mockJWTParser := &mock.JWTParserMock{
-			ParseFunc: func(tokenString string) (*permissions.EntityData, error) {
+			ParseFunc: func(tokenString string) (*permsdk.EntityData, error) {
 				return nil, expectedError
 			},
 		}
@@ -233,7 +230,7 @@ func TestMiddleware_Require_PermissionsCheckerError(t *testing.T) {
 	Convey("Given the permission check returns an error", t, func() {
 		expectedError := errors.New("error checking permissions - probably means the cache failed to refresh")
 		permissionsChecker := &mock.PermissionsCheckerMock{
-			HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
+			HasPermissionFunc: func(ctx context.Context, entityData permsdk.EntityData, permission string, attributes map[string]string) (bool, error) {
 				return false, expectedError
 			},
 		}
@@ -274,7 +271,7 @@ func TestMiddleware_Require_PermissionsCheckerError(t *testing.T) {
 func TestMiddleware_Require_PermissionDenied(t *testing.T) {
 	Convey("Given the permission check returns false", t, func() {
 		permissionsChecker := &mock.PermissionsCheckerMock{
-			HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
+			HasPermissionFunc: func(ctx context.Context, entityData permsdk.EntityData, permission string, attributes map[string]string) (bool, error) {
 				return false, nil
 			},
 		}
@@ -315,7 +312,7 @@ func TestMiddleware_Require_PermissionDenied(t *testing.T) {
 func TestMiddleware_ServiceTokenUser_SuccessfullyAuthorised(t *testing.T) {
 	Convey("Given the permission check returns true", t, func() {
 		permissionsChecker := &mock.PermissionsCheckerMock{
-			HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
+			HasPermissionFunc: func(ctx context.Context, entityData permsdk.EntityData, permission string, attributes map[string]string) (bool, error) {
 				return true, nil
 			},
 		}
@@ -351,7 +348,7 @@ func TestMiddleware_ServiceTokenUser_SuccessfullyAuthorised(t *testing.T) {
 func TestMiddleware_ServiceTokenUser_AuthorisationDenied(t *testing.T) {
 	Convey("Given the permission check returns false", t, func() {
 		permissionsChecker := &mock.PermissionsCheckerMock{
-			HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
+			HasPermissionFunc: func(ctx context.Context, entityData permsdk.EntityData, permission string, attributes map[string]string) (bool, error) {
 				return false, nil
 			},
 		}
@@ -387,7 +384,7 @@ func TestMiddleware_ServiceTokenUser_AuthorisationDenied(t *testing.T) {
 func TestMiddleware_ServiceTokenUser_ZebedeeIdentityVerificationError(t *testing.T) {
 	Convey("Given the permission check returns false", t, func() {
 		permissionsChecker := &mock.PermissionsCheckerMock{
-			HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
+			HasPermissionFunc: func(ctx context.Context, entityData permsdk.EntityData, permission string, attributes map[string]string) (bool, error) {
 				return true, nil
 			},
 		}
@@ -482,7 +479,7 @@ func TestMiddleware_NewMiddlewareFromConfig_JWTKeys(t *testing.T) {
 
 func newMockJWTParser() *mock.JWTParserMock {
 	jwtParser := &mock.JWTParserMock{
-		ParseFunc: func(tokenString string) (*permissions.EntityData, error) {
+		ParseFunc: func(tokenString string) (*permsdk.EntityData, error) {
 			return dummyEntityData, nil
 		},
 	}

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-authorisation/v2/jwt"
-	"github.com/ONSdigital/dp-authorisation/v2/permissions"
+	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -60,7 +60,7 @@ func TestCognitoRSAParser_NewCognitoRSAParser_InvalidPublicKey(t *testing.T) {
 
 func TestCognitoRSAParser_Parse(t *testing.T) {
 	p, _ := jwt.NewCognitoRSAParser(testPublicKey)
-	expectedEntityData := &permissions.EntityData{
+	expectedEntityData := &permsdk.EntityData{
 		UserID: expectedUser,
 		Groups: []string{"admin", "publishing", "data", "test"},
 	}

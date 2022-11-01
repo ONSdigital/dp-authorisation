@@ -264,7 +264,7 @@ func main() {
         ctx := context.Background()
         // the following retrieves auth config values used in local dev and testing. For other environments, ensure you set IDENTITY_WEB_KEY_SET_URL env variable – https://github.com/ONSdigital/dp-authorisation/blob/master/v2/authorisation/config.go#L5-L15
         cfg := authorisation.NewDefaultConfig()
-        ExpectedEntityData := permissions.EntityData{
+        ExpectedEntityData := permsdk.EntityData{
                 UserID: "janedoe@example.com",
                 Groups: []string{"role-admin"},
         }

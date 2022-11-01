@@ -12,6 +12,7 @@ import (
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	"github.com/ONSdigital/dp-authorisation/v2/zebedeeclient"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
@@ -122,7 +123,7 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 
 		// process the token accordingly
 		var (
-			entityData = &permissions.EntityData{}
+			entityData = &permsdk.EntityData{}
 			err        error
 		)
 		if strings.Contains(authToken, ".") {
@@ -199,7 +200,7 @@ func (m PermissionCheckMiddleware) IdentityHealthCheck(ctx context.Context, stat
 }
 
 // Parse token using returned Parser object
-func (m PermissionCheckMiddleware) Parse(token string) (*permissions.EntityData, error) {
+func (m PermissionCheckMiddleware) Parse(token string) (*permsdk.EntityData, error) {
 	//	jwtParser, err := NewCognitoRSAParser(m.IdentityClient.JWTKeys)
 	//	if err != nil {
 	//		j, _ := json.Marshal(m.IdentityClient.JWTKeys)

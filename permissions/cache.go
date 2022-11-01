@@ -6,6 +6,7 @@ import (
 	"time"
 
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
@@ -15,7 +16,7 @@ var _ Store = (*CachingStore)(nil)
 // CachingStore is a permissions store implementation that caches permission data in memory.
 type CachingStore struct {
 	underlyingStore      Store
-	cachedBundle         Bundle
+	cachedBundle         permsdk.Bundle
 	closing              chan struct{}
 	cacheUpdaterClosed   chan struct{}
 	lastUpdated          time.Time
@@ -33,19 +34,19 @@ func NewCachingStore(underlyingStore Store) *CachingStore {
 }
 
 // GetPermissionsBundle returns the cached permission data, or an error if it's not cached.
-func (c *CachingStore) GetPermissionsBundle(ctx context.Context) (Bundle, error) {
+func (c *CachingStore) GetPermissionsBundle(ctx context.Context) (permsdk.Bundle, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
 	if c.cachedBundle == nil {
-		return nil, ErrNotCached
+		return nil, permsdk.ErrNotCached
 	}
 
 	return c.cachedBundle, nil
 }
 
 // Update the permissions cache data, by calling the underlying permissions store
-func (c *CachingStore) Update(ctx context.Context, maxCacheTime time.Duration) (Bundle, error) {
+func (c *CachingStore) Update(ctx context.Context, maxCacheTime time.Duration) (permsdk.Bundle, error) {
 	bundle, err := c.underlyingStore.GetPermissionsBundle(ctx)
 
 	c.mutex.Lock()
@@ -78,7 +79,7 @@ func (c *CachingStore) CheckCacheExpiry(ctx context.Context, maxCacheTime time.D
 }
 
 // StartCacheUpdater starts a go routine to continually update cache data at time intervals.
-//  - updateInterval - how often to update the cache data.
+//   - updateInterval - how often to update the cache data.
 func (c *CachingStore) StartCacheUpdater(ctx context.Context, updateInterval time.Duration, maxCacheTime time.Duration) {
 	c.updateWithErrLog(ctx, maxCacheTime)
 	go func() {

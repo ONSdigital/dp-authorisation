@@ -48,7 +48,7 @@ The Close function should be called on the library when it is no longer required
 #### Check if a user has a permission
 
 ```go
-  entityData := permissions.EntityData{
+  entityData := permsdk.EntityData{
     UserID: "1234",
     Groups: []string{"admin"},
   }

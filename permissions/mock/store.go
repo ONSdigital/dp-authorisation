@@ -6,6 +6,7 @@ package mock
 import (
 	"context"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
+	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	"sync"
 )
 
@@ -15,22 +16,22 @@ var _ permissions.Store = &StoreMock{}
 
 // StoreMock is a mock implementation of permissions.Store.
 //
-//     func TestSomethingThatUsesStore(t *testing.T) {
+//	func TestSomethingThatUsesStore(t *testing.T) {
 //
-//         // make and configure a mocked permissions.Store
-//         mockedStore := &StoreMock{
-//             GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
-// 	               panic("mock out the GetPermissionsBundle method")
-//             },
-//         }
+//		// make and configure a mocked permissions.Store
+//		mockedStore := &StoreMock{
+//			GetPermissionsBundleFunc: func(ctx context.Context) (permsdk.Bundle, error) {
+//				panic("mock out the GetPermissionsBundle method")
+//			},
+//		}
 //
-//         // use mockedStore in code that requires permissions.Store
-//         // and then make assertions.
+//		// use mockedStore in code that requires permissions.Store
+//		// and then make assertions.
 //
-//     }
+//	}
 type StoreMock struct {
 	// GetPermissionsBundleFunc mocks the GetPermissionsBundle method.
-	GetPermissionsBundleFunc func(ctx context.Context) (permissions.Bundle, error)
+	GetPermissionsBundleFunc func(ctx context.Context) (permsdk.Bundle, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -44,7 +45,7 @@ type StoreMock struct {
 }
 
 // GetPermissionsBundle calls GetPermissionsBundleFunc.
-func (mock *StoreMock) GetPermissionsBundle(ctx context.Context) (permissions.Bundle, error) {
+func (mock *StoreMock) GetPermissionsBundle(ctx context.Context) (permsdk.Bundle, error) {
 	if mock.GetPermissionsBundleFunc == nil {
 		panic("StoreMock.GetPermissionsBundleFunc: method is nil but Store.GetPermissionsBundle was just called")
 	}
@@ -61,7 +62,8 @@ func (mock *StoreMock) GetPermissionsBundle(ctx context.Context) (permissions.Bu
 
 // GetPermissionsBundleCalls gets all the calls that were made to GetPermissionsBundle.
 // Check the length with:
-//     len(mockedStore.GetPermissionsBundleCalls())
+//
+//	len(mockedStore.GetPermissionsBundleCalls())
 func (mock *StoreMock) GetPermissionsBundleCalls() []struct {
 	Ctx context.Context
 } {

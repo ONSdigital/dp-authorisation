@@ -6,8 +6,8 @@ package mock
 import (
 	"context"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
-	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	"net/http"
 	"sync"
 )
@@ -18,34 +18,34 @@ var _ authorisation.Middleware = &MiddlewareMock{}
 
 // MiddlewareMock is a mock implementation of authorisation.Middleware.
 //
-// 	func TestSomethingThatUsesMiddleware(t *testing.T) {
+//	func TestSomethingThatUsesMiddleware(t *testing.T) {
 //
-// 		// make and configure a mocked authorisation.Middleware
-// 		mockedMiddleware := &MiddlewareMock{
-// 			CloseFunc: func(ctx context.Context) error {
-// 				panic("mock out the Close method")
-// 			},
-// 			HealthCheckFunc: func(ctx context.Context, state *health.CheckState) error {
-// 				panic("mock out the HealthCheck method")
-// 			},
-// 			IdentityHealthCheckFunc: func(ctx context.Context, state *health.CheckState) error {
-// 				panic("mock out the IdentityHealthCheck method")
-// 			},
-// 			ParseFunc: func(token string) (*permissions.EntityData, error) {
-// 				panic("mock out the Parse method")
-// 			},
-// 			RequireFunc: func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
-// 				panic("mock out the Require method")
-// 			},
-// 			RequireWithAttributesFunc: func(permission string, handlerFunc http.HandlerFunc, getAttributes authorisation.GetAttributesFromRequest) http.HandlerFunc {
-// 				panic("mock out the RequireWithAttributes method")
-// 			},
-// 		}
+//		// make and configure a mocked authorisation.Middleware
+//		mockedMiddleware := &MiddlewareMock{
+//			CloseFunc: func(ctx context.Context) error {
+//				panic("mock out the Close method")
+//			},
+//			HealthCheckFunc: func(ctx context.Context, state *health.CheckState) error {
+//				panic("mock out the HealthCheck method")
+//			},
+//			IdentityHealthCheckFunc: func(ctx context.Context, state *health.CheckState) error {
+//				panic("mock out the IdentityHealthCheck method")
+//			},
+//			ParseFunc: func(token string) (*permsdk.EntityData, error) {
+//				panic("mock out the Parse method")
+//			},
+//			RequireFunc: func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
+//				panic("mock out the Require method")
+//			},
+//			RequireWithAttributesFunc: func(permission string, handlerFunc http.HandlerFunc, getAttributes authorisation.GetAttributesFromRequest) http.HandlerFunc {
+//				panic("mock out the RequireWithAttributes method")
+//			},
+//		}
 //
-// 		// use mockedMiddleware in code that requires authorisation.Middleware
-// 		// and then make assertions.
+//		// use mockedMiddleware in code that requires authorisation.Middleware
+//		// and then make assertions.
 //
-// 	}
+//	}
 type MiddlewareMock struct {
 	// CloseFunc mocks the Close method.
 	CloseFunc func(ctx context.Context) error
@@ -57,7 +57,7 @@ type MiddlewareMock struct {
 	IdentityHealthCheckFunc func(ctx context.Context, state *health.CheckState) error
 
 	// ParseFunc mocks the Parse method.
-	ParseFunc func(token string) (*permissions.EntityData, error)
+	ParseFunc func(token string) (*permsdk.EntityData, error)
 
 	// RequireFunc mocks the Require method.
 	RequireFunc func(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc
@@ -134,7 +134,8 @@ func (mock *MiddlewareMock) Close(ctx context.Context) error {
 
 // CloseCalls gets all the calls that were made to Close.
 // Check the length with:
-//     len(mockedMiddleware.CloseCalls())
+//
+//	len(mockedMiddleware.CloseCalls())
 func (mock *MiddlewareMock) CloseCalls() []struct {
 	Ctx context.Context
 } {
@@ -167,7 +168,8 @@ func (mock *MiddlewareMock) HealthCheck(ctx context.Context, state *health.Check
 
 // HealthCheckCalls gets all the calls that were made to HealthCheck.
 // Check the length with:
-//     len(mockedMiddleware.HealthCheckCalls())
+//
+//	len(mockedMiddleware.HealthCheckCalls())
 func (mock *MiddlewareMock) HealthCheckCalls() []struct {
 	Ctx   context.Context
 	State *health.CheckState
@@ -202,7 +204,8 @@ func (mock *MiddlewareMock) IdentityHealthCheck(ctx context.Context, state *heal
 
 // IdentityHealthCheckCalls gets all the calls that were made to IdentityHealthCheck.
 // Check the length with:
-//     len(mockedMiddleware.IdentityHealthCheckCalls())
+//
+//	len(mockedMiddleware.IdentityHealthCheckCalls())
 func (mock *MiddlewareMock) IdentityHealthCheckCalls() []struct {
 	Ctx   context.Context
 	State *health.CheckState
@@ -218,7 +221,7 @@ func (mock *MiddlewareMock) IdentityHealthCheckCalls() []struct {
 }
 
 // Parse calls ParseFunc.
-func (mock *MiddlewareMock) Parse(token string) (*permissions.EntityData, error) {
+func (mock *MiddlewareMock) Parse(token string) (*permsdk.EntityData, error) {
 	if mock.ParseFunc == nil {
 		panic("MiddlewareMock.ParseFunc: method is nil but Middleware.Parse was just called")
 	}
@@ -235,7 +238,8 @@ func (mock *MiddlewareMock) Parse(token string) (*permissions.EntityData, error)
 
 // ParseCalls gets all the calls that were made to Parse.
 // Check the length with:
-//     len(mockedMiddleware.ParseCalls())
+//
+//	len(mockedMiddleware.ParseCalls())
 func (mock *MiddlewareMock) ParseCalls() []struct {
 	Token string
 } {
@@ -268,7 +272,8 @@ func (mock *MiddlewareMock) Require(permission string, handlerFunc http.HandlerF
 
 // RequireCalls gets all the calls that were made to Require.
 // Check the length with:
-//     len(mockedMiddleware.RequireCalls())
+//
+//	len(mockedMiddleware.RequireCalls())
 func (mock *MiddlewareMock) RequireCalls() []struct {
 	Permission  string
 	HandlerFunc http.HandlerFunc
@@ -305,7 +310,8 @@ func (mock *MiddlewareMock) RequireWithAttributes(permission string, handlerFunc
 
 // RequireWithAttributesCalls gets all the calls that were made to RequireWithAttributes.
 // Check the length with:
-//     len(mockedMiddleware.RequireWithAttributesCalls())
+//
+//	len(mockedMiddleware.RequireWithAttributesCalls())
 func (mock *MiddlewareMock) RequireWithAttributesCalls() []struct {
 	Permission    string
 	HandlerFunc   http.HandlerFunc

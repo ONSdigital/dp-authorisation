@@ -6,8 +6,8 @@ package mock
 import (
 	"context"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
-	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	"sync"
 )
 
@@ -17,31 +17,31 @@ var _ authorisation.PermissionsChecker = &PermissionsCheckerMock{}
 
 // PermissionsCheckerMock is a mock implementation of authorisation.PermissionsChecker.
 //
-// 	func TestSomethingThatUsesPermissionsChecker(t *testing.T) {
+//	func TestSomethingThatUsesPermissionsChecker(t *testing.T) {
 //
-// 		// make and configure a mocked authorisation.PermissionsChecker
-// 		mockedPermissionsChecker := &PermissionsCheckerMock{
-// 			CloseFunc: func(ctx context.Context) error {
-// 				panic("mock out the Close method")
-// 			},
-// 			HasPermissionFunc: func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
-// 				panic("mock out the HasPermission method")
-// 			},
-// 			HealthCheckFunc: func(ctx context.Context, state *health.CheckState) error {
-// 				panic("mock out the HealthCheck method")
-// 			},
-// 		}
+//		// make and configure a mocked authorisation.PermissionsChecker
+//		mockedPermissionsChecker := &PermissionsCheckerMock{
+//			CloseFunc: func(ctx context.Context) error {
+//				panic("mock out the Close method")
+//			},
+//			HasPermissionFunc: func(ctx context.Context, entityData permsdk.EntityData, permission string, attributes map[string]string) (bool, error) {
+//				panic("mock out the HasPermission method")
+//			},
+//			HealthCheckFunc: func(ctx context.Context, state *health.CheckState) error {
+//				panic("mock out the HealthCheck method")
+//			},
+//		}
 //
-// 		// use mockedPermissionsChecker in code that requires authorisation.PermissionsChecker
-// 		// and then make assertions.
+//		// use mockedPermissionsChecker in code that requires authorisation.PermissionsChecker
+//		// and then make assertions.
 //
-// 	}
+//	}
 type PermissionsCheckerMock struct {
 	// CloseFunc mocks the Close method.
 	CloseFunc func(ctx context.Context) error
 
 	// HasPermissionFunc mocks the HasPermission method.
-	HasPermissionFunc func(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error)
+	HasPermissionFunc func(ctx context.Context, entityData permsdk.EntityData, permission string, attributes map[string]string) (bool, error)
 
 	// HealthCheckFunc mocks the HealthCheck method.
 	HealthCheckFunc func(ctx context.Context, state *health.CheckState) error
@@ -58,7 +58,7 @@ type PermissionsCheckerMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// EntityData is the entityData argument value.
-			EntityData permissions.EntityData
+			EntityData permsdk.EntityData
 			// Permission is the permission argument value.
 			Permission string
 			// Attributes is the attributes argument value.
@@ -95,7 +95,8 @@ func (mock *PermissionsCheckerMock) Close(ctx context.Context) error {
 
 // CloseCalls gets all the calls that were made to Close.
 // Check the length with:
-//     len(mockedPermissionsChecker.CloseCalls())
+//
+//	len(mockedPermissionsChecker.CloseCalls())
 func (mock *PermissionsCheckerMock) CloseCalls() []struct {
 	Ctx context.Context
 } {
@@ -109,13 +110,13 @@ func (mock *PermissionsCheckerMock) CloseCalls() []struct {
 }
 
 // HasPermission calls HasPermissionFunc.
-func (mock *PermissionsCheckerMock) HasPermission(ctx context.Context, entityData permissions.EntityData, permission string, attributes map[string]string) (bool, error) {
+func (mock *PermissionsCheckerMock) HasPermission(ctx context.Context, entityData permsdk.EntityData, permission string, attributes map[string]string) (bool, error) {
 	if mock.HasPermissionFunc == nil {
 		panic("PermissionsCheckerMock.HasPermissionFunc: method is nil but PermissionsChecker.HasPermission was just called")
 	}
 	callInfo := struct {
 		Ctx        context.Context
-		EntityData permissions.EntityData
+		EntityData permsdk.EntityData
 		Permission string
 		Attributes map[string]string
 	}{
@@ -132,16 +133,17 @@ func (mock *PermissionsCheckerMock) HasPermission(ctx context.Context, entityDat
 
 // HasPermissionCalls gets all the calls that were made to HasPermission.
 // Check the length with:
-//     len(mockedPermissionsChecker.HasPermissionCalls())
+//
+//	len(mockedPermissionsChecker.HasPermissionCalls())
 func (mock *PermissionsCheckerMock) HasPermissionCalls() []struct {
 	Ctx        context.Context
-	EntityData permissions.EntityData
+	EntityData permsdk.EntityData
 	Permission string
 	Attributes map[string]string
 } {
 	var calls []struct {
 		Ctx        context.Context
-		EntityData permissions.EntityData
+		EntityData permsdk.EntityData
 		Permission string
 		Attributes map[string]string
 	}
@@ -171,7 +173,8 @@ func (mock *PermissionsCheckerMock) HealthCheck(ctx context.Context, state *heal
 
 // HealthCheckCalls gets all the calls that were made to HealthCheck.
 // Check the length with:
-//     len(mockedPermissionsChecker.HealthCheckCalls())
+//
+//	len(mockedPermissionsChecker.HealthCheckCalls())
 func (mock *PermissionsCheckerMock) HealthCheckCalls() []struct {
 	Ctx   context.Context
 	State *health.CheckState

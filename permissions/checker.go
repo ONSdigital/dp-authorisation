@@ -14,7 +14,7 @@ import (
 	"time"
 
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
-	rchttp "github.com/ONSdigital/dp-rchttp"
+	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
@@ -30,20 +30,13 @@ func NewCheckerForStore(cache Cache) *Checker {
 	}
 }
 
-// request backoff schedule: 60/120/180 seconds
-var backoffSchedule = []time.Duration{
-	60 * time.Second,
-	120 * time.Second,
-	180 * time.Second,
-}
-
 // NewChecker creates a new Checker instance that uses the permissions API client, wrapped in a CachingStore
 func NewChecker(
 	ctx context.Context,
 	permissionsAPIHost string,
 	cacheUpdateInterval, maxCacheTime time.Duration) *Checker {
 
-	apiClient := NewAPIClient(permissionsAPIHost, rchttp.NewClient(), backoffSchedule)
+	apiClient := permsdk.NewClient(permissionsAPIHost)
 	cachingStore := NewCachingStore(apiClient)
 	cachingStore.StartCacheUpdater(ctx, cacheUpdateInterval, maxCacheTime)
 
@@ -57,7 +50,7 @@ func NewChecker(
 //	attributes - other key value attributes for use in access control decision, e.g. `collectionID`, `datasetID`, `isPublished`, `roleId`, etc
 func (c Checker) HasPermission(
 	ctx context.Context,
-	entityData EntityData,
+	entityData permsdk.EntityData,
 	permission string,
 	attributes map[string]string) (bool, error) {
 
@@ -74,7 +67,7 @@ func (c Checker) HealthCheck(ctx context.Context, state *health.CheckState) erro
 	return c.cache.HealthCheck(ctx, state)
 }
 
-func mapEntityDataToEntities(entityData EntityData) []string {
+func mapEntityDataToEntities(entityData permsdk.EntityData) []string {
 	var entities []string
 
 	if len(entityData.UserID) > 0 {
@@ -121,7 +114,7 @@ func (c Checker) hasPermission(
 	return false, nil
 }
 
-func aPolicyApplies(policies []Policy, attributes map[string]string) bool {
+func aPolicyApplies(policies []permsdk.Policy, attributes map[string]string) bool {
 	if policies == nil || len(policies) == 0 {
 		return false
 	}
@@ -135,7 +128,7 @@ func aPolicyApplies(policies []Policy, attributes map[string]string) bool {
 	return false
 }
 
-func conditionIsMet(condition Condition, attributes map[string]string) bool {
+func conditionIsMet(condition permsdk.Condition, attributes map[string]string) bool {
 	if condition.Attribute == "" {
 		// an empty Attribute indicates the policy is unconditional
 		return true
@@ -146,10 +139,10 @@ func conditionIsMet(condition Condition, attributes map[string]string) bool {
 	}
 
 	for _, conditionValue := range condition.Values {
-		if condition.Operator == OperatorStringEquals && value == conditionValue {
+		if condition.Operator == permsdk.OperatorStringEquals && value == conditionValue {
 			return true
 		}
-		if condition.Operator == OperatorStartsWith && strings.HasPrefix(value, conditionValue) {
+		if condition.Operator == permsdk.OperatorStartsWith && strings.HasPrefix(value, conditionValue) {
 			return true
 		}
 	}

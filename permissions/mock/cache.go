@@ -6,7 +6,8 @@ package mock
 import (
 	"context"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
-	"github.com/ONSdigital/dp-healthcheck/healthcheck"
+	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	"sync"
 )
 
@@ -16,34 +17,34 @@ var _ permissions.Cache = &CacheMock{}
 
 // CacheMock is a mock implementation of permissions.Cache.
 //
-//     func TestSomethingThatUsesCache(t *testing.T) {
+//	func TestSomethingThatUsesCache(t *testing.T) {
 //
-//         // make and configure a mocked permissions.Cache
-//         mockedCache := &CacheMock{
-//             CloseFunc: func(ctx context.Context) error {
-// 	               panic("mock out the Close method")
-//             },
-//             GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
-// 	               panic("mock out the GetPermissionsBundle method")
-//             },
-//             HealthCheckFunc: func(ctx context.Context, state *healthcheck.CheckState) error {
-// 	               panic("mock out the HealthCheck method")
-//             },
-//         }
+//		// make and configure a mocked permissions.Cache
+//		mockedCache := &CacheMock{
+//			CloseFunc: func(ctx context.Context) error {
+//				panic("mock out the Close method")
+//			},
+//			GetPermissionsBundleFunc: func(ctx context.Context) (permsdk.Bundle, error) {
+//				panic("mock out the GetPermissionsBundle method")
+//			},
+//			HealthCheckFunc: func(ctx context.Context, state *health.CheckState) error {
+//				panic("mock out the HealthCheck method")
+//			},
+//		}
 //
-//         // use mockedCache in code that requires permissions.Cache
-//         // and then make assertions.
+//		// use mockedCache in code that requires permissions.Cache
+//		// and then make assertions.
 //
-//     }
+//	}
 type CacheMock struct {
 	// CloseFunc mocks the Close method.
 	CloseFunc func(ctx context.Context) error
 
 	// GetPermissionsBundleFunc mocks the GetPermissionsBundle method.
-	GetPermissionsBundleFunc func(ctx context.Context) (permissions.Bundle, error)
+	GetPermissionsBundleFunc func(ctx context.Context) (permsdk.Bundle, error)
 
 	// HealthCheckFunc mocks the HealthCheck method.
-	HealthCheckFunc func(ctx context.Context, state *healthcheck.CheckState) error
+	HealthCheckFunc func(ctx context.Context, state *health.CheckState) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -62,7 +63,7 @@ type CacheMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// State is the state argument value.
-			State *healthcheck.CheckState
+			State *health.CheckState
 		}
 	}
 	lockClose                sync.RWMutex
@@ -88,7 +89,8 @@ func (mock *CacheMock) Close(ctx context.Context) error {
 
 // CloseCalls gets all the calls that were made to Close.
 // Check the length with:
-//     len(mockedCache.CloseCalls())
+//
+//	len(mockedCache.CloseCalls())
 func (mock *CacheMock) CloseCalls() []struct {
 	Ctx context.Context
 } {
@@ -102,7 +104,7 @@ func (mock *CacheMock) CloseCalls() []struct {
 }
 
 // GetPermissionsBundle calls GetPermissionsBundleFunc.
-func (mock *CacheMock) GetPermissionsBundle(ctx context.Context) (permissions.Bundle, error) {
+func (mock *CacheMock) GetPermissionsBundle(ctx context.Context) (permsdk.Bundle, error) {
 	if mock.GetPermissionsBundleFunc == nil {
 		panic("CacheMock.GetPermissionsBundleFunc: method is nil but Cache.GetPermissionsBundle was just called")
 	}
@@ -119,7 +121,8 @@ func (mock *CacheMock) GetPermissionsBundle(ctx context.Context) (permissions.Bu
 
 // GetPermissionsBundleCalls gets all the calls that were made to GetPermissionsBundle.
 // Check the length with:
-//     len(mockedCache.GetPermissionsBundleCalls())
+//
+//	len(mockedCache.GetPermissionsBundleCalls())
 func (mock *CacheMock) GetPermissionsBundleCalls() []struct {
 	Ctx context.Context
 } {
@@ -133,13 +136,13 @@ func (mock *CacheMock) GetPermissionsBundleCalls() []struct {
 }
 
 // HealthCheck calls HealthCheckFunc.
-func (mock *CacheMock) HealthCheck(ctx context.Context, state *healthcheck.CheckState) error {
+func (mock *CacheMock) HealthCheck(ctx context.Context, state *health.CheckState) error {
 	if mock.HealthCheckFunc == nil {
 		panic("CacheMock.HealthCheckFunc: method is nil but Cache.HealthCheck was just called")
 	}
 	callInfo := struct {
 		Ctx   context.Context
-		State *healthcheck.CheckState
+		State *health.CheckState
 	}{
 		Ctx:   ctx,
 		State: state,
@@ -152,14 +155,15 @@ func (mock *CacheMock) HealthCheck(ctx context.Context, state *healthcheck.Check
 
 // HealthCheckCalls gets all the calls that were made to HealthCheck.
 // Check the length with:
-//     len(mockedCache.HealthCheckCalls())
+//
+//	len(mockedCache.HealthCheckCalls())
 func (mock *CacheMock) HealthCheckCalls() []struct {
 	Ctx   context.Context
-	State *healthcheck.CheckState
+	State *health.CheckState
 } {
 	var calls []struct {
 		Ctx   context.Context
-		State *healthcheck.CheckState
+		State *health.CheckState
 	}
 	mock.lockHealthCheck.RLock()
 	calls = mock.calls.HealthCheck

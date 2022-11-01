@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/ONSdigital/dp-authorisation/v2/permissions"
+	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
 )
@@ -61,7 +61,7 @@ func NewCognitoRSAParser(base64EncodedPublicKey map[string]string) (*CognitoRSAP
 }
 
 // Parse and verify the given JWT token, and return the EntityData contained within the JWT (user ID and groups list)
-func (p CognitoRSAParser) Parse(tokenString string) (*permissions.EntityData, error) {
+func (p CognitoRSAParser) Parse(tokenString string) (*permsdk.EntityData, error) {
 	if len(p.PublicKeys) == 0 {
 		return nil, ErrPublickeysEmpty
 	}
@@ -84,7 +84,7 @@ func (p CognitoRSAParser) Parse(tokenString string) (*permissions.EntityData, er
 }
 
 // getEntityData takes a jwt token and reads its claims to determine the entity data (user ID and groups)
-func getEntityData(token *jwt.Token) (*permissions.EntityData, error) {
+func getEntityData(token *jwt.Token) (*permsdk.EntityData, error) {
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		return nil, ErrFailedToParseClaims
@@ -101,7 +101,7 @@ func getEntityData(token *jwt.Token) (*permissions.EntityData, error) {
 	}
 
 	groups := mapToStringArray(jwtGroups)
-	entityData := &permissions.EntityData{
+	entityData := &permsdk.EntityData{
 		UserID: userID,
 		Groups: groups,
 	}

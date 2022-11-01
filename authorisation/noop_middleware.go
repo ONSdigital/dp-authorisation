@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 )
 
 // NoopMiddleware provides a middleware implementation that does not do any permissions checking.
@@ -31,7 +31,7 @@ func (m NoopMiddleware) Require(permission string, handlerFunc http.HandlerFunc)
 }
 
 // Parse token used by the middleware.
-func (m NoopMiddleware) Parse(token string) (*permissions.EntityData, error) {
+func (m NoopMiddleware) Parse(token string) (*permsdk.EntityData, error) {
 	return nil, nil
 }
 

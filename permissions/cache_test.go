@@ -9,16 +9,17 @@ import (
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions/mock"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
+	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 var maxCacheTime time.Duration = 1 * time.Minute
 
 func TestCachingStore_Update(t *testing.T) {
-	expectedBundle := permissions.Bundle{}
+	expectedBundle := permsdk.Bundle{}
 	ctx := context.Background()
 	underlyingStore := &mock.StoreMock{
-		GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
+		GetPermissionsBundleFunc: func(ctx context.Context) (permsdk.Bundle, error) {
 			return expectedBundle, nil
 		},
 	}
@@ -44,7 +45,7 @@ func TestCachingStore_Update_UnderlyingStoreErr(t *testing.T) {
 	expectedErr := errors.New("API broke")
 	ctx := context.Background()
 	underlyingStore := &mock.StoreMock{
-		GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
+		GetPermissionsBundleFunc: func(ctx context.Context) (permsdk.Bundle, error) {
 			return nil, expectedErr
 		},
 	}
@@ -67,10 +68,10 @@ func TestCachingStore_Update_UnderlyingStoreErr(t *testing.T) {
 }
 
 func TestCachingStore_GetPermissionsBundle(t *testing.T) {
-	expectedBundle := permissions.Bundle{}
+	expectedBundle := permsdk.Bundle{}
 	ctx := context.Background()
 	underlyingStore := &mock.StoreMock{
-		GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
+		GetPermissionsBundleFunc: func(ctx context.Context) (permsdk.Bundle, error) {
 			return expectedBundle, nil
 		},
 	}
@@ -104,7 +105,7 @@ func TestCachingStore_GetPermissionsBundle_NotCached(t *testing.T) {
 
 			Convey("Then the expected error is returned", func() {
 				So(err, ShouldNotBeNil)
-				So(err, ShouldEqual, permissions.ErrNotCached)
+				So(err, ShouldEqual, permsdk.ErrNotCached)
 			})
 
 			Convey("Then the permissions bundle is nil", func() {
@@ -116,9 +117,9 @@ func TestCachingStore_GetPermissionsBundle_NotCached(t *testing.T) {
 
 func TestCachingStore_CheckCacheExpiry(t *testing.T) {
 	ctx := context.Background()
-	expectedBundle := permissions.Bundle{}
+	expectedBundle := permsdk.Bundle{}
 	underlyingStore := &mock.StoreMock{
-		GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
+		GetPermissionsBundleFunc: func(ctx context.Context) (permsdk.Bundle, error) {
 			return expectedBundle, nil
 		},
 	}
@@ -141,9 +142,9 @@ func TestCachingStore_CheckCacheExpiry(t *testing.T) {
 
 func TestCachingStore_CheckCacheExpiry_Expired(t *testing.T) {
 	ctx := context.Background()
-	expectedBundle := permissions.Bundle{}
+	expectedBundle := permsdk.Bundle{}
 	underlyingStore := &mock.StoreMock{
-		GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
+		GetPermissionsBundleFunc: func(ctx context.Context) (permsdk.Bundle, error) {
 			return expectedBundle, nil
 		},
 	}
@@ -158,7 +159,7 @@ func TestCachingStore_CheckCacheExpiry_Expired(t *testing.T) {
 
 			Convey("Then there should should be no cached data", func() {
 				bundle, err := store.GetPermissionsBundle(ctx)
-				So(err, ShouldEqual, permissions.ErrNotCached)
+				So(err, ShouldEqual, permsdk.ErrNotCached)
 				So(bundle, ShouldBeNil)
 			})
 		})
@@ -177,7 +178,7 @@ func TestCachingStore_CheckCacheExpiry_NoCachedData(t *testing.T) {
 
 			Convey("Then the expected ErrNotCached error should be returned", func() {
 				bundle, err := store.GetPermissionsBundle(ctx)
-				So(err, ShouldEqual, permissions.ErrNotCached)
+				So(err, ShouldEqual, permsdk.ErrNotCached)
 				So(bundle, ShouldBeNil)
 			})
 		})
@@ -209,11 +210,11 @@ func TestCachingStore_HealthCheck_Critical(t *testing.T) {
 
 func TestCachingStore_HealthCheck_OK(t *testing.T) {
 	ctx := context.Background()
-	expectedBundle := permissions.Bundle{}
+	expectedBundle := permsdk.Bundle{}
 
 	Convey("Given a CachingStore with cached data", t, func() {
 		underlyingStore := &mock.StoreMock{
-			GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
+			GetPermissionsBundleFunc: func(ctx context.Context) (permsdk.Bundle, error) {
 				return expectedBundle, nil
 			},
 		}
@@ -238,13 +239,13 @@ func TestCachingStore_HealthCheck_OK(t *testing.T) {
 
 func TestCachingStore_HealthCheck_Warning(t *testing.T) {
 	ctx := context.Background()
-	expectedBundle := permissions.Bundle{}
+	expectedBundle := permsdk.Bundle{}
 
 	Convey("Given a CachingStore with cached data and a failed cache update", t, func() {
 		hasBeenCalled := false
 		expectedError := errors.New("permissions API call failed")
 		underlyingStore := &mock.StoreMock{
-			GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
+			GetPermissionsBundleFunc: func(ctx context.Context) (permsdk.Bundle, error) {
 				if hasBeenCalled {
 					return nil, expectedError
 				}
@@ -274,10 +275,10 @@ func TestCachingStore_HealthCheck_Warning(t *testing.T) {
 }
 
 func TestCachingStore_BackgroundGoRoutines(t *testing.T) {
-	expectedBundle := permissions.Bundle{}
+	expectedBundle := permsdk.Bundle{}
 	ctx := context.Background()
 	underlyingStore := &mock.StoreMock{
-		GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
+		GetPermissionsBundleFunc: func(ctx context.Context) (permsdk.Bundle, error) {
 			return expectedBundle, nil
 		},
 	}

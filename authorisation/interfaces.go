@@ -4,10 +4,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
-
 	dprequest "github.com/ONSdigital/dp-net/request"
+	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 )
 
 //go:generate moq -out mock/jwt_parser.go -pkg mock . JWTParser
@@ -20,20 +19,20 @@ type Middleware interface {
 	Require(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc
 	RequireWithAttributes(permission string, handlerFunc http.HandlerFunc, getAttributes GetAttributesFromRequest) http.HandlerFunc
 	Close(ctx context.Context) error
-	Parse(token string) (*permissions.EntityData, error)
+	Parse(token string) (*permsdk.EntityData, error)
 	HealthCheck(ctx context.Context, state *health.CheckState) error
 	IdentityHealthCheck(ctx context.Context, state *health.CheckState) error
 }
 
 // JWTParser takes a raw JWT token string, verifying it and extracting the required entity data.
 type JWTParser interface {
-	Parse(tokenString string) (*permissions.EntityData, error)
+	Parse(tokenString string) (*permsdk.EntityData, error)
 }
 
 // PermissionsChecker checks if the given entity data matches the given permission
 type PermissionsChecker interface {
 	HasPermission(ctx context.Context,
-		entityData permissions.EntityData,
+		entityData permsdk.EntityData,
 		permission string,
 		attributes map[string]string,
 	) (bool, error)

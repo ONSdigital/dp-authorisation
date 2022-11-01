@@ -7,63 +7,64 @@ import (
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions/mock"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
+	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-var permissionsBundle = permissions.Bundle{
-	"users.add": map[string][]permissions.Policy{
+var permissionsBundle = permsdk.Bundle{
+	"users.add": map[string][]permsdk.Policy{
 		"groups/admin": {
-			permissions.Policy{
+			permsdk.Policy{
 				ID:        "policy1",
-				Condition: permissions.Condition{},
+				Condition: permsdk.Condition{},
 			},
 		},
 	},
-	"legacy.read": map[string][]permissions.Policy{
+	"legacy.read": map[string][]permsdk.Policy{
 		"groups/admin": {
-			permissions.Policy{
+			permsdk.Policy{
 				ID:        "policy3",
-				Condition: permissions.Condition{},
+				Condition: permsdk.Condition{},
 			},
 		},
 		"groups/publisher": {
-			permissions.Policy{
+			permsdk.Policy{
 				ID:        "policy4",
-				Condition: permissions.Condition{},
+				Condition: permsdk.Condition{},
 			},
 		},
 		"groups/viewer": {
-			permissions.Policy{
+			permsdk.Policy{
 				ID: "policy2",
-				Condition: permissions.Condition{
+				Condition: permsdk.Condition{
 					Attribute: "collection_id",
-					Operator:  permissions.OperatorStringEquals,
+					Operator:  permsdk.OperatorStringEquals,
 					Values:    []string{"collection765"},
 				},
 			},
 		},
 	},
-	"legacy.write": map[string][]permissions.Policy{
+	"legacy.write": map[string][]permsdk.Policy{
 		"groups/admin": {
-			permissions.Policy{
+			permsdk.Policy{
 				ID:        "policy5",
-				Condition: permissions.Condition{},
+				Condition: permsdk.Condition{},
 			},
 		},
 		"groups/publisher": {
-			permissions.Policy{
+			permsdk.Policy{
 				ID:        "policy6",
-				Condition: permissions.Condition{},
+				Condition: permsdk.Condition{},
 			},
 		},
 	},
-	"some_service.write": map[string][]permissions.Policy{
+	"some_service.write": map[string][]permsdk.Policy{
 		"groups/publisher": {
-			permissions.Policy{
+			permsdk.Policy{
 				ID: "policy7",
-				Condition: permissions.Condition{
+				Condition: permsdk.Condition{
 					Attribute: "path",
-					Operator:  permissions.OperatorStartsWith,
+					Operator:  permsdk.OperatorStartsWith,
 					Values:    []string{"/files/dir/a/"},
 				},
 			},
@@ -77,7 +78,7 @@ func TestChecker_HasPermission(t *testing.T) {
 	checker := permissions.NewCheckerForStore(store)
 
 	Convey("Given an admin user", t, func() {
-		entityData := permissions.EntityData{
+		entityData := permsdk.EntityData{
 			Groups: []string{"admin"},
 		}
 
@@ -101,7 +102,7 @@ func TestChecker_HasPermission_False(t *testing.T) {
 	checker := permissions.NewCheckerForStore(store)
 
 	Convey("Given a publisher user", t, func() {
-		entityData := permissions.EntityData{
+		entityData := permsdk.EntityData{
 			Groups: []string{"publisher"},
 		}
 
@@ -125,7 +126,7 @@ func TestChecker_HasPermission_NoGroupMatch(t *testing.T) {
 	checker := permissions.NewCheckerForStore(store)
 
 	Convey("Given a user that belongs to a group with no permissions", t, func() {
-		entityData := permissions.EntityData{
+		entityData := permsdk.EntityData{
 			Groups: []string{"default"},
 		}
 
@@ -149,7 +150,7 @@ func TestChecker_HasPermission_WithStringEqualsConditionTrue(t *testing.T) {
 	checker := permissions.NewCheckerForStore(store)
 
 	Convey("Given a viewer user", t, func() {
-		entityData := permissions.EntityData{
+		entityData := permsdk.EntityData{
 			Groups: []string{"viewer"},
 		}
 
@@ -175,7 +176,7 @@ func TestChecker_HasPermission_WithStringEqualsConditionFalse(t *testing.T) {
 	checker := permissions.NewCheckerForStore(store)
 
 	Convey("Given a viewer user", t, func() {
-		entityData := permissions.EntityData{
+		entityData := permsdk.EntityData{
 			Groups: []string{"viewer"},
 		}
 
@@ -201,7 +202,7 @@ func TestChecker_HasPermission_WithCaseInsensitivePolicyConditionOperatorFalse(t
 	checker := permissions.NewCheckerForStore(store)
 
 	Convey("Given a viewer user", t, func() {
-		entityData := permissions.EntityData{
+		entityData := permsdk.EntityData{
 			Groups: []string{"viewer"},
 		}
 
@@ -227,7 +228,7 @@ func TestChecker_HasPermission_WithStartsWithConditionTrue(t *testing.T) {
 	checker := permissions.NewCheckerForStore(store)
 
 	Convey("Given a publisher user", t, func() {
-		entityData := permissions.EntityData{
+		entityData := permsdk.EntityData{
 			Groups: []string{"publisher"},
 		}
 
@@ -253,7 +254,7 @@ func TestChecker_HasPermission_WithStartsWithConditionFalse(t *testing.T) {
 	checker := permissions.NewCheckerForStore(store)
 
 	Convey("Given a publisher user", t, func() {
-		entityData := permissions.EntityData{
+		entityData := permsdk.EntityData{
 			Groups: []string{"publisher"},
 		}
 
@@ -279,7 +280,7 @@ func TestChecker_HasPermission_MultipleConditionsChecked(t *testing.T) {
 	checker := permissions.NewCheckerForStore(store)
 
 	Convey("Given a viewer user", t, func() {
-		entityData := permissions.EntityData{
+		entityData := permsdk.EntityData{
 			Groups: []string{"viewer"},
 		}
 
@@ -345,7 +346,7 @@ func TestChecker_HealthCheck(t *testing.T) {
 
 func newMockCache() *mock.CacheMock {
 	return &mock.CacheMock{
-		GetPermissionsBundleFunc: func(ctx context.Context) (permissions.Bundle, error) {
+		GetPermissionsBundleFunc: func(ctx context.Context) (permsdk.Bundle, error) {
 			return permissionsBundle, nil
 		},
 		CloseFunc: func(ctx context.Context) error {
