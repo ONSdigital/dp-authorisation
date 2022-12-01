@@ -17,7 +17,6 @@ import (
 )
 
 const (
-	chunkSize                = 3
 	collectionIdAttributeKey = "collection_id"
 	IdentityClientError      = "identity client cannot be nil"
 )
