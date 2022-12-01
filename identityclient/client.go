@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"time"
@@ -31,8 +30,9 @@ const (
 	identityServiceJWTKeys   = "/v1/jwt-keys"
 )
 
-//go:generate moq -out mock/identity_client.go -pkg mock . IdentityInterface
 // IdentityInterface interface contains one method
+//
+//go:generate moq -out mock/identity_client.go -pkg mock . IdentityInterface
 type IdentityInterface interface {
 	Get(ctx context.Context, url string) (*http.Response, error)
 }
@@ -129,7 +129,7 @@ func (c *IdentityClient) GetJWTVerificationKeys(ctx context.Context) error {
 
 // unmarshalIdentityResponse method to unmarshal Get response body
 func (c *IdentityClient) unmarshalIdentityResponse(responseBody io.ReadCloser) error {
-	body, err := ioutil.ReadAll(responseBody)
+	body, err := io.ReadAll(responseBody)
 	if err != nil {
 		return err
 	}

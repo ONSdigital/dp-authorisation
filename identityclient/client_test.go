@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"reflect"
 	"testing"
@@ -95,7 +95,7 @@ func TestIndentityClient_GetJWTVerificationKeys(t *testing.T) {
 				GetFunc: func(ctx context.Context, url string) (*http.Response, error) {
 					r := &http.Response{
 						StatusCode: http.StatusOK,
-						Body:       ioutil.NopCloser(bytes.NewBufferString(testJWTPublicKeyAPIMap)),
+						Body:       io.NopCloser(bytes.NewBufferString(testJWTPublicKeyAPIMap)),
 					}
 					return r, nil
 				},
@@ -136,7 +136,7 @@ func TestIndentityClient_IdentityHealthCheck(t *testing.T) {
 				GetFunc: func(ctx context.Context, url string) (*http.Response, error) {
 					r := &http.Response{
 						StatusCode: http.StatusOK,
-						Body:       ioutil.NopCloser(bytes.NewBufferString(testJWTPublicKeyAPIMap)),
+						Body:       io.NopCloser(bytes.NewBufferString(testJWTPublicKeyAPIMap)),
 					}
 					return r, nil
 				},

@@ -78,7 +78,8 @@ func TestCachingStore_GetPermissionsBundle(t *testing.T) {
 
 	Convey("Given a CachingStore that has a cached permissions bundle", t, func() {
 		store := permissions.NewCachingStore(underlyingStore)
-		store.Update(ctx, maxCacheTime)
+		_, err := store.Update(ctx, maxCacheTime)
+		So(err, ShouldBeNil)
 
 		Convey("When GetPermissionsBundle is called", func() {
 			bundle, err := store.GetPermissionsBundle(ctx)
@@ -126,7 +127,8 @@ func TestCachingStore_CheckCacheExpiry(t *testing.T) {
 
 	Convey("Given a CachingStore with cached data that's not expired", t, func() {
 		store := permissions.NewCachingStore(underlyingStore)
-		store.Update(ctx, maxCacheTime)
+		_, err := store.Update(ctx, maxCacheTime)
+		So(err, ShouldBeNil)
 
 		Convey("When CheckCacheExpiry is called", func() {
 			store.CheckCacheExpiry(ctx, time.Second)
@@ -151,7 +153,8 @@ func TestCachingStore_CheckCacheExpiry_Expired(t *testing.T) {
 
 	Convey("Given a CachingStore with cached data that has expired", t, func() {
 		store := permissions.NewCachingStore(underlyingStore)
-		store.Update(ctx, maxCacheTime)
+		_, err := store.Update(ctx, maxCacheTime)
+		So(err, ShouldBeNil)
 
 		Convey("When CheckCacheExpiry is called", func() {
 			store.CheckCacheExpiry(ctx, time.Nanosecond)
@@ -219,7 +222,8 @@ func TestCachingStore_HealthCheck_OK(t *testing.T) {
 			},
 		}
 		store := permissions.NewCachingStore(underlyingStore)
-		store.Update(ctx, maxCacheTime)
+		_, err := store.Update(ctx, maxCacheTime)
+		So(err, ShouldBeNil)
 
 		Convey("When HealthCheck is called", func() {
 			checkState := healthcheck.NewCheckState("")
@@ -255,8 +259,12 @@ func TestCachingStore_HealthCheck_Warning(t *testing.T) {
 			},
 		}
 		store := permissions.NewCachingStore(underlyingStore)
-		store.Update(ctx, maxCacheTime) // first update succeeds to update cache
-		store.Update(ctx, maxCacheTime) // second update returns an error to imitate a failed update
+
+		_, err := store.Update(ctx, maxCacheTime) // first update succeeds to update cache
+		So(err, ShouldBeNil)
+
+		_, err = store.Update(ctx, maxCacheTime) // second update returns an error to imitate a failed update
+		So(err, ShouldNotBeNil)
 
 		Convey("When HealthCheck is called", func() {
 			checkState := healthcheck.NewCheckState("")

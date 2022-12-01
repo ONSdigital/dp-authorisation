@@ -1,9 +1,11 @@
 package authorisationtest
 
 import (
+	"context"
 	"encoding/json"
 
 	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/maxcnunes/httpfake"
 )
 
@@ -20,7 +22,10 @@ func NewFakePermissionsAPI() *FakePermissionsAPI {
 	}
 
 	bundle := GetDefaultPermissionsBundle()
-	fakePermissionsAPI.UpdatePermissionsBundleResponse(bundle)
+	if err := fakePermissionsAPI.UpdatePermissionsBundleResponse(bundle); err != nil {
+		// Note that this error should never happen, as we are using a hardcoded bundle
+		log.Error(context.Background(), "failed to update permissions bundle response", err)
+	}
 
 	return fakePermissionsAPI
 }

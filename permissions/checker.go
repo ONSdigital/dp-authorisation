@@ -115,7 +115,7 @@ func (c Checker) hasPermission(
 }
 
 func aPolicyApplies(policies []permsdk.Policy, attributes map[string]string) bool {
-	if policies == nil || len(policies) == 0 {
+	if len(policies) == 0 {
 		return false
 	}
 

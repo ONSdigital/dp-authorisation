@@ -22,12 +22,6 @@ const (
 	IdentityClientError      = "identity client cannot be nil"
 )
 
-type tokenHeaderData struct {
-	Kid string `json:"kid"`
-	Alg string `json:"alg"`
-	Typ string `json:"typ"`
-}
-
 // PermissionCheckMiddleware is used to wrap HTTP handlers with JWT token based authorisation
 type PermissionCheckMiddleware struct {
 	jwtParser          JWTParser
