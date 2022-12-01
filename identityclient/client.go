@@ -31,7 +31,6 @@ const (
 )
 
 // IdentityInterface interface contains one method
-//
 //go:generate moq -out mock/identity_client.go -pkg mock . IdentityInterface
 type IdentityInterface interface {
 	Get(ctx context.Context, url string) (*http.Response, error)
