@@ -34,8 +34,8 @@ func NewCheckerForStore(cache Cache) *Checker {
 func NewChecker(
 	ctx context.Context,
 	permissionsAPIHost string,
-	cacheUpdateInterval, maxCacheTime time.Duration) *Checker {
-
+	cacheUpdateInterval,
+	maxCacheTime time.Duration) *Checker {
 	apiClient := permsdk.NewClient(permissionsAPIHost)
 	cachingStore := NewCachingStore(apiClient)
 	cachingStore.StartCacheUpdater(ctx, cacheUpdateInterval, maxCacheTime)
@@ -53,7 +53,6 @@ func (c Checker) HasPermission(
 	entityData permsdk.EntityData,
 	permission string,
 	attributes map[string]string) (bool, error) {
-
 	entities := mapEntityDataToEntities(entityData)
 	return c.hasPermission(ctx, entities, permission, attributes)
 }
@@ -87,7 +86,6 @@ func (c Checker) hasPermission(
 	entities []string,
 	permission string,
 	attributes map[string]string) (bool, error) {
-
 	logData := &log.Data{"permission": permission}
 	permissionsBundle, err := c.cache.GetPermissionsBundle(ctx)
 	if err != nil {

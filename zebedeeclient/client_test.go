@@ -25,9 +25,7 @@ func (c Client) CheckTokenIdentity(ctx context.Context, token string, tokenType 
 
 func TestZebedeeClient(t *testing.T) {
 	ctx := context.Background()
-
 	Convey("Given a zebedee client instance created", t, func() {
-
 		zc := zebedeeclient.ZebedeeClient{
 			Client: Client{},
 		}

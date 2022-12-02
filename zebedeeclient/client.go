@@ -18,9 +18,9 @@ type ZebedeeClient struct {
 }
 
 // NewZebedeeIdentity creates a new zebedee identity client
-func NewZebedeeClient(ZebedeeURL string) *ZebedeeClient {
+func NewZebedeeClient(zebedeeURL string) *ZebedeeClient {
 	return &ZebedeeClient{
-		Client: identity.New(ZebedeeURL),
+		Client: identity.New(zebedeeURL),
 	}
 }
 

@@ -31,6 +31,7 @@ const (
 )
 
 // IdentityInterface interface contains one method
+//
 //go:generate moq -out mock/identity_client.go -pkg mock . IdentityInterface
 type IdentityInterface interface {
 	Get(ctx context.Context, url string) (*http.Response, error)
@@ -93,20 +94,19 @@ func (c *IdentityClient) IdentityHealthCheck(ctx context.Context, state *health.
 				log.Error(context.Background(), identityHealthStateError, stateErr)
 			}
 			return err
-		} else {
-			err = c.unmarshalIdentityResponse(identityResponse.Body)
-			if err != nil {
-				return err
-			}
-			c.CognitoRSAParser, err = jwt.NewCognitoRSAParser(c.JWTKeys)
-			if err != nil {
-				return err
-			}
-			if stateErr := state.Update(health.StatusOK, jwtKeyRequestOK, http.StatusOK); stateErr != nil {
-				log.Error(context.Background(), identityHealthStateError, stateErr)
-			}
-			return nil
 		}
+		err = c.unmarshalIdentityResponse(identityResponse.Body)
+		if err != nil {
+			return err
+		}
+		c.CognitoRSAParser, err = jwt.NewCognitoRSAParser(c.JWTKeys)
+		if err != nil {
+			return err
+		}
+		if stateErr := state.Update(health.StatusOK, jwtKeyRequestOK, http.StatusOK); stateErr != nil {
+			log.Error(context.Background(), identityHealthStateError, stateErr)
+		}
+		return nil
 	}
 	if stateErr := state.Update(health.StatusOK, jwtKeyRequestOK, http.StatusOK); stateErr != nil {
 		log.Error(context.Background(), identityHealthStateError, stateErr)

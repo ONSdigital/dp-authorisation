@@ -12,12 +12,13 @@ import (
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
 	"github.com/ONSdigital/dp-authorisation/v2/zebedeeclient"
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
+	"github.com/ONSdigital/dp-net/request"
 	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
 const (
-	collectionIdAttributeKey = "collection_id"
+	collectionIDAttributeKey = "collection_id"
 	IdentityClientError      = "identity client cannot be nil"
 )
 
@@ -106,7 +107,7 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 		}
 
 		authToken := req.Header.Get("Authorization")
-		if len(authToken) == 0 {
+		if authToken == "" {
 			log.Info(ctx, "authorisation failed: no authorisation header in request", logData)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
@@ -116,8 +117,9 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 
 		// process the token accordingly
 		var (
-			entityData = &permsdk.EntityData{}
-			err        error
+			entityData              = &permsdk.EntityData{}
+			zebedeeIdentityResponse = &request.IdentityResponse{}
+			err                     error
 		)
 		if strings.Contains(authToken, ".") {
 			entityData, err = m.jwtParser.Parse(authToken)
@@ -133,7 +135,7 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 				return
 			}
 		} else {
-			zebedeeIdentityResponse, err := m.zebedeeClient.CheckTokenIdentity(ctx, authToken)
+			zebedeeIdentityResponse, err = m.zebedeeClient.CheckTokenIdentity(ctx, authToken)
 			if err != nil {
 				logData["message"] = err.Error()
 				log.Error(ctx, "authorisation failed: service token issue", err, logData)
@@ -174,7 +176,7 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 // Require wraps an existing handler, only allowing it to be called if the request is
 // authorised against the given permission. Calls method RequireWithAttributes() with nil getAttributes
 func (m PermissionCheckMiddleware) Require(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
-	return m.RequireWithAttributes(permission, handlerFunc, GetCollectionIdAttribute)
+	return m.RequireWithAttributes(permission, handlerFunc, GetCollectionIDAttribute)
 }
 
 // Close resources used by the middleware.
@@ -194,24 +196,18 @@ func (m PermissionCheckMiddleware) IdentityHealthCheck(ctx context.Context, stat
 
 // Parse token using returned Parser object
 func (m PermissionCheckMiddleware) Parse(token string) (*permsdk.EntityData, error) {
-	//	jwtParser, err := NewCognitoRSAParser(m.IdentityClient.JWTKeys)
-	//	if err != nil {
-	//		j, _ := json.Marshal(m.IdentityClient.JWTKeys)
-	//		fmt.Println(m.IdentityClient.JWTKeys)
-	//		return nil, errors.New(string(j))
-	//	}
 	return m.jwtParser.Parse(token)
 }
 
 // GetCollectionIdAttribute provides an implementation of GetAttributesFromRequest. Retrieves and returns
 // header 'Collection-Id' from the request if it exists, otherwise returns an empty map. Never returns an
 // error as the header is not mandatory
-func GetCollectionIdAttribute(req *http.Request) (map[string]string, error) {
+func GetCollectionIDAttribute(req *http.Request) (map[string]string, error) {
 	attributes := make(map[string]string, 0)
 
-	collectionIdAttribute, _ := headers.GetCollectionID(req)
-	if collectionIdAttribute != "" {
-		attributes[collectionIdAttributeKey] = collectionIdAttribute
+	collectionIDAttribute, _ := headers.GetCollectionID(req)
+	if collectionIDAttribute != "" {
+		attributes[collectionIDAttributeKey] = collectionIDAttribute
 	}
 
 	return attributes, nil

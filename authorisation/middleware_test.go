@@ -81,7 +81,7 @@ func TestMiddleware_RequireWithAttributes(t *testing.T) {
 		mockHandler := &mockHandler{calls: 0}
 		mockJWTParser := newMockJWTParser()
 		identityClient.CognitoRSAParser = NewCognitoRSAParserTest
-		mockAttributes := mockAttributes{attributes: *dummyAttributesData, calls: 0}
+		mockAttributes := &mockAttributes{attributes: *dummyAttributesData, calls: 0}
 		permissionsChecker := &mock.PermissionsCheckerMock{
 			HasPermissionFunc: func(ctx context.Context, entityData permsdk.EntityData, permission string, attributes map[string]string) (bool, error) {
 				return true, nil
@@ -426,7 +426,7 @@ func TestGetCollectionIdAttribute(t *testing.T) {
 		request.Header.Set("Collection-Id", (*dummyAttributesData)["collection_id"])
 
 		Convey("When the function is called", func() {
-			attributes, err := authorisation.GetCollectionIdAttribute(request)
+			attributes, err := authorisation.GetCollectionIDAttribute(request)
 
 			Convey("Then the expected attributes value is returned", func() {
 				So(attributes, ShouldResemble, *dummyAttributesData)
@@ -445,7 +445,7 @@ func TestGetCollectionIdAttribute_NoCollectionIdHeader(t *testing.T) {
 		request.Header.Set("Some-Other-Header", "Some-Value")
 
 		Convey("When the function is called", func() {
-			attributes, err := authorisation.GetCollectionIdAttribute(request)
+			attributes, err := authorisation.GetCollectionIDAttribute(request)
 
 			Convey("Then an empty attributes value is returned", func() {
 				So(attributes, ShouldResemble, map[string]string{})

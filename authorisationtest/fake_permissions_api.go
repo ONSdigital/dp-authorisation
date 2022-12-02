@@ -38,12 +38,12 @@ func (f *FakePermissionsAPI) URL() string {
 
 // UpdatePermissionsBundleResponse overrides the default response to return custom permission bundle data.
 func (f *FakePermissionsAPI) UpdatePermissionsBundleResponse(bundle *permsdk.Bundle) error {
-	bundleJson, err := json.Marshal(bundle)
+	bundleJSON, err := json.Marshal(bundle)
 	if err != nil {
 		return err
 	}
 
-	f.NewHandler().Get("/v1/permissions-bundle").Response.Body(bundleJson).Status(200)
+	f.NewHandler().Get("/v1/permissions-bundle").Response.Body(bundleJSON).Status(200)
 	return nil
 }
 
