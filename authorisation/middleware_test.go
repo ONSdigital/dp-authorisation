@@ -456,6 +456,19 @@ func TestGetCollectionIdAttribute_NoCollectionIdHeader(t *testing.T) {
 			})
 		})
 	})
+
+	Convey("Given a nil request", t, func() {
+		var request *http.Request = nil
+
+		Convey("When the function is called", func() {
+			_, err := authorisation.GetCollectionIDAttribute(request)
+
+			Convey("Then the expected error is returned", func() {
+				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldResemble, "error getting Collection-Id header from request: error setting request header request was nil")
+			})
+		})
+	})
 }
 
 func TestMiddleware_NewMiddlewareFromConfig_JWTKeys(t *testing.T) {

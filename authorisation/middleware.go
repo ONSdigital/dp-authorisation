@@ -3,10 +3,11 @@ package authorisation
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
-	"github.com/ONSdigital/dp-api-clients-go/headers"
+	"github.com/ONSdigital/dp-api-clients-go/v2/headers"
 	"github.com/ONSdigital/dp-authorisation/v2/identityclient"
 	"github.com/ONSdigital/dp-authorisation/v2/jwt"
 	"github.com/ONSdigital/dp-authorisation/v2/permissions"
@@ -200,15 +201,21 @@ func (m PermissionCheckMiddleware) Parse(token string) (*permsdk.EntityData, err
 }
 
 // GetCollectionIdAttribute provides an implementation of GetAttributesFromRequest. Retrieves and returns
-// header 'Collection-Id' from the request if it exists, otherwise returns an empty map. Never returns an
-// error as the header is not mandatory
+// header 'Collection-Id' from the request if it exists, otherwise returns an empty map.
+// It may return an error only if the header cannot be retrieved by some other reason (e.g. nil request).
 func GetCollectionIDAttribute(req *http.Request) (map[string]string, error) {
 	attributes := make(map[string]string, 0)
 
-	collectionIDAttribute, _ := headers.GetCollectionID(req)
-	if collectionIDAttribute != "" {
-		attributes[collectionIDAttributeKey] = collectionIDAttribute
+	collectionIDAttribute, err := headers.GetCollectionID(req)
+	if err != nil {
+		if err == headers.ErrHeaderNotFound {
+			// empty header is allowed (no value returned in attributes map for CollectionID)
+			return attributes, nil
+		}
+		// any other error must be returned
+		return nil, fmt.Errorf("error getting Collection-Id header from request: %w", err)
 	}
 
+	attributes[collectionIDAttributeKey] = collectionIDAttribute
 	return attributes, nil
 }

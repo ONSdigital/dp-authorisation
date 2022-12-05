@@ -3,7 +3,6 @@ module github.com/ONSdigital/dp-authorisation/v2
 go 1.19
 
 require (
-	github.com/ONSdigital/dp-api-clients-go v1.43.0
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.159.1
 	github.com/ONSdigital/dp-healthcheck v1.3.0
 	github.com/ONSdigital/dp-net v1.4.1
@@ -17,6 +16,7 @@ require (
 )
 
 require (
+	github.com/ONSdigital/dp-api-clients-go v1.43.0 // indirect
 	github.com/aws/aws-sdk-go v1.44.75 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
