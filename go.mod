@@ -3,13 +3,13 @@ module github.com/ONSdigital/dp-authorisation/v2
 go 1.19
 
 require (
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.223.0
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.236.0
 	github.com/ONSdigital/dp-healthcheck v1.5.0
 	github.com/ONSdigital/dp-net v1.5.0
-	github.com/ONSdigital/dp-net/v2 v2.8.0
+	github.com/ONSdigital/dp-net/v2 v2.8.1
 	github.com/ONSdigital/dp-permissions-api v0.22.0
 	github.com/ONSdigital/log.go/v2 v2.3.0
-	github.com/golang-jwt/jwt/v4 v4.4.3
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/maxcnunes/httpfake v1.2.4
 	github.com/pkg/errors v0.9.1
 	github.com/smartystreets/goconvey v1.7.2
@@ -17,7 +17,7 @@ require (
 
 require (
 	github.com/ONSdigital/dp-api-clients-go v1.43.0 // indirect
-	github.com/aws/aws-sdk-go v1.44.195 // indirect
+	github.com/aws/aws-sdk-go v1.44.211 // indirect
 	github.com/fatih/color v1.14.1 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
@@ -27,6 +27,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/smartystreets/assertions v1.13.0 // indirect
-	golang.org/x/net v0.5.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 )

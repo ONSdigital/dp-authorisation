@@ -29,7 +29,17 @@ In order to verify a JWT's validity, the RSA public signing keys used to sign th
 
 When consuming this library from a service you have 2 options:
 
-- supply the map manually, or
+- supply the map manually: The helper script in the dp-identity-api [repository](https://github.com/ONSdigital/dp-identity-api/pull/161/commits/f55a1b0a376de649e8da4182503149f96db8102a) can be used to retrieve the RSA public signing keys in the correct format as shown below –
+```
+cd dp-identity-api
+export USER_POOL_ID=eu-west-2_WSD9EcAsw
+export REGION=eu-west-2
+make get-jwks-keys
+
+HUMAN_LOG=1 go run ./scripts/get-jwks-keys/main.go
+XXcFBMOH6ldrCRYziR8SvEDSx2mVBWkqiXiBBiKTjxM=:MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu4oZvGdWclGAowaQOVeYNS7jBC9+jHVlk1uWsaA9wTYTsBfO1figVWqjalc4IOvZh1EERgrmoFOueL9/3PyFOxcFx9WePgFQoaM90uPesp584VB19kUq7tGlrlEej671bxARD+VRQqGDPWBDZdgW+D/a3qejqlFB6b3pTWOTKsskG6jY66oBNUW3ShHcKQZH/VL5s9oXVgZu88/KGkiQuorHhr0O43yoQ5WScrz3r72m2IkC53GOrsvefzoAz8A4Yy8eXFpmZqSAlY+jKEQycNaXT4XnsufU9g3wH/yVr/9i9Hta5lZnB+RXIV/igss7CE7yHLshgKBuAzY+gFVVZQIDAQAB,jxYokzgTDyQUMoUS3G483hkEccxEJIJt+GV0+huREJA=:MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArcCrt0UB2S06x5AjppX9aU1d8wNQ2ODIBkdUWVNmbbHfZqVYfgjmvrYpBKo69ddYJg95g7mouqEVSWYlbsktbWQJGAWkaY3p8uIM36QJYAOlD3k8EnYA/3ptFEo8sY6+9MEIgXD4UBVLfz2YP3N73hk8cyDkEcV+riz74XJCfgKVtP2yyGDsNYzprHihDX4NgbTiaXVvrvrMGkiXSrkUKS9Fd1p0VvB0jgPtFYuD5HVVWmjWvva8+gLKozvUKi/nVU1iv1qKKmtKgPCsCiWg9ZMYjDcJDCw34SD1Nm/vu2/3h0zjDjlrRUKkXQo9SFs34otLQrPv+tfKljKTP7uktQIDAQAB
+```
+
 - allow the library to obtain the keys and set the map automatically for you
   - for this, when creating a new instance, simply set the third argument to `nil`
 
