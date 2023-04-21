@@ -14,7 +14,7 @@ import (
 	"github.com/ONSdigital/dp-authorisation/v2/identityclient"
 	identityClientMock "github.com/ONSdigital/dp-authorisation/v2/identityclient/mock"
 	"github.com/ONSdigital/dp-authorisation/v2/jwt"
-	dprequest "github.com/ONSdigital/dp-net/request"
+	dprequest "github.com/ONSdigital/dp-net/v2/request"
 	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	. "github.com/smartystreets/goconvey/convey"
 )
