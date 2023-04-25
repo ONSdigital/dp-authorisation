@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ONSdigital/dp-api-clients-go/headers"
+	"github.com/ONSdigital/dp-api-clients-go/v2/headers"
 )
 
 // PermissionsRequestBuilder is an implementation of the GetPermissionsRequestBuilder interface that creates a
@@ -49,7 +49,7 @@ func (builder *PermissionsRequestBuilder) createUserPermissionsRequest(authToken
 		return nil, err
 	}
 
-	if err := headers.SetUserAuthToken(getPermissionsRequest, authToken); err != nil {
+	if err := headers.SetAuthToken(getPermissionsRequest, authToken); err != nil {
 		return nil, err
 	}
 

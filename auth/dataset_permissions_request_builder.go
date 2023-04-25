@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ONSdigital/dp-api-clients-go/headers"
+	"github.com/ONSdigital/dp-api-clients-go/v2/headers"
 )
 
 // DatasetPermissionsRequestBuilder is an implementation of the GetPermissionsRequestBuilder interface that creates a
@@ -87,7 +87,7 @@ func (builder *DatasetPermissionsRequestBuilder) createUserDatasetPermissionsReq
 		return nil, err
 	}
 
-	if err := headers.SetUserAuthToken(getPermissionsReq, params.userAuthToken); err != nil {
+	if err := headers.SetAuthToken(getPermissionsReq, params.userAuthToken); err != nil {
 		return nil, err
 	}
 

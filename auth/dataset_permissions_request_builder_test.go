@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/ONSdigital/dp-api-clients-go/headers"
+	"github.com/ONSdigital/dp-api-clients-go/v2/headers"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -106,7 +106,7 @@ func TestDatasetPermissionsRequestBuilder_NewPermissionsRequest(t *testing.T) {
 		}
 
 		req := httptest.NewRequest("GET", testHost, nil)
-		headers.SetUserAuthToken(req, "111")
+		headers.SetAuthToken(req, "111")
 		headers.SetCollectionID(req, "222")
 
 		actual, err := builder.NewPermissionsRequest(req)
@@ -114,9 +114,13 @@ func TestDatasetPermissionsRequestBuilder_NewPermissionsRequest(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(actual.URL.String(), ShouldEqual, fmt.Sprintf(userDatasetPermissionsURL, testHost, "333", "222"))
 
-		token, err := headers.GetUserAuthToken(actual)
+		userToken, err := headers.GetUserAuthToken(actual)
 		So(err, ShouldBeNil)
-		So(token, ShouldEqual, "111")
+		So(userToken, ShouldEqual, "111")
+
+		serviceToken, err := headers.GetServiceAuthToken(actual)
+		So(err, ShouldBeNil)
+		So(serviceToken, ShouldEqual, "111")
 	})
 
 	Convey("should return expected get service dataset permissions request", t, func() {
@@ -136,9 +140,13 @@ func TestDatasetPermissionsRequestBuilder_NewPermissionsRequest(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(actual.URL.String(), ShouldEqual, fmt.Sprintf(serviceDatasetPermissionsURL, testHost, "333"))
 
-		token, err := headers.GetServiceAuthToken(actual)
+		serviceToken, err := headers.GetServiceAuthToken(actual)
 		So(err, ShouldBeNil)
-		So(token, ShouldEqual, "111")
+		So(serviceToken, ShouldEqual, "111")
+
+		userToken, err := headers.GetUserAuthToken(actual)
+		So(err, ShouldNotBeNil)
+		So(userToken, ShouldBeEmpty)
 	})
 
 	Convey("should return get user dataset permissions request if request contains both user and service auth headers", t, func() {
@@ -153,7 +161,7 @@ func TestDatasetPermissionsRequestBuilder_NewPermissionsRequest(t *testing.T) {
 		req := httptest.NewRequest("GET", testHost, nil)
 
 		headers.SetServiceAuthToken(req, "222")
-		headers.SetUserAuthToken(req, "333")
+		headers.SetAuthToken(req, "333")
 		headers.SetCollectionID(req, "444")
 
 		actual, err := builder.NewPermissionsRequest(req)
@@ -161,9 +169,13 @@ func TestDatasetPermissionsRequestBuilder_NewPermissionsRequest(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(actual.URL.String(), ShouldEqual, fmt.Sprintf(userDatasetPermissionsURL, testHost, "111", "444"))
 
-		token, err := headers.GetUserAuthToken(actual)
+		userToken, err := headers.GetUserAuthToken(actual)
 		So(err, ShouldBeNil)
-		So(token, ShouldEqual, "333")
+		So(userToken, ShouldEqual, "333")
+
+		serviceToken, err := headers.GetServiceAuthToken(actual)
+		So(err, ShouldBeNil)
+		So(serviceToken, ShouldEqual, "333")
 	})
 }
 
