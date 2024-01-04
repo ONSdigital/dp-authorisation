@@ -2,6 +2,9 @@ module github.com/ONSdigital/dp-authorisation/v2
 
 go 1.19
 
+// to avoid [CVE-2023-48795] CWE-354: Improper Validation of Integrity Check Value
+replace golang.org/x/crypto => golang.org/x/crypto v0.17.0
+
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.254.1
 	github.com/ONSdigital/dp-healthcheck v1.6.2
