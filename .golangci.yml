@@ -14,7 +14,7 @@ linters-settings:
   gocyclo:
     min-complexity: 20
   gocognit:
-    min-complexity: 100
+    min-complexity: 40
   maligned:
     suggest-new: true
   dupl:
@@ -50,8 +50,6 @@ linters:
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
-    - unused
-    - depguard
     - dogsled
     - errcheck
     - gochecknoinits
@@ -62,10 +60,15 @@ linters:
     - goimports
     - revive
     - gosec
+    - gosimple
     - govet
     - ineffassign
     - nakedret
+    - staticcheck
+    - stylecheck
+    - typecheck
     - unconvert
+    - unused
     - whitespace
     - gocognit
     - prealloc
@@ -78,14 +81,23 @@ issues:
         - errcheck
         - dupl
         - gosec
-        - goconst
+    # Allow log.Fatal in main.go (log.go library continues after calling this, unlike std library log.Fatal)
+    - path: main.go
+      text: "unreachable-code"
+      linters:
         - revive
-        - gocritic
+      source: "log.Fatal"
+    # Allow dot import in test files for goconvey
+    - path: _test.go
+      text: "dot-imports"
+      linters:
+        - revive
+      source: "github.com/smartystreets/goconvey/convey"
   new: false
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
 service:
-  golangci-lint-version: 1.43.x # use the fixed version to not introduce new linters unexpectedly
+  golangci-lint-version: 1.55.x # use the fixed version to not introduce new linters unexpectedly
   prepare:
     - echo "here I can run custom commands, but no preparation needed for this repo"
