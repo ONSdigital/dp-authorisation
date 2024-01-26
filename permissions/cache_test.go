@@ -13,7 +13,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-var maxCacheTime time.Duration = 1 * time.Minute
+var maxCacheTime = 1 * time.Minute
 
 func TestCachingStore_Update(t *testing.T) {
 	expectedBundle := permsdk.Bundle{}

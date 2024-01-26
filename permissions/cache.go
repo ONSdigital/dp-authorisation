@@ -34,7 +34,7 @@ func NewCachingStore(underlyingStore Store) *CachingStore {
 }
 
 // GetPermissionsBundle returns the cached permission data, or an error if it's not cached.
-func (c *CachingStore) GetPermissionsBundle(ctx context.Context) (permsdk.Bundle, error) {
+func (c *CachingStore) GetPermissionsBundle(_ context.Context) (permsdk.Bundle, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -108,13 +108,13 @@ func (c *CachingStore) StartCacheUpdater(ctx context.Context, updateInterval, ma
 }
 
 // Close stops go routines and blocks until closed.
-func (c *CachingStore) Close(ctx context.Context) error {
+func (c *CachingStore) Close(_ context.Context) error {
 	close(c.closing)
 	<-c.cacheUpdaterClosed
 	return nil
 }
 
-func (c *CachingStore) HealthCheck(ctx context.Context, state *health.CheckState) error {
+func (c *CachingStore) HealthCheck(_ context.Context, state *health.CheckState) error {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 

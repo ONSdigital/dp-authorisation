@@ -46,7 +46,7 @@ type mockHandler struct {
 	calls int
 }
 
-func (m *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (m *mockHandler) ServeHTTP(_ http.ResponseWriter, _ *http.Request) {
 	m.calls++
 }
 
@@ -55,7 +55,7 @@ type mockAttributes struct {
 	calls      int
 }
 
-func (m *mockAttributes) GetAttributes(req *http.Request) (attributes map[string]string, err error) {
+func (m *mockAttributes) GetAttributes(_ *http.Request) (attributes map[string]string, err error) {
 	m.calls++
 	return m.attributes, nil
 }
@@ -76,7 +76,7 @@ var NewCognitoRSAParserTest, _ = jwt.NewCognitoRSAParser(testJWTPublicKeyAPIMapx
 func TestMiddleware_RequireWithAttributes(t *testing.T) {
 	Convey("Given a request with a valid JWT token and collection_id header that have the required permissions", t, func() {
 		response := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, testURL, nil)
+		request := httptest.NewRequest(http.MethodGet, testURL, http.NoBody)
 		request.Header.Set("Authorization", authorisationtest.AdminJWTToken)
 		mockHandler := &mockHandler{calls: 0}
 		mockJWTParser := newMockJWTParser()
@@ -124,7 +124,7 @@ func TestMiddleware_RequireWithAttributes(t *testing.T) {
 func TestMiddleware_Require(t *testing.T) {
 	Convey("Given a request with a valid JWT token that has the required permissions", t, func() {
 		response := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, testURL, nil)
+		request := httptest.NewRequest(http.MethodGet, testURL, http.NoBody)
 		request.Header.Set("Authorization", authorisationtest.AdminJWTToken)
 		request.Header.Set("Collection-Id", "123abc")
 		expectMap := map[string]string{"collection_id": "123abc"}
@@ -169,7 +169,7 @@ func TestMiddleware_Require(t *testing.T) {
 func TestMiddleware_Require_NoAuthHeader(t *testing.T) {
 	Convey("Given a request without an authorization header", t, func() {
 		response := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, testURL, nil)
+		request := httptest.NewRequest(http.MethodGet, testURL, http.NoBody)
 		mockHandler := &mockHandler{calls: 0}
 		mockJWTParser := &mock.JWTParserMock{}
 		permissionsChecker := &mock.PermissionsCheckerMock{}
@@ -200,7 +200,7 @@ func TestMiddleware_Require_JWTParseError(t *testing.T) {
 		}
 
 		response := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, testURL, nil)
+		request := httptest.NewRequest(http.MethodGet, testURL, http.NoBody)
 		request.Header.Set("Authorization", authorisationtest.AdminJWTToken)
 		mockHandler := &mockHandler{calls: 0}
 		permissionsChecker := &mock.PermissionsCheckerMock{}
@@ -236,7 +236,7 @@ func TestMiddleware_Require_PermissionsCheckerError(t *testing.T) {
 		}
 
 		response := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, testURL, nil)
+		request := httptest.NewRequest(http.MethodGet, testURL, http.NoBody)
 		request.Header.Set("Authorization", authorisationtest.AdminJWTToken)
 		mockHandler := &mockHandler{calls: 0}
 		mockJWTParser := newMockJWTParser()
@@ -277,7 +277,7 @@ func TestMiddleware_Require_PermissionDenied(t *testing.T) {
 		}
 
 		response := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, testURL, nil)
+		request := httptest.NewRequest(http.MethodGet, testURL, http.NoBody)
 		request.Header.Set("Authorization", authorisationtest.AdminJWTToken)
 		mockHandler := &mockHandler{calls: 0}
 		mockJWTParser := newMockJWTParser()
@@ -318,7 +318,7 @@ func TestMiddleware_ServiceTokenUser_SuccessfullyAuthorised(t *testing.T) {
 		}
 
 		response := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, testURL, nil)
+		request := httptest.NewRequest(http.MethodGet, testURL, http.NoBody)
 		request.Header.Set("Authorization", authorisationtest.ZebedeeServiceToken)
 		mockHandler := &mockHandler{calls: 0}
 		mockJWTParser := newMockJWTParser()
@@ -354,7 +354,7 @@ func TestMiddleware_ServiceTokenUser_AuthorisationDenied(t *testing.T) {
 		}
 
 		response := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, testURL, nil)
+		request := httptest.NewRequest(http.MethodGet, testURL, http.NoBody)
 		request.Header.Set("Authorization", authorisationtest.ZebedeeServiceToken)
 		mockHandler := &mockHandler{calls: 0}
 		mockJWTParser := newMockJWTParser()
@@ -396,7 +396,7 @@ func TestMiddleware_ServiceTokenUser_ZebedeeIdentityVerificationError(t *testing
 		}
 
 		response := httptest.NewRecorder()
-		request := httptest.NewRequest(http.MethodGet, testURL, nil)
+		request := httptest.NewRequest(http.MethodGet, testURL, http.NoBody)
 		request.Header.Set("Authorization", authorisationtest.ZebedeeServiceToken)
 		mockHandler := &mockHandler{calls: 0}
 		mockJWTParser := newMockJWTParser()
@@ -422,7 +422,7 @@ func TestMiddleware_ServiceTokenUser_ZebedeeIdentityVerificationError(t *testing
 }
 func TestGetCollectionIdAttribute(t *testing.T) {
 	Convey("Given a request with a Collection-Id header", t, func() {
-		request := httptest.NewRequest(http.MethodGet, testURL, nil)
+		request := httptest.NewRequest(http.MethodGet, testURL, http.NoBody)
 		request.Header.Set("Collection-Id", (*dummyAttributesData)["collection_id"])
 
 		Convey("When the function is called", func() {
@@ -441,7 +441,7 @@ func TestGetCollectionIdAttribute(t *testing.T) {
 
 func TestGetCollectionIdAttribute_NoCollectionIdHeader(t *testing.T) {
 	Convey("Given a request without a Collection-Id header", t, func() {
-		request := httptest.NewRequest(http.MethodGet, testURL, nil)
+		request := httptest.NewRequest(http.MethodGet, testURL, http.NoBody)
 		request.Header.Set("Some-Other-Header", "Some-Value")
 
 		Convey("When the function is called", func() {
@@ -458,7 +458,7 @@ func TestGetCollectionIdAttribute_NoCollectionIdHeader(t *testing.T) {
 	})
 
 	Convey("Given a nil request", t, func() {
-		var request *http.Request = nil
+		var request *http.Request
 
 		Convey("When the function is called", func() {
 			_, err := authorisation.GetCollectionIDAttribute(request)

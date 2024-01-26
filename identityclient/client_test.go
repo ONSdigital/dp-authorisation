@@ -32,9 +32,7 @@ const (
 	testJWTPublicKeyAPIMap = `{"test123=": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyehkd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdgcKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbcmwIDAQAB","test456=": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyehkd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdgcKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbcmwIDAQAB"}`
 )
 
-var (
-	testError = errors.New("dummy test error")
-)
+var errTest = errors.New("dummy test error")
 
 func TestIndentityClient(t *testing.T) {
 	ctx := context.Background()
@@ -115,7 +113,7 @@ func TestIndentityClient_GetJWTVerificationKeys(t *testing.T) {
 		identityClient := identityclient.IdentityClient{
 			Client: &mock.IdentityInterfaceMock{
 				GetFunc: func(ctx context.Context, url string) (*http.Response, error) {
-					return nil, testError
+					return nil, errTest
 				},
 			},
 		}
@@ -157,7 +155,7 @@ func TestIndentityClient_IdentityHealthCheck(t *testing.T) {
 		identityClient := identityclient.IdentityClient{
 			BasicClient: &mock.IdentityInterfaceMock{
 				GetFunc: func(ctx context.Context, url string) (*http.Response, error) {
-					return nil, testError
+					return nil, errTest
 				},
 			},
 		}

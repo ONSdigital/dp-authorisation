@@ -17,35 +17,35 @@ func NewNoopMiddleware() *NoopMiddleware {
 }
 
 // RequireWithAttributes wraps an existing handler. The Noop implementation just calls the underlying handler.
-func (m NoopMiddleware) RequireWithAttributes(permission string, handlerFunc http.HandlerFunc, getAttributesFunc GetAttributesFromRequest) http.HandlerFunc {
+func (m NoopMiddleware) RequireWithAttributes(_ string, handlerFunc http.HandlerFunc, _ GetAttributesFromRequest) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		handlerFunc(w, req)
 	}
 }
 
 // Require wraps an existing handler. The Noop implementation just calls the underlying handler.
-func (m NoopMiddleware) Require(permission string, handlerFunc http.HandlerFunc) http.HandlerFunc {
+func (m NoopMiddleware) Require(_ string, handlerFunc http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		handlerFunc(w, req)
 	}
 }
 
 // Parse token used by the middleware.
-func (m NoopMiddleware) Parse(token string) (*permsdk.EntityData, error) {
+func (m NoopMiddleware) Parse(_ string) (*permsdk.EntityData, error) {
 	return nil, nil
 }
 
 // Close resources used by the middleware.
-func (m NoopMiddleware) Close(ctx context.Context) error {
+func (m NoopMiddleware) Close(_ context.Context) error {
 	return nil
 }
 
 // HealthCheck updates the health status of the permissions checker
-func (m NoopMiddleware) HealthCheck(ctx context.Context, state *health.CheckState) error {
+func (m NoopMiddleware) HealthCheck(_ context.Context, state *health.CheckState) error {
 	return state.Update(health.StatusOK, "noop permissions check", 0)
 }
 
 // IdentityHealthCheck updates the health status of the jwt keys request against identity api
-func (m NoopMiddleware) IdentityHealthCheck(ctx context.Context, state *health.CheckState) error {
+func (m NoopMiddleware) IdentityHealthCheck(_ context.Context, state *health.CheckState) error {
 	return state.Update(health.StatusOK, "noop jwt keys request", 0)
 }

@@ -17,7 +17,7 @@ type Client struct {
 	Client zebedeeclient.IdentityClient
 }
 
-func (c Client) CheckTokenIdentity(ctx context.Context, token string, tokenType identity.TokenType) (*dprequest.IdentityResponse, error) {
+func (c Client) CheckTokenIdentity(_ context.Context, _ string, _ identity.TokenType) (*dprequest.IdentityResponse, error) {
 	return &dprequest.IdentityResponse{
 		Identifier: "bob.monkhouse@bm.io",
 	}, nil
