@@ -15,19 +15,19 @@ var (
 
 // ClienterMock is a mock implementation of Clienter.
 //
-//     func TestSomethingThatUsesClienter(t *testing.T) {
+//	    func TestSomethingThatUsesClienter(t *testing.T) {
 //
-//         // make and configure a mocked Clienter
-//         mockedClienter := &ClienterMock{
-//             GetPermissionsFunc: func(ctx context.Context, getPermissionsRequest *http.Request) (*Permissions, error) {
-// 	               panic("TODO: mock out the GetPermissions method")
-//             },
-//         }
+//	        // make and configure a mocked Clienter
+//	        mockedClienter := &ClienterMock{
+//	            GetPermissionsFunc: func(ctx context.Context, getPermissionsRequest *http.Request) (*Permissions, error) {
+//		               panic("TODO: mock out the GetPermissions method")
+//	            },
+//	        }
 //
-//         // TODO: use mockedClienter in code that requires Clienter
-//         //       and then make assertions.
+//	        // TODO: use mockedClienter in code that requires Clienter
+//	        //       and then make assertions.
 //
-//     }
+//	    }
 type ClienterMock struct {
 	// GetPermissionsFunc mocks the GetPermissions method.
 	GetPermissionsFunc func(ctx context.Context, getPermissionsRequest *http.Request) (*Permissions, error)
@@ -64,7 +64,8 @@ func (mock *ClienterMock) GetPermissions(ctx context.Context, getPermissionsRequ
 
 // GetPermissionsCalls gets all the calls that were made to GetPermissions.
 // Check the length with:
-//     len(mockedClienter.GetPermissionsCalls())
+//
+//	len(mockedClienter.GetPermissionsCalls())
 func (mock *ClienterMock) GetPermissionsCalls() []struct {
 	Ctx                   context.Context
 	GetPermissionsRequest *http.Request
@@ -85,19 +86,19 @@ var (
 
 // VerifierMock is a mock implementation of Verifier.
 //
-//     func TestSomethingThatUsesVerifier(t *testing.T) {
+//	    func TestSomethingThatUsesVerifier(t *testing.T) {
 //
-//         // make and configure a mocked Verifier
-//         mockedVerifier := &VerifierMock{
-//             CheckAuthorisationFunc: func(ctx context.Context, callerPermissions *Permissions, requiredPermissions *Permissions) error {
-// 	               panic("TODO: mock out the CheckAuthorisation method")
-//             },
-//         }
+//	        // make and configure a mocked Verifier
+//	        mockedVerifier := &VerifierMock{
+//	            CheckAuthorisationFunc: func(ctx context.Context, callerPermissions *Permissions, requiredPermissions *Permissions) error {
+//		               panic("TODO: mock out the CheckAuthorisation method")
+//	            },
+//	        }
 //
-//         // TODO: use mockedVerifier in code that requires Verifier
-//         //       and then make assertions.
+//	        // TODO: use mockedVerifier in code that requires Verifier
+//	        //       and then make assertions.
 //
-//     }
+//	    }
 type VerifierMock struct {
 	// CheckAuthorisationFunc mocks the CheckAuthorisation method.
 	CheckAuthorisationFunc func(ctx context.Context, callerPermissions *Permissions, requiredPermissions *Permissions) error
@@ -138,7 +139,8 @@ func (mock *VerifierMock) CheckAuthorisation(ctx context.Context, callerPermissi
 
 // CheckAuthorisationCalls gets all the calls that were made to CheckAuthorisation.
 // Check the length with:
-//     len(mockedVerifier.CheckAuthorisationCalls())
+//
+//	len(mockedVerifier.CheckAuthorisationCalls())
 func (mock *VerifierMock) CheckAuthorisationCalls() []struct {
 	Ctx                 context.Context
 	CallerPermissions   *Permissions
@@ -161,19 +163,19 @@ var (
 
 // HTTPClienterMock is a mock implementation of HTTPClienter.
 //
-//     func TestSomethingThatUsesHTTPClienter(t *testing.T) {
+//	    func TestSomethingThatUsesHTTPClienter(t *testing.T) {
 //
-//         // make and configure a mocked HTTPClienter
-//         mockedHTTPClienter := &HTTPClienterMock{
-//             DoFunc: func(ctx context.Context, req *http.Request) (*http.Response, error) {
-// 	               panic("TODO: mock out the Do method")
-//             },
-//         }
+//	        // make and configure a mocked HTTPClienter
+//	        mockedHTTPClienter := &HTTPClienterMock{
+//	            DoFunc: func(ctx context.Context, req *http.Request) (*http.Response, error) {
+//		               panic("TODO: mock out the Do method")
+//	            },
+//	        }
 //
-//         // TODO: use mockedHTTPClienter in code that requires HTTPClienter
-//         //       and then make assertions.
+//	        // TODO: use mockedHTTPClienter in code that requires HTTPClienter
+//	        //       and then make assertions.
 //
-//     }
+//	    }
 type HTTPClienterMock struct {
 	// DoFunc mocks the Do method.
 	DoFunc func(ctx context.Context, req *http.Request) (*http.Response, error)
@@ -210,7 +212,8 @@ func (mock *HTTPClienterMock) Do(ctx context.Context, req *http.Request) (*http.
 
 // DoCalls gets all the calls that were made to Do.
 // Check the length with:
-//     len(mockedHTTPClienter.DoCalls())
+//
+//	len(mockedHTTPClienter.DoCalls())
 func (mock *HTTPClienterMock) DoCalls() []struct {
 	Ctx context.Context
 	Req *http.Request
@@ -231,19 +234,19 @@ var (
 
 // GetPermissionsRequestBuilderMock is a mock implementation of GetPermissionsRequestBuilder.
 //
-//     func TestSomethingThatUsesGetPermissionsRequestBuilder(t *testing.T) {
+//	    func TestSomethingThatUsesGetPermissionsRequestBuilder(t *testing.T) {
 //
-//         // make and configure a mocked GetPermissionsRequestBuilder
-//         mockedGetPermissionsRequestBuilder := &GetPermissionsRequestBuilderMock{
-//             NewPermissionsRequestFunc: func(req *http.Request) (*http.Request, error) {
-// 	               panic("TODO: mock out the NewPermissionsRequest method")
-//             },
-//         }
+//	        // make and configure a mocked GetPermissionsRequestBuilder
+//	        mockedGetPermissionsRequestBuilder := &GetPermissionsRequestBuilderMock{
+//	            NewPermissionsRequestFunc: func(req *http.Request) (*http.Request, error) {
+//		               panic("TODO: mock out the NewPermissionsRequest method")
+//	            },
+//	        }
 //
-//         // TODO: use mockedGetPermissionsRequestBuilder in code that requires GetPermissionsRequestBuilder
-//         //       and then make assertions.
+//	        // TODO: use mockedGetPermissionsRequestBuilder in code that requires GetPermissionsRequestBuilder
+//	        //       and then make assertions.
 //
-//     }
+//	    }
 type GetPermissionsRequestBuilderMock struct {
 	// NewPermissionsRequestFunc mocks the NewPermissionsRequest method.
 	NewPermissionsRequestFunc func(req *http.Request) (*http.Request, error)
@@ -276,7 +279,8 @@ func (mock *GetPermissionsRequestBuilderMock) NewPermissionsRequest(req *http.Re
 
 // NewPermissionsRequestCalls gets all the calls that were made to NewPermissionsRequest.
 // Check the length with:
-//     len(mockedGetPermissionsRequestBuilder.NewPermissionsRequestCalls())
+//
+//	len(mockedGetPermissionsRequestBuilder.NewPermissionsRequestCalls())
 func (mock *GetPermissionsRequestBuilderMock) NewPermissionsRequestCalls() []struct {
 	Req *http.Request
 } {

@@ -49,9 +49,9 @@ func LoggerNamespace(logNamespace string) {
 }
 
 // NewHandler construct a new Handler.
-//	- requestBuilder an implementation of GetPermissionsRequestBuilder that creates Permissions API requests from the inbound http request.
-//	- permissionsClient is a client for communicating with the permissions API.
-//	- permissionsVerifier is an object that checks a caller's permissions satisfy the permissions requirements.
+//   - requestBuilder an implementation of GetPermissionsRequestBuilder that creates Permissions API requests from the inbound http request.
+//   - permissionsClient is a client for communicating with the permissions API.
+//   - permissionsVerifier is an object that checks a caller's permissions satisfy the permissions requirements.
 func NewHandler(requestBuilder GetPermissionsRequestBuilder, permissionsClient Clienter, permissionsVerifier Verifier) *Handler {
 	return &Handler{
 		requestBuilder:      requestBuilder,
