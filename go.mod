@@ -11,7 +11,7 @@ replace github.com/spf13/cobra => github.com/spf13/cobra v1.7.0
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.260.0
 	github.com/ONSdigital/dp-net/v2 v2.11.0
-	github.com/ONSdigital/log.go/v2 v2.4.2
+	github.com/ONSdigital/log.go/v2 v2.4.1
 	github.com/gorilla/mux v1.8.1
 	github.com/smartystreets/goconvey v1.8.1
 )
