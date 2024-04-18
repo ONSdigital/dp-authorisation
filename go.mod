@@ -25,7 +25,6 @@ require (
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
-	github.com/justinas/alice v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/smarty/assertions v1.15.1 // indirect
