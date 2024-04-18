@@ -10,14 +10,13 @@ replace github.com/spf13/cobra => github.com/spf13/cobra v1.7.0
 
 require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.254.1
+	github.com/ONSdigital/dp-net/v2 v2.11.2
 	github.com/ONSdigital/log.go/v2 v2.4.3
 	github.com/gorilla/mux v1.8.1
 	github.com/smartystreets/goconvey v1.8.1
 )
 
 require (
-	github.com/ONSdigital/dp-net/v2 v2.11.2 // indirect
-	github.com/ONSdigital/go-ns v0.0.0-20191104121206-f144c4ec2e58 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
