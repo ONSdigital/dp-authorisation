@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/ONSdigital/dp-rchttp"
+	dphttp "github.com/ONSdigital/dp-net/v2/http"
 )
 
 const (
@@ -49,12 +49,12 @@ type PermissionsClient struct {
 }
 
 func DefaultPermissionsClient() *PermissionsClient {
-	return &PermissionsClient{httpCli: rchttp.NewClient()}
+	return &PermissionsClient{httpCli: dphttp.NewClient()}
 }
 
 // NewPermissionsClient construct a new PermissionsClient instance.
-//	- host is the URL of the permissions API to call.
-//	- httpClient is instance of HTTPClienter
+//   - host is the URL of the permissions API to call.
+//   - httpClient is instance of HTTPClienter
 func NewPermissionsClient(httpClient HTTPClienter) *PermissionsClient {
 	return &PermissionsClient{httpCli: httpClient}
 }
