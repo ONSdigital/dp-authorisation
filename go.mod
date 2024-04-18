@@ -16,13 +16,10 @@ require (
 )
 
 require (
-	github.com/ONSdigital/dp-api-clients-go v1.10.0 // indirect
 	github.com/ONSdigital/dp-frontend-models v1.1.0 // indirect
 	github.com/ONSdigital/dp-healthcheck v1.6.1 // indirect
 	github.com/ONSdigital/dp-mocking v0.10.1 // indirect
 	github.com/ONSdigital/dp-net/v2 v2.11.2 // indirect
-	github.com/ONSdigital/go-ns v0.0.0-20200205115900-a11716f93bad // indirect
-	github.com/ONSdigital/log.go v1.0.0 // indirect
 	github.com/aws/aws-sdk-go v1.48.9 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/creack/pty v1.1.9 // indirect
