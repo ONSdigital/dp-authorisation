@@ -9,10 +9,14 @@ go 1.22
 replace github.com/spf13/cobra => github.com/spf13/cobra v1.7.0
 
 require (
-	github.com/ONSdigital/dp-api-clients-go/v2 v2.252.1
+	github.com/ONSdigital/dp-api-clients-go/v2 v2.254.1
 	github.com/ONSdigital/dp-rchttp v1.0.0
+	github.com/ONSdigital/log.go/v2 v2.4.3
+	github.com/gorilla/mux v1.8.1
+	github.com/smartystreets/goconvey v1.8.1
+)
+
+require (
+	github.com/ONSdigital/dp-net/v2 v2.11.2 // indirect
 	github.com/ONSdigital/go-ns v0.0.0-20200205115900-a11716f93bad // indirect
-	github.com/ONSdigital/log.go/v2 v2.4.1
-	github.com/gorilla/mux v1.8.0
-	github.com/smartystreets/goconvey v1.8.0
 )
