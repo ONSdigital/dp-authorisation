@@ -6,7 +6,7 @@ import (
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/identity"
 	"github.com/ONSdigital/dp-authorisation/v2/zebedeeclient"
-	dprequest "github.com/ONSdigital/dp-net/v2/request"
+	dprequest "github.com/ONSdigital/dp-net/v3/request"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisationtest"
 

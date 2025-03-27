@@ -69,11 +69,11 @@ func (c Checker) HealthCheck(ctx context.Context, state *health.CheckState) erro
 func mapEntityDataToEntities(entityData permsdk.EntityData) []string {
 	var entities []string
 
-	if len(entityData.UserID) > 0 {
+	if entityData.UserID != "" {
 		entities = append(entities, "users/"+entityData.UserID)
 	}
 	for _, group := range entityData.Groups {
-		if len(group) > 0 {
+		if group != "" {
 			entities = append(entities, "groups/"+group)
 		}
 	}

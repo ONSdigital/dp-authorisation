@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
-	dprequest "github.com/ONSdigital/dp-net/v2/request"
+	dprequest "github.com/ONSdigital/dp-net/v3/request"
 	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 )
 
