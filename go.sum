@@ -6,8 +6,8 @@ github.com/ONSdigital/dp-mocking v0.11.0 h1:laln6e2JD4vtsYbg0cTw9ur1Xf390AUYdd85
 github.com/ONSdigital/dp-mocking v0.11.0/go.mod h1:oHkuukWnURnK7epY5TD5oYVkOwldR2La1D5LQBTxY0A=
 github.com/ONSdigital/dp-net/v2 v2.22.0 h1:LY9C5x1+sfK9QyjNpB2G3TPvAtSuOFR9FRcXsR9twqs=
 github.com/ONSdigital/dp-net/v2 v2.22.0/go.mod h1:F6yL3jjuVwBLVMFIKgHF3zhMRbmZysAxBiu+aIAi3Z0=
-github.com/ONSdigital/dp-net/v3 v3.1.1 h1:Bre5zi3xWxIx/6qslb0axWP3yzBUMiWJkd5BI6otGwc=
-github.com/ONSdigital/dp-net/v3 v3.1.1/go.mod h1:vgGXEr1NOEwDEml3HB+5kw1OPkIFm3AoVaBXpGehWR8=
+github.com/ONSdigital/dp-net/v3 v3.1.2 h1:p+pUgB3zg4CUNY7ndAaXOwvTfSS63neLWLo5MEASQKI=
+github.com/ONSdigital/dp-net/v3 v3.1.2/go.mod h1:f3HtQBYU8Uvl/pGlbbNbZ8IVhC0kEDBAkG65kG32Uzo=
 github.com/ONSdigital/dp-permissions-api v0.27.0 h1:pPXJvhfDTqUMaugnCp6SPGfNE/iJWFy6dypBBHDyIJo=
 github.com/ONSdigital/dp-permissions-api v0.27.0/go.mod h1:SycLVjcK8XPHbLEV4wUh2CsAY8baMJG5rgd1PQ19BpE=
 github.com/ONSdigital/log.go/v2 v2.4.4 h1:yQYdZAdsuLOCzrIdWnISkFmWLJZDvqgjuwI1y+BFUb4=
@@ -57,8 +57,8 @@ go.opentelemetry.io/otel/metric v1.35.0 h1:0znxYu2SNyuMSQT4Y9WDWej0VpcsxkuklLa4/
 go.opentelemetry.io/otel/metric v1.35.0/go.mod h1:nKVFgxBZ2fReX6IlyW28MgZojkoAkJGaE8CpgeAU3oE=
 go.opentelemetry.io/otel/trace v1.35.0 h1:dPpEfJu1sDIqruz7BHFG3c7528f6ddfSWfFDVt/xgMs=
 go.opentelemetry.io/otel/trace v1.35.0/go.mod h1:WUk7DtFp1Aw2MkvqGdwiXYDZZNvA/1J8o6xRXLrIkyc=
-golang.org/x/net v0.38.0 h1:vRMAPTMaeGqVhG5QyLJHqNDwecKTomGeqbnfZyKlBI8=
-golang.org/x/net v0.38.0/go.mod h1:ivrbrMbzFq5J41QOQh0siUuly180yBYtLp+CKbEaFx8=
+golang.org/x/net v0.39.0 h1:ZCu7HMWDxpXpaiKdhzIfaltL9Lp31x/3fCP11bc6/fY=
+golang.org/x/net v0.39.0/go.mod h1:X7NRbYVEA+ewNkCNyJ513WmMdQ3BineSwVtN2zD/d+E=
 golang.org/x/sys v0.6.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.32.0 h1:s77OFDvIQeibCmezSnk/q6iAfkdiQaJi4VzroCFrN20=
 golang.org/x/sys v0.32.0/go.mod h1:BJP2sWEmIv4KK5OTEluFJCKSidICx8ciO85XgH3Ak8k=
