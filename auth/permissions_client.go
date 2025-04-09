@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	dphttp "github.com/ONSdigital/dp-net/v2/http"
+	dphttp "github.com/ONSdigital/dp-net/v3/http"
 )
 
 const (
