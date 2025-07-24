@@ -33,7 +33,7 @@ func NewFakePermissionsAPI() *FakePermissionsAPI {
 // URL returns the URL of the HTTP server. This can be used in the setup of the component test to override
 // the default URL for the permission API.
 func (f *FakePermissionsAPI) URL() string {
-	return f.HTTPFake.Server.URL
+	return f.Server.URL
 }
 
 // UpdatePermissionsBundleResponse overrides the default response to return custom permission bundle data.
