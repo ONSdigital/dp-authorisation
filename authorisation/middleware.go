@@ -38,7 +38,10 @@ type GetAttributesFromRequest func(req *http.Request) (attributes map[string]str
 
 // NewFeatureFlaggedMiddleware returns a different Middleware implementation depending on the configured feature flag value
 // Use this constructor when first adding authorisation as middleware so that it can be toggled off if required.
-func NewFeatureFlaggedMiddleware(_ context.Context, _ *Config, _ map[string]string) (Middleware, error) {
+func NewFeatureFlaggedMiddleware(ctx context.Context, config *Config, jwtRSAPublicKeys map[string]string) (Middleware, error) {
+	if config.Enabled {
+		return NewMiddlewareFromConfig(ctx, config, jwtRSAPublicKeys)
+	}
 	return NewNoopMiddleware(), nil
 }
 

@@ -5,8 +5,10 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	"github.com/ONSdigital/dp-authorisation/v2/authorisation/mock"
@@ -487,6 +489,32 @@ func TestMiddleware_NewMiddlewareFromConfig_JWTKeys(t *testing.T) {
 		So(len(rsaParser.PublicKeys), ShouldEqual, 2)
 		So(rsaParser.PublicKeys["test123="], ShouldNotBeNil)
 		So(rsaParser.PublicKeys["test456="], ShouldNotBeNil)
+	})
+}
+
+func TestMiddleware_NewFeatureFlaggedMiddleware(t *testing.T) {
+	Convey("When a config is supplied with no enable flag set", t, func() {
+		config := authorisation.NewDefaultConfig()
+		middleware, err := authorisation.NewFeatureFlaggedMiddleware(context.Background(), config, map[string]string{})
+		So(err, ShouldBeNil)
+
+		Convey("Then a noop middleware is returned", func() {
+			So(reflect.TypeOf(middleware), ShouldEqual, reflect.TypeOf(&authorisation.NoopMiddleware{}))
+		})
+	})
+
+	Convey("When a config is supplied with the enable flag set to true", t, func() {
+		config := authorisation.Config{
+			Enabled:                        true,
+			PermissionsAPIURL:              "http://localhost:4567",
+			PermissionsCacheUpdateInterval: time.Second * 60,
+		}
+		middleware, err := authorisation.NewFeatureFlaggedMiddleware(context.Background(), &config, map[string]string{})
+		So(err, ShouldBeNil)
+
+		Convey("Then a middleware from config is returned", func() {
+			So(reflect.TypeOf(middleware), ShouldEqual, reflect.TypeOf(&authorisation.PermissionCheckMiddleware{}))
+		})
 	})
 }
 
