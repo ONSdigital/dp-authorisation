@@ -346,7 +346,7 @@ func TestChecker_HealthCheck(t *testing.T) {
 
 func newMockCache() *mock.CacheMock {
 	return &mock.CacheMock{
-		GetPermissionsBundleFunc: func(_ context.Context) (permsdk.Bundle, error) {
+		GetPermissionsBundleFunc: func(ctx context.Context, headers permsdk.Headers) (permsdk.Bundle, error) {
 			return permissionsBundle, nil
 		},
 		CloseFunc: func(_ context.Context) error {

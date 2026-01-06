@@ -87,7 +87,7 @@ func (c Checker) hasPermission(
 	permission string,
 	attributes map[string]string) (bool, error) {
 	logData := &log.Data{"permission": permission}
-	permissionsBundle, err := c.cache.GetPermissionsBundle(ctx)
+	permissionsBundle, err := c.cache.GetPermissionsBundle(ctx, permsdk.Headers{})
 	if err != nil {
 		return false, err
 	}

@@ -34,7 +34,7 @@ func NewCachingStore(underlyingStore Store) *CachingStore {
 }
 
 // GetPermissionsBundle returns the cached permission data, or an error if it's not cached.
-func (c *CachingStore) GetPermissionsBundle(_ context.Context) (permsdk.Bundle, error) {
+func (c *CachingStore) GetPermissionsBundle(_ context.Context, _ permsdk.Headers) (permsdk.Bundle, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -47,7 +47,7 @@ func (c *CachingStore) GetPermissionsBundle(_ context.Context) (permsdk.Bundle, 
 
 // Update the permissions cache data, by calling the underlying permissions store
 func (c *CachingStore) Update(ctx context.Context, maxCacheTime time.Duration) (permsdk.Bundle, error) {
-	bundle, err := c.underlyingStore.GetPermissionsBundle(ctx)
+	bundle, err := c.underlyingStore.GetPermissionsBundle(ctx, permsdk.Headers{})
 
 	c.mutex.Lock()
 	defer c.mutex.Unlock()

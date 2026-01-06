@@ -24,7 +24,7 @@ var _ permissions.Cache = &CacheMock{}
 //			CloseFunc: func(ctx context.Context) error {
 //				panic("mock out the Close method")
 //			},
-//			GetPermissionsBundleFunc: func(ctx context.Context) (permsdk.Bundle, error) {
+//			GetPermissionsBundleFunc: func(ctx context.Context, headers permsdk.Headers) (permsdk.Bundle, error) {
 //				panic("mock out the GetPermissionsBundle method")
 //			},
 //			HealthCheckFunc: func(ctx context.Context, state *health.CheckState) error {
@@ -41,7 +41,7 @@ type CacheMock struct {
 	CloseFunc func(ctx context.Context) error
 
 	// GetPermissionsBundleFunc mocks the GetPermissionsBundle method.
-	GetPermissionsBundleFunc func(ctx context.Context) (permsdk.Bundle, error)
+	GetPermissionsBundleFunc func(ctx context.Context, headers permsdk.Headers) (permsdk.Bundle, error)
 
 	// HealthCheckFunc mocks the HealthCheck method.
 	HealthCheckFunc func(ctx context.Context, state *health.CheckState) error
@@ -57,6 +57,8 @@ type CacheMock struct {
 		GetPermissionsBundle []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
+			// Headers is the headers argument value.
+			Headers permsdk.Headers
 		}
 		// HealthCheck holds details about calls to the HealthCheck method.
 		HealthCheck []struct {
@@ -104,19 +106,21 @@ func (mock *CacheMock) CloseCalls() []struct {
 }
 
 // GetPermissionsBundle calls GetPermissionsBundleFunc.
-func (mock *CacheMock) GetPermissionsBundle(ctx context.Context) (permsdk.Bundle, error) {
+func (mock *CacheMock) GetPermissionsBundle(ctx context.Context, headers permsdk.Headers) (permsdk.Bundle, error) {
 	if mock.GetPermissionsBundleFunc == nil {
 		panic("CacheMock.GetPermissionsBundleFunc: method is nil but Cache.GetPermissionsBundle was just called")
 	}
 	callInfo := struct {
-		Ctx context.Context
+		Ctx     context.Context
+		Headers permsdk.Headers
 	}{
-		Ctx: ctx,
+		Ctx:     ctx,
+		Headers: headers,
 	}
 	mock.lockGetPermissionsBundle.Lock()
 	mock.calls.GetPermissionsBundle = append(mock.calls.GetPermissionsBundle, callInfo)
 	mock.lockGetPermissionsBundle.Unlock()
-	return mock.GetPermissionsBundleFunc(ctx)
+	return mock.GetPermissionsBundleFunc(ctx, headers)
 }
 
 // GetPermissionsBundleCalls gets all the calls that were made to GetPermissionsBundle.
@@ -124,10 +128,12 @@ func (mock *CacheMock) GetPermissionsBundle(ctx context.Context) (permsdk.Bundle
 //
 //	len(mockedCache.GetPermissionsBundleCalls())
 func (mock *CacheMock) GetPermissionsBundleCalls() []struct {
-	Ctx context.Context
+	Ctx     context.Context
+	Headers permsdk.Headers
 } {
 	var calls []struct {
-		Ctx context.Context
+		Ctx     context.Context
+		Headers permsdk.Headers
 	}
 	mock.lockGetPermissionsBundle.RLock()
 	calls = mock.calls.GetPermissionsBundle

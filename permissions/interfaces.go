@@ -13,7 +13,7 @@ import (
 // Store represents a store of permission data
 // The implementation can be a client of the permissions API, though a cache implementation can also be wrapped around it.
 type Store interface {
-	GetPermissionsBundle(ctx context.Context) (permsdk.Bundle, error)
+	GetPermissionsBundle(ctx context.Context, headers permsdk.Headers) (permsdk.Bundle, error)
 }
 
 // Cache represents a cache of permissions data.

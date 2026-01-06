@@ -20,7 +20,7 @@ var _ permissions.Store = &StoreMock{}
 //
 //		// make and configure a mocked permissions.Store
 //		mockedStore := &StoreMock{
-//			GetPermissionsBundleFunc: func(ctx context.Context) (permsdk.Bundle, error) {
+//			GetPermissionsBundleFunc: func(ctx context.Context, headers permsdk.Headers) (permsdk.Bundle, error) {
 //				panic("mock out the GetPermissionsBundle method")
 //			},
 //		}
@@ -31,7 +31,7 @@ var _ permissions.Store = &StoreMock{}
 //	}
 type StoreMock struct {
 	// GetPermissionsBundleFunc mocks the GetPermissionsBundle method.
-	GetPermissionsBundleFunc func(ctx context.Context) (permsdk.Bundle, error)
+	GetPermissionsBundleFunc func(ctx context.Context, headers permsdk.Headers) (permsdk.Bundle, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -39,25 +39,29 @@ type StoreMock struct {
 		GetPermissionsBundle []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
+			// Headers is the headers argument value.
+			Headers permsdk.Headers
 		}
 	}
 	lockGetPermissionsBundle sync.RWMutex
 }
 
 // GetPermissionsBundle calls GetPermissionsBundleFunc.
-func (mock *StoreMock) GetPermissionsBundle(ctx context.Context) (permsdk.Bundle, error) {
+func (mock *StoreMock) GetPermissionsBundle(ctx context.Context, headers permsdk.Headers) (permsdk.Bundle, error) {
 	if mock.GetPermissionsBundleFunc == nil {
 		panic("StoreMock.GetPermissionsBundleFunc: method is nil but Store.GetPermissionsBundle was just called")
 	}
 	callInfo := struct {
-		Ctx context.Context
+		Ctx     context.Context
+		Headers permsdk.Headers
 	}{
-		Ctx: ctx,
+		Ctx:     ctx,
+		Headers: headers,
 	}
 	mock.lockGetPermissionsBundle.Lock()
 	mock.calls.GetPermissionsBundle = append(mock.calls.GetPermissionsBundle, callInfo)
 	mock.lockGetPermissionsBundle.Unlock()
-	return mock.GetPermissionsBundleFunc(ctx)
+	return mock.GetPermissionsBundleFunc(ctx, headers)
 }
 
 // GetPermissionsBundleCalls gets all the calls that were made to GetPermissionsBundle.
@@ -65,10 +69,12 @@ func (mock *StoreMock) GetPermissionsBundle(ctx context.Context) (permsdk.Bundle
 //
 //	len(mockedStore.GetPermissionsBundleCalls())
 func (mock *StoreMock) GetPermissionsBundleCalls() []struct {
-	Ctx context.Context
+	Ctx     context.Context
+	Headers permsdk.Headers
 } {
 	var calls []struct {
-		Ctx context.Context
+		Ctx     context.Context
+		Headers permsdk.Headers
 	}
 	mock.lockGetPermissionsBundle.RLock()
 	calls = mock.calls.GetPermissionsBundle
