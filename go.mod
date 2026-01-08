@@ -6,7 +6,7 @@ require (
 	github.com/ONSdigital/dp-api-clients-go/v2 v2.270.0
 	github.com/ONSdigital/dp-healthcheck v1.6.4
 	github.com/ONSdigital/dp-net/v3 v3.8.0
-	github.com/ONSdigital/dp-permissions-api v1.9.1-0.20260106141243-268e2b654b68
+	github.com/ONSdigital/dp-permissions-api v1.9.1-0.20260108100359-074d01f4ebe3
 	github.com/ONSdigital/log.go/v2 v2.5.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/maxcnunes/httpfake v1.2.4
