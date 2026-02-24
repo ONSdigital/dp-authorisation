@@ -112,7 +112,7 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 
 		authToken := req.Header.Get("Authorization")
 		if authToken == "" {
-			log.Info(ctx, "authorisation failed: no authorisation header in request", logData)
+			log.Info(ctx, "authorisation failed: no authorisation header in request", log.Classification(log.ProtectiveMonitoring), logData)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -123,32 +123,36 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 		var (
 			entityData              = &permsdk.EntityData{}
 			zebedeeIdentityResponse = &request.IdentityResponse{}
+			identityType            = log.USER
 			err                     error
 		)
 		if strings.Contains(authToken, ".") {
 			entityData, err = m.jwtParser.Parse(authToken)
 			if err != nil {
 				if errors.Is(err, jwt.ErrPublickeysEmpty) {
-					log.Error(ctx, "no public keys", err)
+					log.Error(ctx, "no public keys", err, logData)
 					w.WriteHeader(http.StatusInternalServerError)
 				} else {
 					logData["message"] = err.Error()
-					log.Error(ctx, "authorisation failed: unable to parse jwt", err, logData)
+					log.Error(ctx, "authorisation failed: unable to parse jwt", err, log.Classification(log.ProtectiveMonitoring), log.Auth(identityType, ""), logData)
 					w.WriteHeader(http.StatusUnauthorized)
 				}
 				return
 			}
 		} else {
+			identityType = log.SERVICE
 			zebedeeIdentityResponse, err = m.zebedeeClient.CheckTokenIdentity(ctx, authToken)
 			if err != nil {
 				logData["message"] = err.Error()
-				log.Error(ctx, "authorisation failed: service token issue", err, logData)
+				log.Error(ctx, "authorisation failed: service token issue", err, log.Classification(log.ProtectiveMonitoring), log.Auth(identityType, ""), logData)
 				w.WriteHeader(http.StatusForbidden)
 				return
 			}
 			// extract user name and proceed
 			entityData.UserID = zebedeeIdentityResponse.Identifier
 		}
+
+		logAuthOption := log.Auth(identityType, entityData.UserID)
 
 		var attributes map[string]string
 		if getAttributes != nil {
@@ -168,10 +172,13 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 		}
 
 		if !hasPermission {
-			log.Info(ctx, "authorisation failed: request has no permission", logData)
+			logData["message"] = "user/service does not have required permission"
+			log.Info(ctx, "authorisation failed: request has no permission", log.Classification(log.ProtectiveMonitoring), logAuthOption, logData)
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
+
+		log.Info(ctx, "authorisation successful", log.Classification(log.ProtectiveMonitoring), logAuthOption, logData)
 
 		handlerFunc(w, req)
 	}
