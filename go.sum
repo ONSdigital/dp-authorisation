@@ -6,8 +6,8 @@ github.com/ONSdigital/dp-mocking v0.11.0 h1:laln6e2JD4vtsYbg0cTw9ur1Xf390AUYdd85
 github.com/ONSdigital/dp-mocking v0.11.0/go.mod h1:oHkuukWnURnK7epY5TD5oYVkOwldR2La1D5LQBTxY0A=
 github.com/ONSdigital/dp-net/v3 v3.8.0 h1:4VYHBryZyN/4Aa3SywJIwuNF3Ey6JRoZbWO1Wb+tPUc=
 github.com/ONSdigital/dp-net/v3 v3.8.0/go.mod h1:ur4LLCvd2xW2jpa785pElE6HB2bPvszZxdAjqv0XFGg=
-github.com/ONSdigital/dp-permissions-api v1.10.0 h1:iAdeeDSX84AJrhljIaVvPyenZP/Nu30o8duY89rvXlI=
-github.com/ONSdigital/dp-permissions-api v1.10.0/go.mod h1:HfQYvW7eLeJDIBRbwtES8Gr49yJvc4Zs3YgsQZulABk=
+github.com/ONSdigital/dp-permissions-api v1.10.1 h1:dOyPtS94CpBgS0Y1oZJy84UcKZOHkmDK+Zdg5OClEXs=
+github.com/ONSdigital/dp-permissions-api v1.10.1/go.mod h1:436ej+daY+8+hNCReDvCIsI0iNRWKU/UZsxC09CRMNA=
 github.com/ONSdigital/log.go/v2 v2.5.2 h1:V6NYtbi+thHYTwckxOXPklZUgQCNBo1/fyPPIutu4V4=
 github.com/ONSdigital/log.go/v2 v2.5.2/go.mod h1:KZNEweCUHD8dKwhlvoRvgd2Y2aUIuU3H9/MmbFyVzW8=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
