@@ -123,6 +123,59 @@ func TestMiddleware_RequireWithAttributes(t *testing.T) {
 	})
 }
 
+func TestMiddleware_RequireWithAttributes_AddsAuthEntityDataToHandlerRequestContext(t *testing.T) {
+	Convey("Given a request with a valid JWT token that has the required permissions", t, func() {
+		response := httptest.NewRecorder()
+		request := httptest.NewRequest(http.MethodGet, testURL, http.NoBody)
+		request.Header.Set("Authorization", authorisationtest.AdminJWTToken)
+
+		_, originalHasAuthEntityData := authorisation.AuthEntityDataFromContext(request.Context())
+		mockJWTParser := newMockJWTParser()
+		permissionsChecker := &mock.PermissionsCheckerMock{
+			HasPermissionFunc: func(ctx context.Context, entityData permsdk.EntityData, permission string, attributes map[string]string) (bool, error) {
+				return true, nil
+			},
+		}
+
+		var (
+			handlerAuthEntityData    *authorisation.AuthEntityData
+			handlerHasAuthEntityData bool
+			handlerCalls             int
+		)
+
+		handler := func(_ http.ResponseWriter, req *http.Request) {
+			handlerCalls++
+			handlerAuthEntityData, handlerHasAuthEntityData = authorisation.AuthEntityDataFromContext(req.Context())
+		}
+
+		middleware := authorisation.NewMiddlewareFromDependencies(mockJWTParser, permissionsChecker, zebedeeIdentity, identityClient)
+		middlewareFunc := middleware.RequireWithAttributes(permission, handler, nil)
+
+		Convey("When the middleware function is called", func() {
+			middlewareFunc(response, request)
+
+			Convey("Then the original request context is unchanged", func() {
+				_, ok := authorisation.AuthEntityDataFromContext(request.Context())
+				So(originalHasAuthEntityData, ShouldBeFalse)
+				So(ok, ShouldBeFalse)
+			})
+
+			Convey("Then the wrapped handler receives a request with auth entity data in context", func() {
+				So(handlerCalls, ShouldEqual, 1)
+				So(handlerHasAuthEntityData, ShouldBeTrue)
+				So(handlerAuthEntityData, ShouldNotBeNil)
+				So(handlerAuthEntityData.EntityData, ShouldNotBeNil)
+				So(handlerAuthEntityData.EntityData.UserID, ShouldEqual, dummyEntityData.UserID)
+				So(handlerAuthEntityData.IsServiceAuth, ShouldBeFalse)
+			})
+
+			Convey("Then the response code should be 200", func() {
+				So(response.Code, ShouldEqual, http.StatusOK)
+			})
+		})
+	})
+}
+
 func TestMiddleware_Require(t *testing.T) {
 	Convey("Given a request with a valid JWT token that has the required permissions", t, func() {
 		response := httptest.NewRecorder()

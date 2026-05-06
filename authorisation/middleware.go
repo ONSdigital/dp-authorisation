@@ -180,7 +180,10 @@ func (m PermissionCheckMiddleware) RequireWithAttributes(permission string, hand
 
 		log.Info(ctx, "authorisation successful", log.Classification(log.ProtectiveMonitoring), logAuthOption, logData)
 
-		handlerFunc(w, req)
+		authEntityData := CreateAuthEntityData(entityData, identityType == log.SERVICE)
+		ctx = ContextWithAuthEntityData(ctx, authEntityData)
+
+		handlerFunc(w, req.WithContext(ctx))
 	}
 }
 
