@@ -1,42 +1,48 @@
-package authorisation
+package authorisation_test
 
 import (
 	"context"
 	"testing"
 
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestContextWithAuthEntityDataAndFromContext(t *testing.T) {
-	ctx := context.Background()
-	expected := &AuthEntityData{
-		EntityData: &permsdk.EntityData{
-			UserID: "test-user",
-			Groups: []string{"group-a"},
-		},
-		IsServiceAuth: true,
-	}
+	Convey("Given auth entity data and a base context", t, func() {
+		ctx := context.Background()
+		expected := &authorisation.AuthEntityData{
+			EntityData: &permsdk.EntityData{
+				UserID: "test-user",
+				Groups: []string{"group-a"},
+			},
+			IsServiceAuth: true,
+		}
 
-	ctxWithData := ContextWithAuthEntityData(ctx, expected)
-	got, ok := AuthEntityDataFromContext(ctxWithData)
-	if !ok {
-		t.Fatal("expected auth entity data in context, got none")
-	}
+		Convey("When the auth entity data is added to context", func() {
+			ctxWithData := authorisation.ContextWithAuthEntityData(ctx, expected)
+			got, ok := authorisation.AuthEntityDataFromContext(ctxWithData)
 
-	if got != expected {
-		t.Fatalf("expected same auth entity data pointer, got different pointer")
-	}
+			Convey("Then the same auth entity data is returned", func() {
+				So(ok, ShouldBeTrue)
+				So(got, ShouldEqual, expected)
+			})
+		})
+	})
 }
 
 func TestAuthEntityDataFromContextWhenMissing(t *testing.T) {
-	ctx := context.Background()
+	Convey("Given a context without auth entity data", t, func() {
+		ctx := context.Background()
 
-	got, ok := AuthEntityDataFromContext(ctx)
-	if ok {
-		t.Fatal("expected no auth entity data in context")
-	}
+		Convey("When auth entity data is retrieved from context", func() {
+			got, ok := authorisation.AuthEntityDataFromContext(ctx)
 
-	if got != nil {
-		t.Fatalf("expected nil auth entity data, got %#v", got)
-	}
+			Convey("Then no auth entity data is found", func() {
+				So(ok, ShouldBeFalse)
+				So(got, ShouldBeNil)
+			})
+		})
+	})
 }

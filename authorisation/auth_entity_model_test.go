@@ -1,59 +1,39 @@
-package authorisation
+package authorisation_test
 
 import (
 	"testing"
 
+	"github.com/ONSdigital/dp-authorisation/v2/authorisation"
 	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestCreateAuthEntityData(t *testing.T) {
-	entityData := &permsdk.EntityData{
-		UserID: "test-user",
-		Groups: []string{"group-a", "group-b"},
-	}
+	Convey("Given entity data", t, func() {
+		entityData := &permsdk.EntityData{
+			UserID: "test-user",
+			Groups: []string{"group-a", "group-b"},
+		}
 
-	tests := []struct {
-		name      string
-		isService bool
-	}{
-		{
-			name:      "service auth",
-			isService: true,
-		},
-		{
-			name:      "user auth",
-			isService: false,
-		},
-	}
+		Convey("When auth entity data is created for service auth", func() {
+			got := authorisation.CreateAuthEntityData(entityData, true)
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			got := CreateAuthEntityData(entityData, tc.isService)
-			if got == nil {
-				t.Fatal("expected auth entity data, got nil")
-			}
-
-			if got.EntityData == nil {
-				t.Fatal("expected entity data, got nil")
-			}
-
-			if got.EntityData.UserID != entityData.UserID {
-				t.Fatalf("expected user id %q, got %q", entityData.UserID, got.EntityData.UserID)
-			}
-
-			if len(got.EntityData.Groups) != len(entityData.Groups) {
-				t.Fatalf("expected %d groups, got %d", len(entityData.Groups), len(got.EntityData.Groups))
-			}
-
-			for i := range entityData.Groups {
-				if got.EntityData.Groups[i] != entityData.Groups[i] {
-					t.Fatalf("expected group %q at index %d, got %q", entityData.Groups[i], i, got.EntityData.Groups[i])
-				}
-			}
-
-			if got.IsServiceAuth != tc.isService {
-				t.Fatalf("expected IsServiceAuth %t, got %t", tc.isService, got.IsServiceAuth)
-			}
+			Convey("Then auth entity data contains the expected values", func() {
+				So(got, ShouldNotBeNil)
+				So(got.EntityData, ShouldNotBeNil)
+				So(got.EntityData.UserID, ShouldEqual, entityData.UserID)
+				So(got.EntityData.Groups, ShouldResemble, entityData.Groups)
+				So(got.IsServiceAuth, ShouldBeTrue)
+			})
 		})
-	}
+
+		Convey("When auth entity data is created for user auth", func() {
+			got := authorisation.CreateAuthEntityData(entityData, false)
+
+			Convey("Then the service auth flag is false", func() {
+				So(got, ShouldNotBeNil)
+				So(got.IsServiceAuth, ShouldBeFalse)
+			})
+		})
+	})
 }
