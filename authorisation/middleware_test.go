@@ -16,6 +16,7 @@ import (
 	"github.com/ONSdigital/dp-authorisation/v2/identityclient"
 	identityClientMock "github.com/ONSdigital/dp-authorisation/v2/identityclient/mock"
 	"github.com/ONSdigital/dp-authorisation/v2/jwt"
+	permissionsMock "github.com/ONSdigital/dp-authorisation/v2/permissions/mock"
 	dprequest "github.com/ONSdigital/dp-net/v3/request"
 	permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
 	. "github.com/smartystreets/goconvey/convey"
@@ -567,6 +568,60 @@ func TestMiddleware_NewFeatureFlaggedMiddleware(t *testing.T) {
 
 		Convey("Then a middleware from config is returned", func() {
 			So(reflect.TypeOf(middleware), ShouldEqual, reflect.TypeOf(&authorisation.PermissionCheckMiddleware{}))
+		})
+	})
+}
+
+func TestMiddleware_NewFeatureFlaggedMiddlewareWithPermissionsStore(t *testing.T) {
+	Convey("When a config is supplied with no enable flag set and no permissions store", t, func() {
+		config := authorisation.NewDefaultConfig()
+		middleware, err := authorisation.NewFeatureFlaggedMiddlewareWithPermissionsStore(context.Background(), config, map[string]string{}, nil)
+		So(err, ShouldBeNil)
+
+		Convey("Then a noop middleware is returned", func() {
+			So(reflect.TypeOf(middleware), ShouldEqual, reflect.TypeOf(&authorisation.NoopMiddleware{}))
+		})
+	})
+
+	Convey("When a config is supplied with the enable flag set to true and no permissions store", t, func() {
+		config := authorisation.Config{
+			Enabled:                        true,
+			PermissionsCacheUpdateInterval: time.Second * 60,
+			PermissionsMaxCacheTime:        time.Second * 60,
+		}
+		middleware, err := authorisation.NewFeatureFlaggedMiddlewareWithPermissionsStore(context.Background(), &config, map[string]string{}, nil)
+		So(middleware, ShouldBeNil)
+
+		Convey("Then the expected error is returned", func() {
+			So(err, ShouldNotBeNil)
+			So(err.Error(), ShouldEqual, "permissions store cannot be nil")
+		})
+	})
+
+	Convey("When a config is supplied with the enable flag set to true and a permissions store", t, func() {
+		config := authorisation.Config{
+			Enabled:                        true,
+			PermissionsCacheUpdateInterval: time.Second * 60,
+			PermissionsMaxCacheTime:        time.Second * 60,
+		}
+		store := &permissionsMock.StoreMock{
+			GetPermissionsBundleFunc: func(ctx context.Context, headers permsdk.Headers) (permsdk.Bundle, error) {
+				return permsdk.Bundle{}, nil
+			},
+		}
+
+		middleware, err := authorisation.NewFeatureFlaggedMiddlewareWithPermissionsStore(context.Background(), &config, map[string]string{}, store)
+		So(err, ShouldBeNil)
+		defer func() {
+			So(middleware.Close(context.Background()), ShouldBeNil)
+		}()
+
+		Convey("Then a middleware from config is returned", func() {
+			So(reflect.TypeOf(middleware), ShouldEqual, reflect.TypeOf(&authorisation.PermissionCheckMiddleware{}))
+		})
+
+		Convey("Then the permissions store is used to populate the cache", func() {
+			So(store.GetPermissionsBundleCalls(), ShouldHaveLength, 1)
 		})
 	})
 }
