@@ -8,11 +8,16 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const (
+	modelTestUserID = "test-user"
+	modelTestGroupA = "group-a"
+)
+
 func TestCreateAuthEntityData(t *testing.T) {
 	Convey("Given entity data", t, func() {
 		entityData := &permsdk.EntityData{
-			UserID: "test-user",
-			Groups: []string{"group-a", "group-b"},
+			UserID: modelTestUserID,
+			Groups: []string{modelTestGroupA, "group-b"},
 		}
 
 		Convey("When auth entity data is created for service auth", func() {

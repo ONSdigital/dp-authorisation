@@ -45,6 +45,15 @@ func NewFeatureFlaggedMiddleware(ctx context.Context, config *Config, jwtRSAPubl
 	return NewNoopMiddleware(), nil
 }
 
+// NewFeatureFlaggedMiddlewareWithPermissionsStore returns a Middleware implementation using the provided permissions store
+// when authorisation is enabled, or a no-op implementation when it is disabled.
+func NewFeatureFlaggedMiddlewareWithPermissionsStore(ctx context.Context, config *Config, jwtRSAPublicKeys map[string]string, store permissions.Store) (Middleware, error) {
+	if config.Enabled {
+		return NewMiddlewareFromConfigWithPermissionsStore(ctx, config, jwtRSAPublicKeys, store)
+	}
+	return NewNoopMiddleware(), nil
+}
+
 // NewMiddlewareFromDependencies creates a new instance of PermissionCheckMiddleware, using injected dependencies
 func NewMiddlewareFromDependencies(jwtParser JWTParser, permissionsChecker PermissionsChecker, zebedeeClient ZebedeeClient, identityClient *identityclient.IdentityClient) *PermissionCheckMiddleware {
 	return &PermissionCheckMiddleware{
@@ -61,6 +70,30 @@ func NewMiddlewareFromDependencies(jwtParser JWTParser, permissionsChecker Permi
 // This constructor uses default dependencies - the Cognito specific JWT parser, caching permissions checker and JWT RSA public signing keys (optional)
 // If different dependencies are required, use the NewMiddlewareFromDependencies constructor.
 func NewMiddlewareFromConfig(ctx context.Context, config *Config, jwtRSAPublicKeys map[string]string) (*PermissionCheckMiddleware, error) {
+	permissionsChecker := permissions.NewChecker(
+		ctx,
+		config.PermissionsAPIURL,
+		config.PermissionsCacheUpdateInterval,
+		config.PermissionsMaxCacheTime,
+	)
+
+	return newMiddlewareFromConfigWithChecker(ctx, config, jwtRSAPublicKeys, permissionsChecker)
+}
+
+// NewMiddlewareFromConfigWithPermissionsStore creates a new instance of PermissionCheckMiddleware with a cache backed by the provided permissions store.
+func NewMiddlewareFromConfigWithPermissionsStore(ctx context.Context, config *Config, jwtRSAPublicKeys map[string]string, store permissions.Store) (*PermissionCheckMiddleware, error) {
+	if store == nil {
+		return nil, errors.New("permissions store cannot be nil")
+	}
+
+	cachingStore := permissions.NewCachingStore(store)
+	cachingStore.StartCacheUpdater(ctx, config.PermissionsCacheUpdateInterval, config.PermissionsMaxCacheTime)
+	permissionsChecker := permissions.NewCheckerForStore(cachingStore)
+
+	return newMiddlewareFromConfigWithChecker(ctx, config, jwtRSAPublicKeys, permissionsChecker)
+}
+
+func newMiddlewareFromConfigWithChecker(ctx context.Context, config *Config, jwtRSAPublicKeys map[string]string, permissionsChecker PermissionsChecker) (*PermissionCheckMiddleware, error) {
 	// identity client retrieves jwt keys from identity service
 	identityClient, err := identityclient.NewIdentityClient(config.IdentityWebKeySetURL, config.IdentityClientMaxRetries)
 	if err != nil {
@@ -82,13 +115,6 @@ func NewMiddlewareFromConfig(ctx context.Context, config *Config, jwtRSAPublicKe
 		return nil, err
 	}
 	identityClient.CognitoRSAParser = jwtParser
-
-	permissionsChecker := permissions.NewChecker(
-		ctx,
-		config.PermissionsAPIURL,
-		config.PermissionsCacheUpdateInterval,
-		config.PermissionsMaxCacheTime,
-	)
 
 	zebedeeClient := zebedeeclient.NewZebedeeClient(config.ZebedeeURL)
 

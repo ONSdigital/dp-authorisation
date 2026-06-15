@@ -11,9 +11,19 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const (
+	adminGroupEntity       = "groups/admin"
+	publisherGroupEntity   = "groups/publisher"
+	checkerCollectionIDKey = "collection_id"
+	testCollectionID       = "collection765"
+	pathAttribute          = "path"
+	publisherGroup         = "publisher"
+	viewerGroup            = "viewer"
+)
+
 var permissionsBundle = permsdk.Bundle{
 	"users.add": map[string][]permsdk.Policy{
-		"groups/admin": {
+		adminGroupEntity: {
 			permsdk.Policy{
 				ID:        "policy1",
 				Condition: permsdk.Condition{},
@@ -21,13 +31,13 @@ var permissionsBundle = permsdk.Bundle{
 		},
 	},
 	"legacy.read": map[string][]permsdk.Policy{
-		"groups/admin": {
+		adminGroupEntity: {
 			permsdk.Policy{
 				ID:        "policy3",
 				Condition: permsdk.Condition{},
 			},
 		},
-		"groups/publisher": {
+		publisherGroupEntity: {
 			permsdk.Policy{
 				ID:        "policy4",
 				Condition: permsdk.Condition{},
@@ -37,21 +47,21 @@ var permissionsBundle = permsdk.Bundle{
 			permsdk.Policy{
 				ID: "policy2",
 				Condition: permsdk.Condition{
-					Attribute: "collection_id",
+					Attribute: checkerCollectionIDKey,
 					Operator:  permsdk.OperatorStringEquals,
-					Values:    []string{"collection765"},
+					Values:    []string{testCollectionID},
 				},
 			},
 		},
 	},
 	"legacy.write": map[string][]permsdk.Policy{
-		"groups/admin": {
+		adminGroupEntity: {
 			permsdk.Policy{
 				ID:        "policy5",
 				Condition: permsdk.Condition{},
 			},
 		},
-		"groups/publisher": {
+		publisherGroupEntity: {
 			permsdk.Policy{
 				ID:        "policy6",
 				Condition: permsdk.Condition{},
@@ -59,11 +69,11 @@ var permissionsBundle = permsdk.Bundle{
 		},
 	},
 	"some_service.write": map[string][]permsdk.Policy{
-		"groups/publisher": {
+		publisherGroupEntity: {
 			permsdk.Policy{
 				ID: "policy7",
 				Condition: permsdk.Condition{
-					Attribute: "path",
+					Attribute: pathAttribute,
 					Operator:  permsdk.OperatorStartsWith,
 					Values:    []string{"/files/dir/a/"},
 				},
@@ -103,7 +113,7 @@ func TestChecker_HasPermission_False(t *testing.T) {
 
 	Convey("Given a publisher user", t, func() {
 		entityData := permsdk.EntityData{
-			Groups: []string{"publisher"},
+			Groups: []string{publisherGroup},
 		}
 
 		Convey("When HasPermission is called for a permission a publisher does not have", func() {
@@ -151,11 +161,11 @@ func TestChecker_HasPermission_WithStringEqualsConditionTrue(t *testing.T) {
 
 	Convey("Given a viewer user", t, func() {
 		entityData := permsdk.EntityData{
-			Groups: []string{"viewer"},
+			Groups: []string{viewerGroup},
 		}
 
 		Convey("When HasPermission is called with a collection ID that satisfies the 'StringEquals' policy condition", func() {
-			attributes := map[string]string{"collection_id": "collection765"}
+			attributes := map[string]string{checkerCollectionIDKey: testCollectionID}
 
 			hasPermission, err := checker.HasPermission(ctx, entityData, "legacy.read", attributes)
 
@@ -177,11 +187,11 @@ func TestChecker_HasPermission_WithStringEqualsConditionFalse(t *testing.T) {
 
 	Convey("Given a viewer user", t, func() {
 		entityData := permsdk.EntityData{
-			Groups: []string{"viewer"},
+			Groups: []string{viewerGroup},
 		}
 
 		Convey("When HasPermission is called with a collection ID that does not satisfy a 'StringEquals' policy condition", func() {
-			attributes := map[string]string{"collection_id": "collection999"}
+			attributes := map[string]string{checkerCollectionIDKey: "collection999"}
 
 			hasPermission, err := checker.HasPermission(ctx, entityData, "legacy.read", attributes)
 
@@ -203,11 +213,11 @@ func TestChecker_HasPermission_WithCaseInsensitivePolicyConditionOperatorFalse(t
 
 	Convey("Given a viewer user", t, func() {
 		entityData := permsdk.EntityData{
-			Groups: []string{"viewer"},
+			Groups: []string{viewerGroup},
 		}
 
 		Convey("When HasPermission is called with a collection ID that satisfies an invalid (case-insensitive) 'stringequals' policy condition operator", func() {
-			attributes := map[string]string{"collection_id": "collection768"}
+			attributes := map[string]string{checkerCollectionIDKey: "collection768"}
 
 			hasPermission, err := checker.HasPermission(ctx, entityData, "legacy.read", attributes)
 
@@ -229,11 +239,11 @@ func TestChecker_HasPermission_WithStartsWithConditionTrue(t *testing.T) {
 
 	Convey("Given a publisher user", t, func() {
 		entityData := permsdk.EntityData{
-			Groups: []string{"publisher"},
+			Groups: []string{publisherGroup},
 		}
 
 		Convey("When HasPermission is called with a collection ID that satisfies the 'StartsWith' policy condition", func() {
-			attributes := map[string]string{"path": "/files/dir/a/some/dir/"}
+			attributes := map[string]string{pathAttribute: "/files/dir/a/some/dir/"}
 
 			hasPermission, err := checker.HasPermission(ctx, entityData, "some_service.write", attributes)
 
@@ -255,11 +265,11 @@ func TestChecker_HasPermission_WithStartsWithConditionFalse(t *testing.T) {
 
 	Convey("Given a publisher user", t, func() {
 		entityData := permsdk.EntityData{
-			Groups: []string{"publisher"},
+			Groups: []string{publisherGroup},
 		}
 
 		Convey("When HasPermission is called with a collection ID that does not satisfy the 'StartsWith' policy condition", func() {
-			attributes := map[string]string{"path": "/files/dir/c/some/dir/"}
+			attributes := map[string]string{pathAttribute: "/files/dir/c/some/dir/"}
 
 			hasPermission, err := checker.HasPermission(ctx, entityData, "some_service.write", attributes)
 
@@ -281,11 +291,11 @@ func TestChecker_HasPermission_MultipleConditionsChecked(t *testing.T) {
 
 	Convey("Given a viewer user", t, func() {
 		entityData := permsdk.EntityData{
-			Groups: []string{"viewer"},
+			Groups: []string{viewerGroup},
 		}
 
 		Convey("When HasPermission is called with a collection ID that satisfies the last 'StringEquals' policy condition", func() {
-			attributes := map[string]string{"collection_id": "collection765"}
+			attributes := map[string]string{checkerCollectionIDKey: testCollectionID}
 
 			hasPermission, err := checker.HasPermission(ctx, entityData, "legacy.read", attributes)
 
