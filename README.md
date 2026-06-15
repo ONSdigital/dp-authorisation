@@ -62,6 +62,46 @@ For the typical case of adding authorisation as middleware, the JWT parsing and 
 
 Using the `NewFeatureFlaggedMiddleware` constructor will use the `Enabled` config value to automatically apply a feature flag to authorisation. If the flag is disabled, a no-op instance of middleware will be used. This minimises the amount of code required to apply a feature flag to authorisation. Endpoints can still be wrapped with the authorisation middleware, but it will just act as a pass-through if authorisation is disabled. Should you want to create a middleware instance without a feature flag, use the `NewMiddlewareFromConfig` constructor function instead.
 
+#### Creating middleware with an injected permissions store
+
+Most services should use `NewFeatureFlaggedMiddleware`, which creates a permissions checker backed by the permissions API URL from config.
+
+Some services may already have direct access to permissions bundle data and should not call the permissions API over HTTP. For example, `dp-permissions-api` can build the permissions bundle locally, so calling its own `/v1/permissions-bundle` endpoint during startup can create a loopback dependency before the HTTP server is ready.
+
+For this case, use `NewFeatureFlaggedMiddlewareWithPermissionsStore` and provide an implementation of `permissions.Store`:
+
+```go
+import (
+    "context"
+
+    "github.com/ONSdigital/dp-authorisation/v2/authorisation"
+    "github.com/ONSdigital/dp-authorisation/v2/permissions"
+    permsdk "github.com/ONSdigital/dp-permissions-api/sdk"
+)
+
+type localPermissionsStore struct{}
+
+func (s localPermissionsStore) GetPermissionsBundle(ctx context.Context, headers permsdk.Headers) (permsdk.Bundle, error) {
+    // Return permissions bundle data from a local source.
+    return permsdk.Bundle{}, nil
+}
+
+func createMiddleware(ctx context.Context, authorisationConfig *authorisation.Config) (authorisation.Middleware, error) {
+    store := localPermissionsStore{}
+
+    return authorisation.NewFeatureFlaggedMiddlewareWithPermissionsStore(
+        ctx,
+        authorisationConfig,
+        authorisationConfig.JWTVerificationPublicKeys,
+        store,
+    )
+}
+```
+
+The supplied store is wrapped in the same in-memory permissions cache used by the default middleware path. The cache is still updated on `PermissionsCacheUpdateInterval` and expires data according to `PermissionsMaxCacheTime`.
+
+If authorisation is disabled in config, this constructor returns a no-op middleware and the store is not used. If authorisation is enabled, the store must not be nil.
+
 #### Wrap endpoints using the `authorisationMiddleware.Require` function
 
 ```go
@@ -78,6 +118,8 @@ The above example shows the `POST /v1/users` endpoint being wrapped with authori
         log.Error(ctx, "error adding check for permissions cache", err)
     }
 ```
+
+The permissions cache health check applies to both middleware construction paths. Whether the cache is backed by the permissions API client or an injected `permissions.Store`, services should register `authorisationMiddleware.HealthCheck`.
 
 #### Add a health check for the underlying jwt keys request against identity service
 
