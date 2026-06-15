@@ -22,26 +22,32 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const (
+	middlewareCollectionIDAttribute = "collection_id"
+	testServiceUserID               = "bilbo.baggins@bilbo-baggins.io"
+	testJWTPublicKey                = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyehkd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdgcKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbcmwIDAQAB"
+)
+
 var (
 	dummyEntityData             = &permsdk.EntityData{UserID: "fred"}
-	dummyAttributesData         = &map[string]string{"collection_id": "some-collection_id-uuid"}
+	dummyAttributesData         = &map[string]string{middlewareCollectionIDAttribute: "some-collection_id-uuid"}
 	permission                  = "dataset.read"
-	dummyServiveTokenEntityData = &permsdk.EntityData{UserID: "bilbo.baggins@bilbo-baggins.io"}
+	dummyServiveTokenEntityData = &permsdk.EntityData{UserID: testServiceUserID}
 	zebedeeIdentity             = &mock.ZebedeeClientMock{
 		CheckTokenIdentityFunc: func(ctx context.Context, token string) (*dprequest.IdentityResponse, error) {
 			return &dprequest.IdentityResponse{
-				Identifier: "bilbo.baggins@bilbo-baggins.io",
+				Identifier: testServiceUserID,
 			}, nil
 		},
 	}
 	trimmedToken             = strings.TrimPrefix(authorisationtest.AdminJWTToken, "Bearer ")
 	testURL                  = "https://the-url.com"
 	testJWTPublicKeyAPIMapx1 = map[string]string{
-		"test789=": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyehkd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdgcKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbcmwIDAQAB",
+		"test789=": testJWTPublicKey,
 	}
 	testJWTPublicKeyAPIMapx2 = map[string]string{
-		"test123=": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyehkd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdgcKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbcmwIDAQAB",
-		"test456=": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu1SU1LfVLPHCozMxH2Mo4lgOEePzNm0tRgeLezV6ffAt0gunVTLw7onLRnrq0/IzW7yWR7QkrmBL7jTKEn5u+qKhbwKfBstIs+bMY2Zkp18gnTxKLxoS2tFczGkPLPgizskuemMghRniWaoLcyehkd3qqGElvW/VDL5AaWTg0nLVkjRo9z+40RQzuVaE8AkAFmxZzow3x+VJYKdjykkJ0iT9wCS0DRTXu269V264Vf/3jvredZiKRkgwlL9xNAwxXFg0x/XFw005UWVRIkdgcKWTjpBP2dPwVZ4WWC+9aGVd+Gyn1o0CLelf4rEjGoXbAAEgAqeGUxrcIlbjXfbcmwIDAQAB",
+		"test123=": testJWTPublicKey,
+		"test456=": testJWTPublicKey,
 	}
 )
 
@@ -183,7 +189,7 @@ func TestMiddleware_Require(t *testing.T) {
 		request := httptest.NewRequest(http.MethodGet, testURL, http.NoBody)
 		request.Header.Set("Authorization", authorisationtest.AdminJWTToken)
 		request.Header.Set("Collection-Id", "123abc")
-		expectMap := map[string]string{"collection_id": "123abc"}
+		expectMap := map[string]string{middlewareCollectionIDAttribute: "123abc"}
 		mockHandler := &mockHandler{calls: 0}
 		mockJWTParser := newMockJWTParser()
 
@@ -479,7 +485,7 @@ func TestMiddleware_ServiceTokenUser_ZebedeeIdentityVerificationError(t *testing
 func TestGetCollectionIdAttribute(t *testing.T) {
 	Convey("Given a request with a Collection-Id header", t, func() {
 		request := httptest.NewRequest(http.MethodGet, testURL, http.NoBody)
-		request.Header.Set("Collection-Id", (*dummyAttributesData)["collection_id"])
+		request.Header.Set("Collection-Id", (*dummyAttributesData)[middlewareCollectionIDAttribute])
 
 		Convey("When the function is called", func() {
 			attributes, err := authorisation.GetCollectionIDAttribute(request)

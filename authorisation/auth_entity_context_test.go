@@ -9,13 +9,18 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const (
+	testUserID = "test-user"
+	testGroupA = "group-a"
+)
+
 func TestContextWithAuthEntityDataAndFromContext(t *testing.T) {
 	Convey("Given auth entity data and a base context", t, func() {
 		ctx := context.Background()
 		expected := &authorisation.AuthEntityData{
 			EntityData: &permsdk.EntityData{
-				UserID: "test-user",
-				Groups: []string{"group-a"},
+				UserID: testUserID,
+				Groups: []string{testGroupA},
 			},
 			IsServiceAuth: true,
 		}
